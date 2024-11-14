@@ -1,6 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TkSharp.Merger", "TkSharp.Merger\TkSharp.Merger.csproj", "{DEFF5FDF-6ABF-4CF1-8825-E188C01D77EB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TkSharp.Merging", "TkSharp.Merging\TkSharp.Merging.csproj", "{DEFF5FDF-6ABF-4CF1-8825-E188C01D77EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TkSharp.Debug", "TkSharp.Debug\TkSharp.Debug.csproj", "{E5F7133C-0485-4FE3-9FA1-0D7BAB5A5894}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TkSharp.Core", "TkSharp.Core\TkSharp.Core.csproj", "{3785C128-08C5-4D0C-BDD4-4B217FE8A4F2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,5 +16,13 @@ Global
 		{DEFF5FDF-6ABF-4CF1-8825-E188C01D77EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DEFF5FDF-6ABF-4CF1-8825-E188C01D77EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DEFF5FDF-6ABF-4CF1-8825-E188C01D77EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5F7133C-0485-4FE3-9FA1-0D7BAB5A5894}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5F7133C-0485-4FE3-9FA1-0D7BAB5A5894}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5F7133C-0485-4FE3-9FA1-0D7BAB5A5894}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5F7133C-0485-4FE3-9FA1-0D7BAB5A5894}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3785C128-08C5-4D0C-BDD4-4B217FE8A4F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3785C128-08C5-4D0C-BDD4-4B217FE8A4F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3785C128-08C5-4D0C-BDD4-4B217FE8A4F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3785C128-08C5-4D0C-BDD4-4B217FE8A4F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
