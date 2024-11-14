@@ -47,13 +47,22 @@ public class TkZstd
     
     public RentedBuffer<byte> Decompress(in Stream stream, out int zsDictionaryId)
     {
-        using RentedBuffer<byte> src = RentedBuffer<byte>.Allocate(stream);
-        RentedBuffer<byte> dst = RentedBuffer<byte>.Allocate(
-            GetDecompressedSize(src.Span));
+        RentedBuffer<byte> src = RentedBuffer<byte>.Allocate(stream);
+        Span<byte> srcSpan = src.Span;
+        if (srcSpan.Length < 4 || srcSpan.Read<uint>() != ZSTD_MAGIC) {
+            zsDictionaryId = -1;
+            return src;
+        }
 
-        Decompress(src.Span, dst.Span, out zsDictionaryId);
-
-        return dst;
+        try {
+            RentedBuffer<byte> dst = RentedBuffer<byte>.Allocate(
+                GetDecompressedSize(src.Span));
+            Decompress(src.Span, dst.Span, out zsDictionaryId);
+            return dst;
+        }
+        finally {
+            src.Dispose();
+        }
     }
 
     public byte[] Decompress(ReadOnlySpan<byte> data, out int zsDictionaryId)
