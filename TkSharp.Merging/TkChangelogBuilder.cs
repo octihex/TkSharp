@@ -84,7 +84,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         using RentedBuffer<byte> vanilla
             = _tk.GetVanillaFromCanonical(canonical);
         
-        builder.Build(path, src, vanilla, (path, canon) => {
+        builder.Build(canonical, path, src.Segment, vanilla.Segment, (path, canon) => {
             AddChangelogMetadata(path, canon, ChangelogEntryType.Changelog, zsDictionaryId);
             return _writer.OpenWrite(canon);
         });
@@ -104,7 +104,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         );
     }
 
-    private static ITkChangelogBuilder? GetChangelogBuilder(in TkPath path)
+    internal static ITkChangelogBuilder? GetChangelogBuilder(in TkPath path)
     {
         return path switch {
             { Canonical: "GameData/GameDataList.Product.byml" } => GameDataChangelogBuilder.Instance,
