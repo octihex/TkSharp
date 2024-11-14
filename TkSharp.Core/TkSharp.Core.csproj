@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Revrs" Version="1.0.6" />
+      <PackageReference Include="SarcLibrary" Version="3.2.0" />
+      <PackageReference Include="ZstdSharp.Port" Version="0.8.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="IO\" />
+    </ItemGroup>
+
+</Project>
