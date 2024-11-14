@@ -6,4 +6,16 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Revrs" Version="1.0.6" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\TkSharp.Core\TkSharp.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Using Include="TkSharp.Core.Common" />
+    </ItemGroup>
+
 </Project>
