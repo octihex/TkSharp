@@ -46,11 +46,11 @@ public class TkPatch(string nsoBinaryId)
     private const char COMMENT_CHAR = '@';
     private const string STOP_KEYWORD = "@stop";
 
-    public static async ValueTask<TkPatch?> FromPchTxt(Stream stream, CancellationToken ct = default)
+    public static TkPatch? FromPchTxt(Stream stream)
     {
         using StreamReader reader = new(stream);
 
-        if (await reader.ReadLineAsync(ct) is not string firstLine) {
+        if (reader.ReadLine() is not string firstLine) {
             return null;
         }
 
@@ -61,7 +61,7 @@ public class TkPatch(string nsoBinaryId)
         TkPatch patch = new(nsoBinaryId);
 
         var state = State.None;
-        while (await reader.ReadLineAsync(ct) is string line) {
+        while (reader.ReadLine() is string line) {
             if (state is State.Enabled) {
                 if (line.StartsWith(STOP_KEYWORD)) {
                     state = State.None;
