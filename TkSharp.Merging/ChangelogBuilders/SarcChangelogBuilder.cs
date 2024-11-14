@@ -5,7 +5,7 @@ namespace TkSharp.Merging.ChangelogBuilders;
 
 public sealed class SarcChangelogBuilder : Singleton<SarcChangelogBuilder>, ITkChangelogBuilder
 {
-    public void Build(in TkPath path, RentedBuffer<byte> src, RentedBuffer<byte> vanilla, OpenWriteChangelog openWrite)
+    public void Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
     {
         throw new NotImplementedException();
     }
