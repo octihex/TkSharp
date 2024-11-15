@@ -36,11 +36,11 @@ public sealed class SarcChangelogBuilder : Singleton<SarcChangelogBuilder>, ITkC
                 goto MoveContent;
             }
             
-            builder.Build(canonical, nested, data, vanillaData,
+            builder.Build(name, nested, data, vanillaData,
                 (_, canon) => changelog.OpenWrite(canon)
             );
             
-            return;
+            continue;
 
         MoveContent:
             changelog[name] = data;
