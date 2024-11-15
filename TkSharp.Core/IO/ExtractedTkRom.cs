@@ -61,7 +61,21 @@ public sealed class ExtractedTkRom : ITkRom
         }
         
         using Stream fs = File.OpenRead(absolute);
-        return RentedBuffer<byte>.Allocate(fs);
+        RentedBuffer<byte> raw = RentedBuffer<byte>.Allocate(fs);
+        Span<byte> rawBuffer = raw.Span;
+
+        if (!TkZstd.IsCompressed(rawBuffer)) {
+            return raw;
+        }
+
+        try {
+            RentedBuffer<byte> decompressed = RentedBuffer<byte>.Allocate(TkZstd.GetDecompressedSize(rawBuffer)); 
+            Zstd.Decompress(rawBuffer, decompressed.Span);
+            return decompressed;
+        }
+        finally {
+            raw.Dispose();
+        }
     }
 
     public bool IsVanilla(ReadOnlySpan<char> canonical, Span<byte> src, int fileVersion)
