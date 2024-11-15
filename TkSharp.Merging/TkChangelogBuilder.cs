@@ -62,8 +62,9 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         goto Build;
         
     Copy:
+        string outputFilePath = Path.Combine(path.Root.ToString(), canonical);
         // ReSharper disable once ConvertToUsingDeclaration
-        using (Stream output = _writer.OpenWrite(canonical)) {
+        using (Stream output = _writer.OpenWrite(outputFilePath)) {
             content.CopyTo(output);
         }
         
