@@ -12,8 +12,6 @@ public readonly ref struct TkPath(ReadOnlySpan<char> canonical, int fileVersion,
 
     public readonly ReadOnlySpan<char> Root = root;
 
-    public readonly ReadOnlySpan<char> Type = Path.GetExtension(Path.GetFileNameWithoutExtension(canonical));
-
     public readonly ReadOnlySpan<char> Extension = Path.GetExtension(canonical);
 
     public readonly string OriginPath = originPath;
