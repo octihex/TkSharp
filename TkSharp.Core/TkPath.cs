@@ -11,7 +11,7 @@ public readonly ref struct TkPath(ReadOnlySpan<char> canonical, int fileVersion,
     public readonly TkFileAttributes Attributes = attributes;
 
     public readonly ReadOnlySpan<char> Root = root;
-    
+
     public readonly ReadOnlySpan<char> Extension = extension;
 
     public readonly string OriginPath = originPath;
@@ -30,11 +30,13 @@ public readonly ref struct TkPath(ReadOnlySpan<char> canonical, int fileVersion,
             );
         }
 
-        ReadOnlySpan<char> span = path.AsSpan();
-        ReadOnlySpan<char> relative = span[(rootFolderPath[^1] switch {
+        int rootFolderLength = rootFolderPath[^1] switch {
             '/' or '\\' => rootFolderPath.Length,
             _ => rootFolderPath.Length + 1
-        })..];
+        };
+
+        ReadOnlySpan<char> span = path.AsSpan();
+        ReadOnlySpan<char> relative = span[rootFolderLength..];
 
         if (relative.Length < 6) {
             throw new ArgumentException(
@@ -53,10 +55,9 @@ public readonly ref struct TkPath(ReadOnlySpan<char> canonical, int fileVersion,
             )
         };
 
-        ReadOnlySpan<char> canonical = span
-            .GetCanonical(span[(rootFolderPath.Length + rootLength)..],
-                out int fileVersion, out TkFileAttributes attributes
-            );
+        ReadOnlySpan<char> canonical = span[(rootFolderLength + rootLength + 1)..].GetCanonical(
+            out int fileVersion, out TkFileAttributes attributes
+        );
 
         return new TkPath(
             canonical,
