@@ -31,7 +31,10 @@ public readonly ref struct TkPath(ReadOnlySpan<char> canonical, int fileVersion,
         }
 
         ReadOnlySpan<char> span = path.AsSpan();
-        ReadOnlySpan<char> relative = span[rootFolderPath.Length..];
+        ReadOnlySpan<char> relative = span[(rootFolderPath[^1] switch {
+            '/' or '\\' => rootFolderPath.Length,
+            _ => rootFolderPath.Length + 1
+        })..];
 
         if (relative.Length < 6) {
             throw new ArgumentException(
@@ -40,7 +43,7 @@ public readonly ref struct TkPath(ReadOnlySpan<char> canonical, int fileVersion,
         }
 
         Span<char> root = stackalloc char[6];
-        relative.ToLowerInvariant(root);
+        relative[..6].ToLowerInvariant(root);
 
         int rootLength = root[..5] switch {
             "romfs" or "exefs" => 5,
