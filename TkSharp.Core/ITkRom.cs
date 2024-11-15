@@ -12,7 +12,7 @@ public interface ITkRom
     IDictionary<string, string> AddressTable { get; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    RentedBuffer<byte> GetVanillaFromCanonical(string canonical, TkFileAttributes attributes)
+    RentedBuffer<byte> GetVanilla(string canonical, TkFileAttributes attributes)
     {
         string relativePath = AddressTable.TryGetValue(canonical, out string? address) ? address : canonical;
         

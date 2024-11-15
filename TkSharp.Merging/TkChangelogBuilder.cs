@@ -83,7 +83,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         }
 
         using RentedBuffer<byte> vanilla
-            = _tk.GetVanillaFromCanonical(canonical, path.Attributes);
+            = _tk.GetVanilla(canonical, path.Attributes);
         
         builder.Build(canonical, path, src.Segment, vanilla.Segment, (path, canon) => {
             AddChangelogMetadata(path, canon, ChangelogEntryType.Changelog, zsDictionaryId);
