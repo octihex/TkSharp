@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\TkSharp.Core\TkSharp.Core.csproj" />
+      <ProjectReference Include="..\TkSharp.Merging\TkSharp.Merging.csproj" />
     </ItemGroup>
 
 </Project>
