@@ -45,6 +45,10 @@ public sealed class SarcChangelogBuilder : Singleton<SarcChangelogBuilder>, ITkC
         MoveContent:
             changelog[name] = data;
         }
+        
+        if (changelog.Count == 0) {
+            return;
+        }
 
         using Stream output = openWrite(path, canonical);
         changelog.Write(output, changelog.Endianness);

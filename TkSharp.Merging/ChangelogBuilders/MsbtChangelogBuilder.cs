@@ -30,6 +30,10 @@ public sealed class MsbtChangelogBuilder : Singleton<MsbtChangelogBuilder>, ITkC
             changelog[key] = entry;
         }
 
+        if (changelog.Count == 0) {
+            return;
+        }
+
         using Stream output = openWrite(path, canonical);
         changelog.WriteBinary(output);
     }
