@@ -87,7 +87,8 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         
         builder.Build(canonical, path, src.Segment, vanilla.Segment, (path, canon) => {
             AddChangelogMetadata(path, canon, ChangelogEntryType.Changelog, zsDictionaryId);
-            return _writer.OpenWrite(canon);
+            string outputFile = Path.Combine(path.Root.ToString(), canon);
+            return _writer.OpenWrite(outputFile);
         });
     }
 
