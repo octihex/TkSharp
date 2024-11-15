@@ -28,7 +28,6 @@ public sealed class SarcChangelogBuilder : Singleton<SarcChangelogBuilder>, ITkC
                 fileVersion: path.FileVersion,
                 TkFileAttributes.None,
                 root: "romfs",
-                extension: Path.GetExtension(name.AsSpan()),
                 name
             );
 

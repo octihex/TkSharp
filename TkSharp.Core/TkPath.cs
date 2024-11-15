@@ -2,7 +2,7 @@ using TkSharp.Core.Extensions;
 
 namespace TkSharp.Core;
 
-public readonly ref struct TkPath(ReadOnlySpan<char> canonical, int fileVersion, TkFileAttributes attributes, ReadOnlySpan<char> root, ReadOnlySpan<char> extension, string originPath)
+public readonly ref struct TkPath(ReadOnlySpan<char> canonical, int fileVersion, TkFileAttributes attributes, ReadOnlySpan<char> root, string originPath)
 {
     public readonly ReadOnlySpan<char> Canonical = canonical;
 
@@ -12,7 +12,9 @@ public readonly ref struct TkPath(ReadOnlySpan<char> canonical, int fileVersion,
 
     public readonly ReadOnlySpan<char> Root = root;
 
-    public readonly ReadOnlySpan<char> Extension = extension;
+    public readonly ReadOnlySpan<char> Type = Path.GetExtension(Path.GetFileNameWithoutExtension(canonical));
+
+    public readonly ReadOnlySpan<char> Extension = Path.GetExtension(canonical);
 
     public readonly string OriginPath = originPath;
 
@@ -64,7 +66,6 @@ public readonly ref struct TkPath(ReadOnlySpan<char> canonical, int fileVersion,
             fileVersion,
             attributes,
             relative[..rootLength],
-            Path.GetExtension(canonical),
             path
         );
     }
