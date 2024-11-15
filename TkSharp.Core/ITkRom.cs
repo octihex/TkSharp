@@ -12,11 +12,21 @@ public interface ITkRom
     IDictionary<string, string> AddressTable { get; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    RentedBuffer<byte> GetVanillaFromCanonical(string canonical)
+    RentedBuffer<byte> GetVanillaFromCanonical(string canonical, TkFileAttributes attributes)
     {
-        return GetVanilla(
-            AddressTable.TryGetValue(canonical, out string? address) ? address : canonical
-        );
+        string relativePath = AddressTable.TryGetValue(canonical, out string? address) ? address : canonical;
+        
+        if (attributes.HasFlag(TkFileAttributes.HasZsExtension)) {
+            relativePath += ".zs";
+        }
+        
+        // Until we can decode .mc files this will never be reached
+        // 
+        // if (attributes.HasFlag(TkFileAttributes.HasMcExtension)) {
+        //     relativePath += ".mc";
+        // }
+        
+        return GetVanilla(relativePath);
     }
     
     RentedBuffer<byte> GetVanilla(string relativeFilePath);
