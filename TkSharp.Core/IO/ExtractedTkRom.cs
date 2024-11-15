@@ -7,11 +7,13 @@ namespace TkSharp.Core.IO;
 public sealed class ExtractedTkRom : ITkRom
 {
     private readonly string _gamePath;
+    private readonly TkChecksums _checksums;
 
-    public ExtractedTkRom(string gamePath)
+    public ExtractedTkRom(string gamePath, TkChecksums checksums)
     {
         _gamePath = gamePath;
-        
+        _checksums = checksums;
+
         {
             string regionLangMaskPath = Path.Combine(gamePath, "System", "RegionLangMask.txt");
             if (!File.Exists(regionLangMaskPath)) {
@@ -64,6 +66,6 @@ public sealed class ExtractedTkRom : ITkRom
 
     public bool IsVanilla(ReadOnlySpan<char> canonical, Span<byte> src, int fileVersion)
     {
-        throw new NotImplementedException();
+        return _checksums.IsFileVanilla(canonical, src, fileVersion);
     }
 }
