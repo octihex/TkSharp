@@ -42,6 +42,8 @@ public ref struct RentedBuffer<T> : IDisposable where T : unmanaged
         private set;
     }
 
+    public bool IsEmpty => _size == 0;
+
     public RentedBuffer()
     {
         _buffer = [];
