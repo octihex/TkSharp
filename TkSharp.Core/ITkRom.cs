@@ -5,6 +5,8 @@ namespace TkSharp.Core;
 
 public interface ITkRom
 {
+    int GameVersion { get; }
+    
     TkZstd Zstd { get; }
     
     IDictionary<string, string> AddressTable { get; }

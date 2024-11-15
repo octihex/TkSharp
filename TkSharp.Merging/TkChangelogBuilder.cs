@@ -4,14 +4,14 @@ using TkSharp.Merging.ChangelogBuilders;
 
 namespace TkSharp.Merging;
 
-public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom tk, int tkGameVersion)
+public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom tk)
 {
     private readonly ITkModSource _source = source;
     private readonly ITkModWriter _writer = writer;
     private readonly ITkRom _tk = tk;
     private readonly TkChangelog _changelog = new() {
         BuilderVersion = 100,
-        GameVersion = tkGameVersion
+        GameVersion = tk.GameVersion
     };
 
     public async ValueTask<TkChangelog> BuildAsync()
