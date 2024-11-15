@@ -42,7 +42,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         
         switch (path) {
             case { Root: "exefs", Extension: ".ips" }:
-                if (TkPatch.FromIps(content, path.Canonical[..4].ToString()) is TkPatch patch) {
+                if (TkPatch.FromIps(content, path.Canonical[..^4].ToString()) is TkPatch patch) {
                     _changelog.PatchFiles.Add(patch);
                 }
                 return;
@@ -51,7 +51,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
                     _changelog.PatchFiles.Add(patchFromPchtxt);
                 }
                 return;
-            case { Root: "exefs", Canonical.Length: 7 } when path.Canonical[..7] is "subsdk":
+            case { Root: "exefs", Canonical.Length: 7 } when path.Canonical[..6] is "subsdk":
                 _changelog.SubSdkFiles.Add(canonical);
                 goto Copy;
             case { Root: "cheats" }:
