@@ -12,7 +12,7 @@ using OverflowMapEntry = (BymlLibrary.Byml Row, int Version);
 
 namespace TkSharp.Merging.ChangelogBuilders.ResourceDatabase;
 
-public static class RsdbVersionCache
+public static class RsdbRowCache
 {
     private static readonly OverflowMap _overflow;
     
@@ -42,10 +42,10 @@ public static class RsdbVersionCache
         return entry.Row;
     }
 
-    static RsdbVersionCache()
+    static RsdbRowCache()
     {
-        using Stream stream = typeof(RsdbVersionCache).Assembly
-            .GetManifestResourceStream("TkSharp.Merging.Resources.RsdbVersionCache.bin")!;
+        using Stream stream = typeof(RsdbRowCache).Assembly
+            .GetManifestResourceStream("TkSharp.Merging.Resources.RsdbRowCache.bin")!;
 
         MutableOverflowMap overflow = [];
 

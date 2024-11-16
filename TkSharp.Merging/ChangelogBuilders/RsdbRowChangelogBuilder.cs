@@ -45,11 +45,11 @@ public sealed class RsdbRowChangelogBuilder<TKey>(string keyName) : ITkChangelog
                 continue;
             }
             
-            if (!RsdbIndex.TryGetIndex(dbNameHash, keyHash, out int index)) {
+            if (!RsdbRowIndex.TryGetIndex(dbNameHash, keyHash, out int index)) {
                 goto UpdateChangelog;
             }
 
-            if (!RsdbVersionCache.TryGetVanilla(dbNameHash, keyHash, path.FileVersion, out Byml? vanillaRow)) {
+            if (!RsdbRowCache.TryGetVanilla(dbNameHash, keyHash, path.FileVersion, out Byml? vanillaRow)) {
                 vanillaRows ??= Byml.FromBinary(vanillaBuffer).GetArray();
                 vanillaRow = vanillaRows[index];
             }

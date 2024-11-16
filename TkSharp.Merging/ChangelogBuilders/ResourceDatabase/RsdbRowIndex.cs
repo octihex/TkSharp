@@ -4,14 +4,14 @@ using CommunityToolkit.HighPerformance;
 
 namespace TkSharp.Merging.ChangelogBuilders.ResourceDatabase;
 
-public static class RsdbIndex
+public static class RsdbRowIndex
 {
     private static readonly FrozenDictionary<ulong, FrozenDictionary<ulong, int>> _lookup;
 
-    static RsdbIndex()
+    static RsdbRowIndex()
     {
-        using Stream stream = typeof(RsdbIndex).Assembly
-            .GetManifestResourceStream("TkSharp.Merging.Resources.RsdbIndex.bin")!;
+        using Stream stream = typeof(RsdbRowIndex).Assembly
+            .GetManifestResourceStream("TkSharp.Merging.Resources.RsdbRowIndex.bin")!;
 
         Dictionary<ulong, FrozenDictionary<ulong, int>> lookup = [];
 
