@@ -12,6 +12,6 @@ public sealed class FolderModWriter(string outputModFolder) : ITkModWriter
             Directory.CreateDirectory(folder);
         }
 
-        return File.OpenWrite(absolute);
+        return File.Create(absolute);
     }
 }
