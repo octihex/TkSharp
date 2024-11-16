@@ -22,11 +22,11 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
         using MemoryStream ms = new();
         srcByml.WriteBinary(ms, endianness, version);
         ms.Seek(0, SeekOrigin.Begin);
-        
+
         using Stream output = openWrite(path, canonical);
         ms.CopyTo(output);
     }
-    
+
     internal static bool LogChangesInline(ref BymlTrackingInfo info, ref Byml src, Byml vanilla)
     {
         if (src.Type != vanilla.Type) {
@@ -43,16 +43,16 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
             },
             BymlNodeType.Map => LogMapChanges(ref info, src.GetMap(), vanilla.GetMap()),
             BymlNodeType.String or
-            BymlNodeType.Binary or
-            BymlNodeType.BinaryAligned or
-            BymlNodeType.Bool or
-            BymlNodeType.Int or
-            BymlNodeType.Float or
-            BymlNodeType.UInt32 or
-            BymlNodeType.Int64 or
-            BymlNodeType.UInt64 or
-            BymlNodeType.Double or
-            BymlNodeType.Null => Byml.ValueEqualityComparer.Default.Equals(src, vanilla),
+                BymlNodeType.Binary or
+                BymlNodeType.BinaryAligned or
+                BymlNodeType.Bool or
+                BymlNodeType.Int or
+                BymlNodeType.Float or
+                BymlNodeType.UInt32 or
+                BymlNodeType.Int64 or
+                BymlNodeType.UInt64 or
+                BymlNodeType.Double or
+                BymlNodeType.Null => Byml.ValueEqualityComparer.Default.Equals(src, vanilla),
             _ => throw new NotSupportedException(
                 $"Merging '{src.Type}' is not supported")
         };
@@ -61,7 +61,8 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
     private static bool LogMapChanges<T>(ref BymlTrackingInfo info, IDictionary<T, Byml> src, IDictionary<T, Byml> vanilla)
     {
         info.Level++;
-        foreach (T key in src.Keys.Concat(vanilla.Keys).Distinct().ToArray()) { // TODO: Avoid copying keys
+        foreach (T key in src.Keys.Concat(vanilla.Keys).Distinct().ToArray()) {
+            // TODO: Avoid copying keys
             if (!src.TryGetValue(key, out Byml? srcValue)) {
                 src[key] = BymlChangeType.Remove;
                 continue;
@@ -81,7 +82,7 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
 
                 goto Default;
             }
-            
+
             if (LogChangesInline(ref info, ref srcValue, vanillaNode)) {
                 src.Remove(key);
                 continue;
