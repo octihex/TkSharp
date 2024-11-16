@@ -128,8 +128,28 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
     {
         return path switch {
             { Canonical: "GameData/GameDataList.Product.byml" } => GameDataChangelogBuilder.Instance,
-            { Canonical: "RSDB/Tag.Product.rstbl.byml" } => ResourceDbTagChangelogBuilder.Instance,
-            { } when path.Canonical[..4] is "RSDB" => ResourceDbRowChangelogBuilder.Instance,
+            { Canonical: "RSDB/Tag.Product.rstbl.byml" } => RsdbTagChangelogBuilder.Instance,
+            { Canonical: "RSDB/GameSafetySetting.Product.rstbl.byml" } => RsdbRowChangelogBuilder.NameHash,
+            { Canonical: "RSDB/RumbleCall.Product.rstbl.byml" or "RSDB/UIScreen.Product.rstbl.byml" } => RsdbRowChangelogBuilder.Name,
+            { Canonical: "RSDB/TagDef.Product.rstbl.byml" } => RsdbRowChangelogBuilder.FullTagId,
+            {
+                Canonical: "RSDB/ActorInfo.Product.rstbl.byml" or
+                "RSDB/AttachmentActorInfo.Product.rstbl.byml" or
+                "RSDB/Challenge.Product.rstbl.byml" or
+                "RSDB/EnhancementMaterialInfo.Product.rstbl.byml" or
+                "RSDB/EventPlayEnvSetting.Product.rstbl.byml" or
+                "RSDB/EventSetting.Product.rstbl.byml" or
+                "RSDB/GameActorInfo.Product.rstbl.byml" or
+                "RSDB/GameAnalyzedEventInfo.Product.rstbl.byml" or
+                "RSDB/GameEventBaseSetting.Product.rstbl.byml" or
+                "RSDB/GameEventMetadata.Product.rstbl.byml" or
+                "RSDB/LoadingTips.Product.rstbl.byml" or
+                "RSDB/Location.Product.rstbl.byml" or
+                "RSDB/LocatorData.Product.rstbl.byml" or
+                "RSDB/PouchActorInfo.Product.rstbl.byml" or
+                "RSDB/XLinkPropertyTable.Product.rstbl.byml" or
+                "RSDB/XLinkPropertyTableList.Product.rstbl.byml"
+            } => RsdbRowChangelogBuilder.RowId,
             { Extension: ".msbt" } => MsbtChangelogBuilder.Instance,
             { Extension: ".bfarc" or ".bkres" or ".blarc" or ".genvb" or ".pack" or ".sarc" or ".ta" } => SarcChangelogBuilder.Instance,
             { Extension: ".bgyml" } => BymlChangelogBuilder.Instance,
