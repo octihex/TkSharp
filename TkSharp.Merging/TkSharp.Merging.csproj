@@ -16,6 +16,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <EmbeddedResource Include="Resources\**" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Using Include="TkSharp.Core.Common" />
     </ItemGroup>
 
