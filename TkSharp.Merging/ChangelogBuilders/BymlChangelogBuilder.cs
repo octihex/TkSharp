@@ -72,9 +72,13 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
             }
 
             if (key is string keyName && srcValue.Value is BymlArray array && vanillaNode.Value is BymlArray vanillaArray) {
-                BymlArrayChangelogBuilderProvider
+                if (BymlArrayChangelogBuilderProvider
                     .GetChangelogBuilder(ref info, keyName)
-                    .LogChanges(ref info, ref srcValue, array, vanillaArray);
+                    .LogChanges(ref info, ref srcValue, array, vanillaArray)) {
+                    src.Remove(key);
+                    continue;
+                }
+
                 goto Default;
             }
             
