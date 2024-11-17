@@ -23,5 +23,3 @@ TkChangelog changelog = builder.Build();
 
 stopwatch.Stop();
 Console.WriteLine(stopwatch.ElapsedMilliseconds);
-
-Debugger.Break();
