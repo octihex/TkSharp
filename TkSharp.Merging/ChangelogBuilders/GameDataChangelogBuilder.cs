@@ -23,18 +23,23 @@ public sealed class GameDataChangelogBuilder : Singleton<GameDataChangelogBuilde
         foreach ((string tableName, Byml srcEntry) in src) {
             BymlArray entries = srcEntry.GetArray();
             BymlArray vanillaEntries = vanilla[tableName].GetArray();
-            
+
             if (tableName is "Bool64bitKey") {
                 if (LogUInt64Entries(ref bymlTrackingInfo, entries, vanillaEntries) is { Count: > 0 } u64LogResult) {
                     changelog[tableName] = u64LogResult;
                 }
-                
+
                 continue;
             }
-            
+
+            IBymlArrayChangelogBuilderProvider arrayChangelogBuilderProvider = tableName switch {
+                "Struct" => GameDataStructArrayChangelogBuilderProvider.Instance,
+                _ => GameDataArrayChangelogBuilderProvider.Instance
+            };
+
             ulong tableNameHash = XxHash3.HashToUInt64(
                 tableName.AsSpan().Cast<char, byte>());
-            if (LogEntries(ref bymlTrackingInfo, tableNameHash, entries, vanillaEntries) is { Count: > 0 } logResult) {
+            if (LogEntries(ref bymlTrackingInfo, tableNameHash, entries, vanillaEntries, arrayChangelogBuilderProvider) is { Count: > 0 } logResult) {
                 changelog[tableName] = logResult;
             }
         }
@@ -51,29 +56,39 @@ public sealed class GameDataChangelogBuilder : Singleton<GameDataChangelogBuilde
         ms.CopyTo(output);
     }
 
-    private static BymlHashMap32 LogEntries(ref BymlTrackingInfo bymlTrackingInfo, ulong tableNameHash, BymlArray src, BymlArray vanilla)
+    private static BymlHashMap32 LogEntries(ref BymlTrackingInfo bymlTrackingInfo, ulong tableNameHash,
+        BymlArray src, BymlArray vanilla, IBymlArrayChangelogBuilderProvider changelogBuilderProvider)
     {
         BymlHashMap32 changelog = [];
 
-        foreach (Byml srcEntry in src) {
-            Byml srcEntryVar = srcEntry;
-            BymlMap entry = srcEntryVar.GetMap();
+        for (int i = 0; i < src.Count; i++) {
+            Byml srcEntry = src[i];
+            BymlMap entry = srcEntry.GetMap();
             if (!entry.TryGetValue("Hash", out Byml? hashEntry) || hashEntry.Value is not uint hash) {
                 continue;
             }
 
             if (!GameDataIndex.TryGetIndex(tableNameHash, hash, out int index)) {
+                src.RemoveAt(i);
+                i--;
                 goto UpdateChangelog;
             }
-            
-            if (BymlChangelogBuilder.LogChangesInline(ref bymlTrackingInfo, ref srcEntryVar, vanilla[index])) {
+
+            // Vanilla entry [hash] accounted for
+
+            if (BymlChangelogBuilder.LogChangesInline(ref bymlTrackingInfo, ref srcEntry, vanilla[index], changelogBuilderProvider)) {
                 continue;
             }
-            
+
         UpdateChangelog:
             changelog[hash] = entry;
         }
 
+        if (src.Count == vanilla.Count) {
+            return changelog;
+        }
+
+        // TODO: Handle removed entries
         return changelog;
     }
 
@@ -91,11 +106,11 @@ public sealed class GameDataChangelogBuilder : Singleton<GameDataChangelogBuilde
             if (!GameDataIndex.TryGetIndex(hash, out int index)) {
                 goto UpdateChangelog;
             }
-            
+
             if (BymlChangelogBuilder.LogChangesInline(ref bymlTrackingInfo, ref srcEntryVar, vanilla[index])) {
                 continue;
             }
-            
+
         UpdateChangelog:
             changelog[hash] = entry;
         }
