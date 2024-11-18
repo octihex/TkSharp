@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
 using Revrs;
@@ -27,21 +28,27 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
         ms.CopyTo(output);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool LogChangesInline(ref BymlTrackingInfo info, ref Byml src, Byml vanilla)
+    {
+        return LogChangesInline(ref info, ref src, vanilla, BymlArrayChangelogBuilderProvider.Instance);
+    }
+    
+    internal static bool LogChangesInline(ref BymlTrackingInfo info, ref Byml src, Byml vanilla, IBymlArrayChangelogBuilderProvider arrayChangelogBuilderProvider)
     {
         if (src.Type != vanilla.Type) {
             return false;
         }
 
         return src.Type switch {
-            BymlNodeType.HashMap32 => LogMapChanges(ref info, src.GetHashMap32(), vanilla.GetHashMap32()),
-            BymlNodeType.HashMap64 => LogMapChanges(ref info, src.GetHashMap64(), vanilla.GetHashMap64()),
+            BymlNodeType.HashMap32 => LogMapChanges(ref info, src.GetHashMap32(), vanilla.GetHashMap32(), arrayChangelogBuilderProvider),
+            BymlNodeType.HashMap64 => LogMapChanges(ref info, src.GetHashMap64(), vanilla.GetHashMap64(), arrayChangelogBuilderProvider),
             BymlNodeType.Array => info switch {
                 { Type: "ecocat", Level: 0 } => new BymlKeyedArrayChangelogBuilder<string>("AreaNumber")
                     .LogChanges(ref info, ref src, src.GetArray(), vanilla.GetArray()),
                 _ => BymlArrayChangelogBuilder.Instance.LogChanges(ref info, ref src, src.GetArray(), vanilla.GetArray())
             },
-            BymlNodeType.Map => LogMapChanges(ref info, src.GetMap(), vanilla.GetMap()),
+            BymlNodeType.Map => LogMapChanges(ref info, src.GetMap(), vanilla.GetMap(), arrayChangelogBuilderProvider),
             BymlNodeType.String or
                 BymlNodeType.Binary or
                 BymlNodeType.BinaryAligned or
@@ -57,8 +64,8 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
                 $"Merging '{src.Type}' is not supported")
         };
     }
-
-    private static bool LogMapChanges<T>(ref BymlTrackingInfo info, IDictionary<T, Byml> src, IDictionary<T, Byml> vanilla)
+    
+    private static bool LogMapChanges<T>(ref BymlTrackingInfo info, IDictionary<T, Byml> src, IDictionary<T, Byml> vanilla, IBymlArrayChangelogBuilderProvider bymlArrayChangelogBuilderProvider) 
     {
         info.Level++;
         foreach (T key in src.Keys.Concat(vanilla.Keys).Distinct().ToArray()) {
@@ -73,7 +80,7 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
             }
 
             if (key is string keyName && srcValue.Value is BymlArray array && vanillaNode.Value is BymlArray vanillaArray) {
-                if (BymlArrayChangelogBuilderProvider
+                if (bymlArrayChangelogBuilderProvider
                     .GetChangelogBuilder(ref info, keyName)
                     .LogChanges(ref info, ref srcValue, array, vanillaArray)) {
                     src.Remove(key);

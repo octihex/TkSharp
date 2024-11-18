@@ -1,9 +1,9 @@
 namespace TkSharp.Merging.ChangelogBuilders.BinaryYaml;
 
-public class BymlArrayChangelogBuilderProvider
+public class BymlArrayChangelogBuilderProvider : Singleton<BymlArrayChangelogBuilderProvider>, IBymlArrayChangelogBuilderProvider
 {
     // ReSharper disable StringLiteralTypo
-    public static IBymlArrayChangelogBuilder GetChangelogBuilder(ref BymlTrackingInfo info, ReadOnlySpan<char> key)
+    public IBymlArrayChangelogBuilder GetChangelogBuilder(ref BymlTrackingInfo info, ReadOnlySpan<char> key)
     {
         return key switch {
             "Enemy" or "FallFloorInsect" or "Fish" or "GrassCut" or "Insect" or "NotDecayedLargeSwordList"
