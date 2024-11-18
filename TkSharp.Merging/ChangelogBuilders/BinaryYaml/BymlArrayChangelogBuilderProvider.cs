@@ -9,7 +9,7 @@ public class BymlArrayChangelogBuilderProvider : Singleton<BymlArrayChangelogBui
             "Enemy" or "FallFloorInsect" or "Fish" or "GrassCut" or "Insect" or "NotDecayedLargeSwordList"
                 or "NotDecayedSmallSwordList" or "NotDecayedSpearList" or "RainBonusMaterial" or "Seafood"
                 or "SpObjCapsuleBlockMaster" or "Weapon" or "bow" or "shields" or "weapons"
-                or "helmets" => new BymlKeyedArrayChangelogBuilder<ulong>("name"),  
+                or "helmets" => new BymlKeyedArrayChangelogBuilder<string>("name"),
             "Actors" => info.Type switch {
                 "bcett" => new BymlKeyedArrayChangelogBuilder<ulong>("Hash"),
                 "game__component__ArmyManagerParam" => new BymlKeyedArrayChangelogBuilder<string>("ActorName"),
@@ -104,7 +104,7 @@ public class BymlArrayChangelogBuilderProvider : Singleton<BymlArrayChangelogBui
             "PlacementGroups" => new BymlKeyedArrayChangelogBuilder<int>("GroupID"),
             "EffectLimiterGroup" or "HiddenMaterialGroupList" => new BymlKeyedArrayChangelogBuilder<string>("GroupName"),
             "Textures" => new BymlKeyedArrayChangelogBuilder<uint>("guid"),
-            "AiGroups" or "Points" => new BymlKeyedArrayChangelogBuilder<ulong>("Hash"),
+            /* "AiGroups" or */ "Points" => new BymlKeyedArrayChangelogBuilder<ulong>("Hash"),
             "Rails" => info.Level switch {
                 0 => new BymlKeyedArrayChangelogBuilder<ulong>("Hash"),
                 _ => BymlArrayChangelogBuilder.Instance

@@ -14,7 +14,7 @@ public class BymlKeyedArrayChangelogBuilder<T>(string key) : IBymlArrayChangelog
         for (int i = 0; i < src.Count; i++) {
             Byml element = src[i];
             if (!TryGetIndex(vanilla, element.GetMap()[_key].Get<T>(), _key, out int vanillaIndex)) {
-                changelog.Add(i, (BymlChangeType.Add, element));
+                changelog.Add(int.MaxValue - i, (BymlChangeType.Add, element));
                 continue;
             }
 
