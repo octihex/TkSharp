@@ -143,7 +143,8 @@ public class BymlArrayChangelogBuilderProvider : Singleton<BymlArrayChangelogBui
                 or "RigidBodyEntityNamePathAry" or "RigidBodySensorNamePathAry" or "ShapeList" or "ShapeNamePathAry"
                 or "StringData" or "TailBoneControllerNamePathAry"
                 or "Node" => new BymlKeyedArrayChangelogBuilder<string>("Name"),
-            "Property" or "TowingHookParams" => new BymlKeyedArrayChangelogBuilder<uint>("NameHash"),
+            "TowingHookParams" => new BymlKeyedArrayChangelogBuilder<uint>("NameHash"),
+            "Property" => new BymlNameHashArrayChangelogBuilder(),
             "ExtraNewsSourceInfo" or "TopNewsSourceInfo" => new BymlKeyedArrayChangelogBuilder<string>("NewsKeyName"),
             "PictureBookPackInfoArray" => new BymlKeyedArrayChangelogBuilder<string>("PackActor"),
             "VariationListForParasail" => new BymlKeyedArrayChangelogBuilder<string>("Pattern"),
