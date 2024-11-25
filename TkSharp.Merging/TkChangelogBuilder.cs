@@ -118,9 +118,9 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         }
 
         _changelog.ChangelogFiles.Add(
-            (canonical, new TkChangelogEntry(
-                type, path.Attributes, zsDictionaryId
-            ))
+            new TkChangelogEntry(
+                canonical, type, path.Attributes, zsDictionaryId
+            )
         );
     }
 
