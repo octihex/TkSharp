@@ -1,6 +1,8 @@
 using CommunityToolkit.HighPerformance;
 using TkSharp.Core.Extensions;
+using TkSharp.Core.Models;
 using TkSharp.Merging.IO;
+using TkSharp.Merging.IO.Serialization;
 
 namespace TkSharp.IO.Serialization;
 
@@ -40,7 +42,7 @@ public static class TkModManagerWriter
     private static void WriteTkMod(in Stream output, in TkMod mod)
     {
         WriteTkStoredItem(output, mod);
-        output.Write(mod.Version);
+        output.WriteString(mod.Version);
         output.WriteString(mod.Author);
 
         output.Write(mod.Contributors.Count);

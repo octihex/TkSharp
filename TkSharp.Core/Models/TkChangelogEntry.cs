@@ -1,7 +1,4 @@
-using System.Text.Json.Serialization;
-using TkSharp.Core;
-
-namespace TkSharp.Merging;
+namespace TkSharp.Core.Models;
 
 public record TkChangelogEntry(
     string Canonical,

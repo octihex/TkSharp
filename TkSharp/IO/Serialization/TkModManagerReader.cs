@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.HighPerformance;
 using TkSharp.Core.Extensions;
+using TkSharp.Core.Models;
 using TkSharp.Merging.IO;
+using TkSharp.Merging.IO.Serialization;
 using static TkSharp.IO.Serialization.TkModManagerWriter;
 
 namespace TkSharp.IO.Serialization;
@@ -55,7 +57,7 @@ public static class TkModManagerReader
             Description = input.ReadString()!,
             Thumbnail = ReadTkThumbnail(input),
             Changelog = TkChangelogReader.Read(input),
-            Version = input.Read<int>(),
+            Version = input.ReadString()!,
             Author = input.ReadString()!,
         };
 

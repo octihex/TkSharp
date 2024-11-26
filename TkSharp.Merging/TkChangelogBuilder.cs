@@ -1,5 +1,6 @@
 using TkSharp.Core;
 using TkSharp.Core.IO.Buffers;
+using TkSharp.Core.Models;
 using TkSharp.Merging.ChangelogBuilders;
 
 namespace TkSharp.Merging;

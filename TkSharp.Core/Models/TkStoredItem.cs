@@ -1,6 +1,4 @@
-using TkSharp.Merging;
-
-namespace TkSharp;
+namespace TkSharp.Core.Models;
 
 public abstract class TkStoredItem : TkItem
 {

@@ -1,3 +1,5 @@
+// ReSharper disable CheckNamespace
+
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace TkSharp;
@@ -20,5 +22,5 @@ public abstract partial class TkItem : ObservableObject
     /// The thumbnail of this item.
     /// </summary>
     [ObservableProperty]
-    private TkThumbnail? _thumbnail;
+    private Core.Models.TkThumbnail? _thumbnail;
 }

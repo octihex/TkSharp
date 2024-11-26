@@ -10,6 +10,7 @@
     <ItemGroup>
       <ProjectReference Include="..\TkSharp.Data.Embedded\TkSharp.Data.Embedded.csproj" />
       <ProjectReference Include="..\TkSharp.Merging\TkSharp.Merging.csproj" />
+      <ProjectReference Include="..\TkSharp\TkSharp.csproj" />
     </ItemGroup>
 
 </Project>

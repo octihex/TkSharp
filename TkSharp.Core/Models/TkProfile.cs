@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace TkSharp;
+namespace TkSharp.Core.Models;
 
 public sealed partial class TkProfile : TkItem
 {

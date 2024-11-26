@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace TkSharp;
+namespace TkSharp.Core.Models;
 
 public sealed partial class TkMod : TkStoredItem
 {
@@ -9,7 +9,7 @@ public sealed partial class TkMod : TkStoredItem
     /// The version of this mod.
     /// </summary>
     [ObservableProperty]
-    private int _version;
+    private string _version = string.Empty;
     
     /// <summary>
     /// The author of this mod.

@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace TkSharp;
+namespace TkSharp.Core.Models;
 
 public sealed partial class TkModDependency : ObservableObject
 {

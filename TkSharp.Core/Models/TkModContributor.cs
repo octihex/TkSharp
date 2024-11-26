@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace TkSharp;
+namespace TkSharp.Core.Models;
 
 [method: JsonConstructor]
 public sealed partial class TkModContributor(string author, string contribution) : ObservableObject

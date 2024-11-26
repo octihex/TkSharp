@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace TkSharp;
+namespace TkSharp.Core.Models;
 
 public enum OptionGroupType
 {
