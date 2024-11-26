@@ -1,4 +1,6 @@
-namespace TkSharp.Core.IO;
+using TkSharp.Core;
+
+namespace TkSharp.Debug.IO;
 
 public sealed class FolderModWriter(string outputModFolder) : ITkModWriter
 {
