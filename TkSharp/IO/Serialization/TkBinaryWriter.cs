@@ -5,7 +5,7 @@ using TkSharp.Merging.IO.Serialization;
 
 namespace TkSharp.IO.Serialization;
 
-public static class TkModManagerWriter
+public static class TkBinaryWriter
 {
     internal const uint MAGIC = 0x4D4D4B54;
     internal const uint VERSION = 0x10100000;
@@ -38,7 +38,7 @@ public static class TkModManagerWriter
             : -1);
     }
 
-    private static void WriteTkMod(in Stream output, in TkMod mod)
+    internal static void WriteTkMod(in Stream output, in TkMod mod)
     {
         WriteTkStoredItem(output, mod);
         output.WriteString(mod.Version);

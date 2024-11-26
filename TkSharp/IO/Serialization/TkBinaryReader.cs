@@ -4,11 +4,11 @@ using TkSharp.Core.Extensions;
 using TkSharp.Core.Models;
 using TkSharp.Merging.IO;
 using TkSharp.Merging.IO.Serialization;
-using static TkSharp.IO.Serialization.TkModManagerWriter;
+using static TkSharp.IO.Serialization.TkBinaryWriter;
 
 namespace TkSharp.IO.Serialization;
 
-public static class TkModManagerReader
+public static class TkBinaryReader
 {
     public static TkModManager Read(in Stream input, string dataFolderPath)
     {
@@ -25,7 +25,7 @@ public static class TkModManagerReader
         int modCount = input.Read<int>();
         for (int i = 0; i < modCount; i++) {
             manager.Mods.Add(
-                ReadMod(input)
+                ReadTkMod(input)
             );
         }
         
@@ -49,7 +49,7 @@ public static class TkModManagerReader
         return manager;
     }
 
-    private static TkMod ReadMod(in Stream input)
+    internal static TkMod ReadTkMod(in Stream input)
     {
         var result = new TkMod {
             Id = input.Read<Ulid>(),

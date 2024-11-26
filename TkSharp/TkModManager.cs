@@ -16,7 +16,7 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
         string portableDataFolder = Path.Combine(AppContext.BaseDirectory, ".data");
         string portableManagerStateFile = Path.Combine(portableDataFolder, "state.db");
         using FileStream fs = File.OpenRead(portableManagerStateFile);
-        Portable = TkModManagerReader.Read(fs, portableManagerStateFile);
+        Portable = TkBinaryReader.Read(fs, portableManagerStateFile);
     }
 
     public string DataFolderPath { get; } = dataFolderPath;
@@ -53,7 +53,7 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
         Directory.CreateDirectory(DataFolderPath);
 
         using FileStream fs = File.Create(Path.Combine(DataFolderPath, "state.db"));
-        TkModManagerWriter.Write(fs, this);
+        TkBinaryWriter.Write(fs, this);
     }
 
     private void EnsureProfiles()
