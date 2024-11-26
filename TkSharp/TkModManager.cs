@@ -7,7 +7,7 @@ using TkSharp.IO.Serialization;
 
 namespace TkSharp;
 
-public sealed partial class TkModManager(string dataFolderPath) : ObservableObject
+public sealed partial class TkModManager(string dataFolderPath) : ObservableObject, ITkModWriterProvider
 {
     public static readonly TkModManager Portable;
 
@@ -33,9 +33,9 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
 
     public ObservableCollection<TkProfile> Profiles { get; } = [];
 
-    public ITkModWriter GetSystemModWriter(Ulid targetId)
+    public ITkModWriter GetSystemWriter(TkModContext modContext)
     {
-        return new SystemModWriter(this, targetId);
+        return new SystemModWriter(this, modContext.Id);
     }
 
     public void Add(TkMod target, TkProfile? profile = null)
