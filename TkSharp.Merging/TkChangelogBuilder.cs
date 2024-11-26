@@ -19,7 +19,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
     public async ValueTask<TkChangelog> BuildAsync()
     {
         await Task.WhenAll(_source.Files.Select(
-                file => Task.Run(() => BuildTarget(file))
+                file => Task.Run(() => BuildTarget(file.FilePath, file.Entry))
             ))
             .ConfigureAwait(false);
 
@@ -28,19 +28,19 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
 
     public TkChangelog Build()
     {
-        foreach (string file in _source.Files) {
-            BuildTarget(file);
+        foreach ((string file, object entry) in _source.Files) {
+            BuildTarget(file, entry);
         }
 
         return _changelog;
     }
 
-    private void BuildTarget(string file)
+    private void BuildTarget(string file, object entry)
     {
         TkPath path = TkPath.FromPath(file, _source.PathToRoot);
         string canonical = path.Canonical.ToString();
 
-        using Stream content = _source.OpenRead(file);
+        using Stream content = _source.OpenRead(entry);
 
         switch (path) {
             case { Root: "exefs", Extension: ".ips" }:

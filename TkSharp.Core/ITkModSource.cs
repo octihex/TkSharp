@@ -4,7 +4,7 @@ public interface ITkModSource
 {
     string PathToRoot { get; }
     
-    string[] Files { get; }
+    IEnumerable<(string FilePath, object Entry)> Files { get; }
 
-    Stream OpenRead(string file);
+    Stream OpenRead(object entry);
 }
