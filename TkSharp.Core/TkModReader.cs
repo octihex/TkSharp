@@ -13,7 +13,7 @@ public static class TkModReader
         if (input is string path && File.Exists(path)) {
             await using FileStream fs = File.OpenRead(path);
             return await reader.ReadMod(input, fs, ct: ct)
-                .ConfigureAwait(false); 
+                .ConfigureAwait(false);
         }
 
         return await reader.ReadMod(input, ct: ct)
