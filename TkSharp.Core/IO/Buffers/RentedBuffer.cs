@@ -65,6 +65,8 @@ public ref struct RentedBuffer<T> : IDisposable where T : unmanaged
 
     public void Dispose()
     {
-        ArrayPool<T>.Shared.Return(_buffer);
+        if (_buffer is not null) {
+            ArrayPool<T>.Shared.Return(_buffer);
+        }
     }
 }
