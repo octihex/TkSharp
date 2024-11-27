@@ -1,8 +1,8 @@
 namespace TkSharp.Core.IO.ModSources;
 
-public abstract class TkModSourceBase<T>(string romfsPath) : ITkModSource where T : notnull
+public abstract class TkModSourceBase<T>(string? romfsPath) : ITkModSource where T : notnull
 {
-    public virtual string PathToRoot { get; } = romfsPath;
+    public virtual string PathToRoot { get; } = romfsPath ?? string.Empty;
 
     protected abstract IEnumerable<T> Files { get; }
 
