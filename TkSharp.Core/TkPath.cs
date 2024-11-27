@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using TkSharp.Core.Extensions;
 
 namespace TkSharp.Core;
@@ -21,16 +22,19 @@ public readonly ref struct TkPath(ReadOnlySpan<char> canonical, int fileVersion,
     /// </summary>
     /// <param name="path"></param>
     /// <param name="rootFolderPath"></param>
+    /// <param name="isInvalid"></param>
     /// <returns></returns>
-    public static TkPath FromPath(string path, string rootFolderPath)
+    public static TkPath FromPath(string path, string rootFolderPath, out bool isInvalid)
     {
         if (rootFolderPath.Length >= path.Length) {
             throw new ArgumentException(
                 "The root of the path must be longer than the path itself.", nameof(rootFolderPath)
             );
         }
+        
+        isInvalid = false;
 
-        int rootFolderLength = rootFolderPath[^1] switch {
+        int rootFolderLength = rootFolderPath is "" ? 0 : rootFolderPath[^1] switch {
             '/' or '\\' => rootFolderPath.Length,
             _ => rootFolderPath.Length + 1
         };
@@ -50,10 +54,13 @@ public readonly ref struct TkPath(ReadOnlySpan<char> canonical, int fileVersion,
         int rootLength = root[..5] switch {
             "romfs" or "exefs" => 5,
             "cheat" when root[^1] is 's' => 6,
-            _ => throw new ArgumentException(
-                "The path must contain a root folder or 'romfs', 'exefs' or 'cheats'.", nameof(path)
-            )
+            _ => -1
         };
+
+        if (rootLength == -1) {
+            isInvalid = true;
+            return default;
+        }
 
         ReadOnlySpan<char> canonical = span[(rootFolderLength + rootLength + 1)..].GetCanonical(
             out int fileVersion, out TkFileAttributes attributes
