@@ -9,19 +9,26 @@ namespace TkSharp;
 
 public sealed partial class TkModManager(string dataFolderPath) : ObservableObject, ITkModWriterProvider
 {
-    public static readonly TkModManager Portable;
-
-    static TkModManager()
+    public static TkModManager CreatePortable()
     {
         string portableDataFolder = Path.Combine(AppContext.BaseDirectory, ".data");
-        string portableManagerStateFile = Path.Combine(portableDataFolder, "state.db");
+        return Create(portableDataFolder);
+    }
+
+    public static TkModManager Create(string dataFolderPath)
+    {
+        string portableManagerStateFile = Path.Combine(dataFolderPath, "state.db");
+        if (!File.Exists(portableManagerStateFile)) {
+            return new TkModManager(dataFolderPath);
+        }
+        
         using FileStream fs = File.OpenRead(portableManagerStateFile);
-        Portable = TkBinaryReader.Read(fs, portableManagerStateFile);
+        return TkBinaryReader.Read(fs, dataFolderPath);
     }
 
     public string DataFolderPath { get; } = dataFolderPath;
 
-    public string ModsFolderPath { get; } = Path.Combine(dataFolderPath, "mods");
+    public string ModsFolderPath { get; } = Path.Combine(dataFolderPath, "contents");
 
     [ObservableProperty]
     private TkMod? _selected;
