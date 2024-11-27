@@ -16,6 +16,21 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         GameVersion = tk.GameVersion
     };
 
+    public async ValueTask<TkChangelog> BuildParallel(CancellationToken ct = default)
+    {
+        await Task.WhenAll(_source.Files.Select(
+                file => Task.Run(() => BuildTarget(file.FilePath, file.Entry), ct)
+            ))
+            .ConfigureAwait(false);
+
+        return _changelog;
+    }
+
+    public Task<TkChangelog> BuildAsync(CancellationToken ct = default)
+    {
+        return Task.Run(Build, ct);
+    }
+    
     public TkChangelog Build()
     {
         foreach ((string file, object entry) in _source.Files) {
