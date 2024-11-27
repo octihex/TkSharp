@@ -91,38 +91,28 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             goto Copy;
         }
 
-        using RentedBuffer<byte> raw = RentedBuffer<byte>.Allocate(content);
-        using RentedBuffer<byte> src = RentedBuffer<byte>.Allocate(
-            TkZstd.GetDecompressedSize(raw.Span)
-        );
-
-        _tk.Zstd.Decompress(raw.Span, src.Span, out int zsDictionaryId);
+        using RentedBuffer<byte> src = _tk.Zstd.Decompress(content, out int zsDictionaryId);
 
         if (_tk.IsVanilla(path.Canonical, src.Span, path.FileVersion)) {
             return;
         }
 
-        RentedBuffer<byte> vanilla
+        using RentedBuffer<byte> vanilla
             = _tk.GetVanilla(canonical, path.Attributes);
 
         if (vanilla.IsEmpty) {
             AddChangelogMetadata(path, canonical, ChangelogEntryType.Copy, zsDictionaryId: -1);
             outputFilePath = Path.Combine(path.Root.ToString(), canonical);
             using Stream output = _writer.OpenWrite(outputFilePath);
-            output.Write(raw.Span);
+            output.Write(src.Span);
             return;
         }
 
-        try {
-            builder.Build(canonical, path, src.Segment, vanilla.Segment, (path, canon) => {
-                AddChangelogMetadata(path, canon, ChangelogEntryType.Changelog, zsDictionaryId);
-                string outputFile = Path.Combine(path.Root.ToString(), canon);
-                return _writer.OpenWrite(outputFile);
-            });
-        }
-        finally {
-            vanilla.Dispose();
-        }
+        builder.Build(canonical, path, src.Segment, vanilla.Segment, (path, canon) => {
+            AddChangelogMetadata(path, canon, ChangelogEntryType.Changelog, zsDictionaryId);
+            string outputFile = Path.Combine(path.Root.ToString(), canon);
+            return _writer.OpenWrite(outputFile);
+        });
     }
 
     private void AddChangelogMetadata(in TkPath path, string canonical, ChangelogEntryType type, int zsDictionaryId)
