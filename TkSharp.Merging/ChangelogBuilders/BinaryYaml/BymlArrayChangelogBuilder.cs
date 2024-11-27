@@ -50,7 +50,7 @@ public class BymlArrayChangelogBuilder : IBymlArrayChangelogBuilder
                 continue;
             }
 
-            changelog.Add(i, (BymlChangeType.Add, element));
+            changelog.Add(int.MaxValue - i, (BymlChangeType.Add, element));
         }
 
         root = changelog;
