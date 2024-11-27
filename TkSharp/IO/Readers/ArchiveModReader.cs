@@ -11,15 +11,15 @@ public sealed class ArchiveModReader(ITkModWriterProvider writerProvider, ITkRom
     private readonly ITkModWriterProvider _writerProvider = writerProvider;
     private readonly ITkRomProvider _romProvider = romProvider;
 
-    public ValueTask<TkMod?> ReadMod(object? input, Stream? stream = null, TkModContext context = default, CancellationToken ct = default)
+    public async ValueTask<TkMod?> ReadMod(object? input, Stream? stream = null, TkModContext context = default, CancellationToken ct = default)
     {
         if (input is not string fileName || stream is null) {
-            return ValueTask.FromResult<TkMod?>(null);
+            return null;
         }
         
         using IArchive archive = ArchiveFactory.Open(stream);
-        if (LocateRoot(archive) is not { Key: not null } root) {
-            return ValueTask.FromResult<TkMod?>(null);
+        if (!LocateRoot(archive, out IArchiveEntry? root)) {
+            return null;
         }
 
         if (context.Id == Ulid.Empty) {
@@ -30,13 +30,14 @@ public sealed class ArchiveModReader(ITkModWriterProvider writerProvider, ITkRom
         ITkModWriter writer = _writerProvider.GetSystemWriter(context);
 
         TkChangelogBuilder builder = new(source, writer, _romProvider.GetRom());
-        TkChangelog changelog = builder.Build();
+        TkChangelog changelog = await builder.BuildAsync(ct)
+            .ConfigureAwait(false);
 
-        return ValueTask.FromResult<TkMod?>(new TkMod {
+        return new TkMod {
             Id = context.Id,
             Name = Path.GetFileNameWithoutExtension(fileName),
             Changelog = changelog
-        });
+        };
     }
 
     public bool IsKnownInput(object? input)
@@ -45,7 +46,7 @@ public sealed class ArchiveModReader(ITkModWriterProvider writerProvider, ITkRom
                Path.GetExtension(path.AsSpan()) is ".zip" or ".rar";
     }
     
-    private static IArchiveEntry? LocateRoot(IArchive archive)
+    internal static bool LocateRoot(IArchive archive, out IArchiveEntry? root)
     {
         IArchiveEntry? previous = null;
         foreach (IArchiveEntry entry in archive.Entries) {
@@ -55,12 +56,14 @@ public sealed class ArchiveModReader(ITkModWriterProvider writerProvider, ITkRom
 
             ReadOnlySpan<char> key = entry.Key.AsSpan();
             if (key.Length > 5 && Path.GetFileName(key[^1] is '/' or '\\' ? key[..^1] : key) is "romfs" or "exefs" or "cheats") {
-                return previous;
+                root = previous;
+                return true;
             }
 
             previous = entry;
         }
 
-        return null;
+        root = default;
+        return false;
     }
 }
