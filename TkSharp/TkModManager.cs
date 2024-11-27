@@ -33,6 +33,13 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
 
     public ObservableCollection<TkProfile> Profiles { get; } = [];
 
+    public TkProfile GetCurrentProfile()
+    {
+        EnsureProfiles();
+        
+        return CurrentProfile ?? Profiles[0];
+    }
+
     public ITkModWriter GetSystemWriter(TkModContext modContext)
     {
         return new SystemModWriter(this, modContext.Id);
