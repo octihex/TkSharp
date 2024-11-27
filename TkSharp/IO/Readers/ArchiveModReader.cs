@@ -42,7 +42,7 @@ public sealed class ArchiveModReader(ITkModWriterProvider writerProvider, ITkRom
     public bool IsKnownInput(object? input)
     {
         return input is string path &&
-               Path.GetExtension(path.AsSpan()) is ".zip" or ".rar" or ".7z";
+               Path.GetExtension(path.AsSpan()) is ".zip" or ".rar";
     }
     
     private static IArchiveEntry? LocateRoot(IArchive archive)
