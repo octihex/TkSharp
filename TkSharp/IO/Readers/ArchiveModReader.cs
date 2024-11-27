@@ -11,15 +11,15 @@ public sealed class ArchiveModReader(ITkModWriterProvider writerProvider, ITkRom
     private readonly ITkModWriterProvider _writerProvider = writerProvider;
     private readonly ITkRomProvider _romProvider = romProvider;
 
-    public async ValueTask<TkMod?> ReadMod(object? input, Stream? stream = null, TkModContext context = default, CancellationToken ct = default)
+    public ValueTask<TkMod?> ReadMod(object? input, Stream? stream = null, TkModContext context = default, CancellationToken ct = default)
     {
         if (input is not string fileName || stream is null) {
-            return null;
+            return ValueTask.FromResult<TkMod?>(null);
         }
         
         using IArchive archive = ArchiveFactory.Open(stream);
         if (LocateRoot(archive) is not { Key: not null } root) {
-            return null;
+            return ValueTask.FromResult<TkMod?>(null);
         }
 
         if (context.Id == Ulid.Empty) {
@@ -30,13 +30,13 @@ public sealed class ArchiveModReader(ITkModWriterProvider writerProvider, ITkRom
         ITkModWriter writer = _writerProvider.GetSystemWriter(context);
 
         TkChangelogBuilder builder = new(source, writer, _romProvider.GetRom());
-        TkChangelog changelog = await builder.BuildAsync();
+        TkChangelog changelog = builder.Build();
 
-        return new TkMod {
+        return ValueTask.FromResult<TkMod?>(new TkMod {
             Id = context.Id,
             Name = Path.GetFileNameWithoutExtension(fileName),
             Changelog = changelog
-        };
+        });
     }
 
     public bool IsKnownInput(object? input)

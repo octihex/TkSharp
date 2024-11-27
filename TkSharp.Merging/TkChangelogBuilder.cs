@@ -16,16 +16,6 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         GameVersion = tk.GameVersion
     };
 
-    public async ValueTask<TkChangelog> BuildAsync()
-    {
-        await Task.WhenAll(_source.Files.Select(
-                file => Task.Run(() => BuildTarget(file.FilePath, file.Entry))
-            ))
-            .ConfigureAwait(false);
-
-        return _changelog;
-    }
-
     public TkChangelog Build()
     {
         foreach ((string file, object entry) in _source.Files) {
@@ -67,14 +57,10 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
 
         goto Build;
 
-    CopyWithMetadata:
-        AddChangelogMetadata(path, canonical, ChangelogEntryType.Copy, zsDictionaryId: -1);
-
     Copy:
         string outputFilePath = Path.Combine(path.Root.ToString(), canonical);
         // ReSharper disable once ConvertToUsingDeclaration
         using (Stream output = _writer.OpenWrite(outputFilePath)) {
-            content.Seek(0, SeekOrigin.Begin);
             content.CopyTo(output);
         }
 
@@ -82,10 +68,16 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
 
     Build:
         if (GetChangelogBuilder(path) is not ITkChangelogBuilder builder) {
-            goto CopyWithMetadata;
+            AddChangelogMetadata(path, canonical, ChangelogEntryType.Copy, zsDictionaryId: -1);
+            goto Copy;
         }
 
-        RentedBuffer<byte> src = _tk.Zstd.Decompress(content, out int zsDictionaryId);
+        using RentedBuffer<byte> raw = RentedBuffer<byte>.Allocate(content);
+        using RentedBuffer<byte> src = RentedBuffer<byte>.Allocate(
+            TkZstd.GetDecompressedSize(raw.Span)
+        );
+
+        _tk.Zstd.Decompress(raw.Span, src.Span, out int zsDictionaryId);
 
         if (_tk.IsVanilla(path.Canonical, src.Span, path.FileVersion)) {
             return;
@@ -95,7 +87,11 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             = _tk.GetVanilla(canonical, path.Attributes);
 
         if (vanilla.IsEmpty) {
-            goto CopyWithMetadata;
+            AddChangelogMetadata(path, canonical, ChangelogEntryType.Copy, zsDictionaryId: -1);
+            outputFilePath = Path.Combine(path.Root.ToString(), canonical);
+            using Stream output = _writer.OpenWrite(outputFilePath);
+            output.Write(raw.Span);
+            return;
         }
 
         try {
@@ -106,7 +102,6 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             });
         }
         finally {
-            src.Dispose();
             vanilla.Dispose();
         }
     }
