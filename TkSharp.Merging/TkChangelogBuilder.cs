@@ -27,7 +27,11 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
 
     private void BuildTarget(string file, object entry)
     {
-        TkPath path = TkPath.FromPath(file, _source.PathToRoot);
+        TkPath path = TkPath.FromPath(file, _source.PathToRoot, out bool isInvalid);
+        if (isInvalid) {
+            return;
+        }
+        
         string canonical = path.Canonical.ToString();
 
         using Stream content = _source.OpenRead(entry);
