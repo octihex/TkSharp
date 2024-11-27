@@ -47,6 +47,7 @@ public sealed class ArchiveModReader(ITkModWriterProvider writerProvider, ITkRom
     
     private static IArchiveEntry? LocateRoot(IArchive archive)
     {
+        IArchiveEntry? previous = null;
         foreach (IArchiveEntry entry in archive.Entries) {
             if (!entry.IsDirectory) {
                 continue;
@@ -54,8 +55,10 @@ public sealed class ArchiveModReader(ITkModWriterProvider writerProvider, ITkRom
 
             ReadOnlySpan<char> key = entry.Key.AsSpan();
             if (key.Length > 5 && Path.GetFileName(key[^1] is '/' or '\\' ? key[..^1] : key) is "romfs" or "exefs" or "cheats") {
-                return entry;
+                return previous;
             }
+
+            previous = entry;
         }
 
         return null;
