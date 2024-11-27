@@ -13,7 +13,13 @@ public class BymlKeyedArrayChangelogBuilder<T>(string key) : IBymlArrayChangelog
 
         for (int i = 0; i < src.Count; i++) {
             Byml element = src[i];
-            if (!TryGetIndex(vanilla, element.GetMap()[_key].Get<T>(), _key, out int vanillaIndex)) {
+            if (!element.GetMap().TryGetValue(_key, out Byml? keyEntry)) {
+                // TODO: Warn, skipped entry because key was missing
+                Console.WriteLine($"Entry '{i}' in '{info.Type}' was missing an {_key} field.");
+                continue;
+            }
+            
+            if (!TryGetIndex(vanilla, keyEntry.Get<T>(), _key, out int vanillaIndex)) {
                 changelog.Add(int.MaxValue - i, (BymlChangeType.Add, element));
                 continue;
             }
