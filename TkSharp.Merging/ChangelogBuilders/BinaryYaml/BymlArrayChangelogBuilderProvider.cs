@@ -6,9 +6,9 @@ public class BymlArrayChangelogBuilderProvider : Singleton<BymlArrayChangelogBui
     public IBymlArrayChangelogBuilder GetChangelogBuilder(ref BymlTrackingInfo info, ReadOnlySpan<char> key)
     {
         return key switch {
-            "Enemy" or "FallFloorInsect" or "Fish" or "GrassCut" or "Insect" or "NotDecayedLargeSwordList"
+            "Animal" or "Enemy" or "FallFloorInsect" or "Fish" or "GrassCut" or "Insect" or "NotDecayedLargeSwordList"
                 or "NotDecayedSmallSwordList" or "NotDecayedSpearList" or "RainBonusMaterial" or "Seafood"
-                or "SpObjCapsuleBlockMaster" or "Weapon" or "bow" or "shields" or "weapons"
+                or "SpObjCapsuleBlockMaster" or "Weapon" or "bow" or "bows" or "shields" or "weapons"
                 or "helmets" => new BymlKeyedArrayChangelogBuilder<string>("name"),
             "Actors" => info.Type switch {
                 "bcett" => new BymlKeyedArrayChangelogBuilder<ulong>("Hash"),
