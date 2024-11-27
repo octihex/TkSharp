@@ -27,7 +27,7 @@ public class BymlDirectIndexArrayChangelogBuilder : IBymlArrayChangelogBuilder
         for (; i < larger.Count; i++) {
             changelog[i] = isVanillaSmaller
                 ? (BymlChangeType.Add, src[i])
-                : (BymlChangeType.Remove, new());
+                : (BymlChangeType.Remove, new Byml());
         }
 
         root = changelog;
