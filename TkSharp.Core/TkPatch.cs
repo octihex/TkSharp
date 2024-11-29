@@ -16,6 +16,20 @@ public class TkPatch(string nsoBinaryId)
 
     public Dictionary<uint, uint> Entries { get; } = [];
 
+    public void WriteIps(Stream output)
+    {
+        output.Write(IPS32_MAGIC_PREFIX);
+        output.Write(IPS32_MAGIC_SUFFIX);
+
+        foreach ((uint address, uint value) in Entries) {
+            output.Write(address + NSO_HEADER_LENGTH, Endianness.Big);
+            output.Write<short>(sizeof(uint), Endianness.Big);
+            output.Write(value, Endianness.Big);
+        }
+        
+        output.Write(EOF_MARK);
+    }
+
     public static TkPatch? FromIps(Stream stream, string nsoBinaryId)
     {
         if (stream.Read<uint>() is not IPS32_MAGIC_PREFIX || stream.ReadByte() is not IPS32_MAGIC_SUFFIX) {
