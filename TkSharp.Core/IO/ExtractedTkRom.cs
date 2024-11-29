@@ -22,7 +22,8 @@ public sealed class ExtractedTkRom : ITkRom
 
             using Stream regionLangMaskFs = File.OpenRead(regionLangMaskPath);
             using RentedBuffer<byte> regionLangMask = RentedBuffer<byte>.Allocate(regionLangMaskFs);
-            GameVersion = RegionLangMaskParser.ParseVersion(regionLangMask.Span);
+            GameVersion = RegionLangMaskParser.ParseVersion(regionLangMask.Span, out string nsoBinaryId);
+            NsoBinaryId = nsoBinaryId;
         }
 
         {
@@ -48,6 +49,8 @@ public sealed class ExtractedTkRom : ITkRom
     }
     
     public int GameVersion { get; }
+
+    public string NsoBinaryId { get; }
 
     public TkZstd Zstd { get; }
 

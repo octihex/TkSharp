@@ -7,6 +7,8 @@ public interface ITkRom
 {
     int GameVersion { get; }
     
+    string NsoBinaryId { get; }
+    
     TkZstd Zstd { get; }
     
     // TODO: Type-specific tables should also be loaded

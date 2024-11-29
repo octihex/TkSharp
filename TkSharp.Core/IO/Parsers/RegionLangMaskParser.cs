@@ -1,11 +1,16 @@
+using System.Text;
+
 namespace TkSharp.Core.IO.Parsers;
 
 public static class RegionLangMaskParser
 {
-    public static int ParseVersion(ReadOnlySpan<byte> src)
+    public static int ParseVersion(ReadOnlySpan<byte> src, out string nsoBinaryId)
     {
+        StringBuilder sb = new();
         for (int i = src.Length - 1; i > -1; i--) {
-            if (src[i] != '\n') {
+            byte @char = src[i];
+            if (@char != '\n') {
+                sb.Append((char)@char);
                 continue;
             }
 
@@ -13,6 +18,7 @@ public static class RegionLangMaskParser
                 goto InvalidInput;
             }
             
+            nsoBinaryId = sb.ToString();
             return int.Parse(src[(i - 4)..(i - 1)]);
         }
 
