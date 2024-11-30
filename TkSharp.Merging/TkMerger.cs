@@ -96,14 +96,14 @@ public sealed class TkMerger(ITkModWriter output, ITkRom rom, string locale = "U
 
             foreach (string subSdkFile in changelog.SubSdkFiles) {
                 if (index > 9) {
-                    // Track skipped files
+                    // TODO: Track skipped files
                     index++;
                     continue;
                 }
 
                 using Stream input = changelog.Source.OpenRead($"exefs/{subSdkFile}");
                 using Stream output = _output.OpenWrite($"exefs/subsdk{++index}");
-                output.CopyTo(input);
+                input.CopyTo(output);
             }
         }
 
@@ -123,7 +123,7 @@ public sealed class TkMerger(ITkModWriter output, ITkRom rom, string locale = "U
             foreach (string inputOutput in changelog.CheatFiles.Select(cheatFile => $"cheats/{cheatFile}")) {
                 using Stream input = changelog.Source.OpenRead(inputOutput);
                 using Stream output = _output.OpenWrite(inputOutput);
-                output.CopyTo(input);
+                input.CopyTo(output);
             }
         }
     }
