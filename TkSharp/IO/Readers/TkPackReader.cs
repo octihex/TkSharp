@@ -1,6 +1,5 @@
 using Revrs.Extensions;
 using SharpCompress.Common.Zip;
-using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
 using TkSharp.Core;
 using TkSharp.Core.Models;
@@ -9,9 +8,9 @@ using static TkSharp.IO.Serialization.TkPackWriter;
 
 namespace TkSharp.IO.Readers;
 
-public sealed class TkPackReader(ITkModWriterProvider writerProvider) : ITkModReader
+public sealed class TkPackReader(ITkSystemProvider systemProvider) : ITkModReader
 {
-    private readonly ITkModWriterProvider _writerProvider = writerProvider;
+    private readonly ITkSystemProvider _systemProvider = systemProvider;
 
     public async ValueTask<TkMod?> ReadMod(object? input, Stream? stream = null, TkModContext context = default, CancellationToken ct = default)
     {
@@ -37,14 +36,12 @@ public sealed class TkPackReader(ITkModWriterProvider writerProvider) : ITkModRe
                 "Unexpected TotK mod pack version. Expected 1.0.0");
         }
 
-        TkMod result = TkBinaryReader.ReadTkMod(stream);
+        TkMod result = TkBinaryReader.ReadTkMod(stream, _systemProvider);
         context.Id = result.Id;
 
-        ZipReader reader = ZipReader.Open(stream, new ReaderOptions {
-            Password = "I understand that editing this file may not end well"
-        });
+        ZipReader reader = ZipReader.Open(stream);
         
-        ITkModWriter writer = _writerProvider.GetSystemWriter(context);
+        ITkModWriter writer = _systemProvider.GetSystemWriter(context);
         while (reader.MoveToNextEntry()) {
             ZipEntry entry = reader.Entry;
             await using Stream archiveStream = reader.OpenEntryStream();

@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.HighPerformance;
+using TkSharp.Core;
 using TkSharp.Core.Extensions;
 using TkSharp.Core.Models;
-using TkSharp.Merging.IO;
 using TkSharp.Merging.IO.Serialization;
 using static TkSharp.IO.Serialization.TkBinaryWriter;
 
@@ -25,7 +25,7 @@ public static class TkBinaryReader
         int modCount = input.Read<int>();
         for (int i = 0; i < modCount; i++) {
             manager.Mods.Add(
-                ReadTkMod(input)
+                ReadTkMod(input, manager)
             );
         }
         
@@ -49,16 +49,20 @@ public static class TkBinaryReader
         return manager;
     }
 
-    internal static TkMod ReadTkMod(in Stream input)
+    internal static TkMod ReadTkMod(in Stream input, ITkSystemProvider systemProvider)
     {
+        var id = input.Read<Ulid>();
+        string relativeModFolderPath = id.ToString();
+        ITkModSource source = systemProvider.GetSystemSource(relativeModFolderPath);
+        
         var result = new TkMod {
-            Id = input.Read<Ulid>(),
+            Id = id,
             Name = input.ReadString()!,
             Description = input.ReadString()!,
             Thumbnail = ReadTkThumbnail(input),
-            Changelog = TkChangelogReader.Read(input),
+            Changelog = TkChangelogReader.Read(input, source),
             Version = input.ReadString()!,
-            Author = input.ReadString()!,
+            Author = input.ReadString()!
         };
 
         int contributorCount = input.Read<int>();
@@ -74,7 +78,7 @@ public static class TkBinaryReader
         int optionGroupCount = input.Read<int>();
         for (int i = 0; i < optionGroupCount; i++) {
             result.OptionGroups.Add(
-                ReadTkModOptionGroup(input)
+                ReadTkModOptionGroup(input, systemProvider, relativeModFolderPath)
             );
         }
 
@@ -88,8 +92,12 @@ public static class TkBinaryReader
         return result;
     }
 
-    private static TkModOptionGroup ReadTkModOptionGroup(in Stream input)
+    private static TkModOptionGroup ReadTkModOptionGroup(in Stream input,
+        ITkSystemProvider systemProvider, string parentModFolderPath)
     {
+        var id = input.Read<Ulid>();
+        parentModFolderPath = Path.Combine(parentModFolderPath, "options", id.ToString());
+        
         var result = new TkModOptionGroup {
             Name = input.ReadString()!,
             Description = input.ReadString()!,
@@ -101,7 +109,7 @@ public static class TkBinaryReader
         int optionCount = input.Read<int>();
         for (int i = 0; i < optionCount; i++) {
             result.Options.Add(
-                ReadTkStoredItem<TkModOption>(input)
+                ReadTkModOption(input, systemProvider, parentModFolderPath)
             );
         }
         
@@ -121,6 +129,21 @@ public static class TkBinaryReader
         }
         
         return result;
+    }
+
+    private static TkModOption ReadTkModOption(in Stream input, ITkSystemProvider systemProvider, string parentModFolderPath)
+    {
+        var id = input.Read<Ulid>();
+        string changelogFolderPath = Path.Combine(parentModFolderPath, id.ToString());
+        ITkModSource source = systemProvider.GetSystemSource(changelogFolderPath);
+        
+        return new TkModOption {
+            Id = id,
+            Name = input.ReadString()!,
+            Description = input.ReadString()!,
+            Thumbnail = ReadTkThumbnail(input),
+            Changelog = TkChangelogReader.Read(input, source)
+        };
     }
 
     private static TkModDependency ReadTkModDependency(in Stream input)
@@ -156,17 +179,6 @@ public static class TkBinaryReader
         }
         
         return result;
-    }
-
-    private static T ReadTkStoredItem<T>(in Stream input) where T : TkStoredItem, new()
-    {
-        return new T {
-            Id = input.Read<Ulid>(),
-            Name = input.ReadString()!,
-            Description = input.ReadString()!,
-            Thumbnail = ReadTkThumbnail(input),
-            Changelog = TkChangelogReader.Read(input)
-        };
     }
 
     private static TkThumbnail? ReadTkThumbnail(in Stream input)

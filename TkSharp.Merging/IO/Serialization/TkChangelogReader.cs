@@ -8,7 +8,7 @@ namespace TkSharp.Merging.IO.Serialization;
 
 public static class TkChangelogReader
 {
-    public static TkChangelog Read(in Stream input)
+    public static TkChangelog Read(in Stream input, ITkModSource? source)
     {
         if (input.Read<uint>() != MAGIC) {
             throw new InvalidDataException(
@@ -17,7 +17,8 @@ public static class TkChangelogReader
 
         var result = new TkChangelog {
             BuilderVersion = input.Read<int>(),
-            GameVersion = input.Read<int>()
+            GameVersion = input.Read<int>(),
+            Source = source
         };
         
         int changelogFileCount = input.Read<int>();
