@@ -1,10 +1,11 @@
 using TkSharp.Core.IO.Buffers;
-using TkSharp.Merging.ResourceSizeTable;
+using TkSharp.Core.Models;
 
 namespace TkSharp.Merging;
 
 public interface ITkMerger
 {
-    void Merge(RentedBuffers<byte> inputs, ArraySegment<byte> vanillaData, Stream output,
-        TkResourceSizeCollector tkResourceSizeTable);
+    void Merge(TkChangelogEntry entry, RentedBuffers<byte> inputs, ArraySegment<byte> vanillaData, Stream output);
+    
+    void MergeSingle(TkChangelogEntry entry, ArraySegment<byte> input, ArraySegment<byte> @base, Stream output);
 }

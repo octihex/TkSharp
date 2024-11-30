@@ -8,12 +8,22 @@ using MergeTarget = (TkSharp.Core.Models.TkChangelogEntry Changelog, LanguageExt
 
 namespace TkSharp.Merging;
 
-public sealed class TkMerger(ITkModWriter output, ITkRom rom, string locale = "USen")
+public sealed class TkMerger
 {
-    private readonly ITkModWriter _output = output;
-    private readonly ITkRom _rom = rom;
-    private readonly string _locale = locale;
-    private readonly TkResourceSizeCollector _resourceSizeCollector = new(output, rom);
+    private readonly ITkModWriter _output;
+    private readonly ITkRom _rom;
+    private readonly string _locale;
+    private readonly TkResourceSizeCollector _resourceSizeCollector;
+    private readonly SarcMerger _sarcMerger;
+
+    public TkMerger(ITkModWriter output, ITkRom rom, string locale = "USen")
+    {
+        _output = output;
+        _rom = rom;
+        _locale = locale;
+        _resourceSizeCollector = new TkResourceSizeCollector(output, rom);
+        _sarcMerger = new SarcMerger(this, _resourceSizeCollector, _rom.Zstd);
+    }
 
     public async ValueTask MergeAsync(IEnumerable<TkChangelog> changelogs, CancellationToken ct = default)
     {
@@ -46,9 +56,9 @@ public sealed class TkMerger(ITkModWriter output, ITkRom rom, string locale = "U
 
         MergeMals(tkChangelogs);
 
-        foreach ((TkChangelogEntry changelog, Either<(ITkMerger, Stream[]), Stream> target) in GetTargets(tkChangelogs)) {
-            MergeTarget(changelog, target);
-        }
+        // foreach ((TkChangelogEntry changelog, Either<(ITkMerger, Stream[]), Stream> target) in GetTargets(tkChangelogs)) {
+        //     MergeTarget(changelog, target);
+        // }
     }
 
     public void MergeTarget(TkChangelogEntry changelog, Either<(ITkMerger, Stream[]), Stream> target)
@@ -58,7 +68,7 @@ public sealed class TkMerger(ITkModWriter output, ITkRom rom, string locale = "U
             case (ITkMerger merger, Stream[] streams): {
                 using RentedBuffers<byte> inputs = RentedBuffers<byte>.Allocate(streams); 
                 using RentedBuffer<byte> vanilla = _rom.GetVanilla(changelog.Canonical, changelog.Attributes);
-                merger.Merge(inputs, vanilla.Segment, output, _resourceSizeCollector);
+                merger.Merge(changelog, inputs, vanilla.Segment, output);
                 break;
             }
             case Stream copy:
@@ -136,14 +146,16 @@ public sealed class TkMerger(ITkModWriter output, ITkRom rom, string locale = "U
                 .Select(entry => entry.Changelog.Source!.OpenRead($"romfs/{entry.MalsFile}"))
                 .ToArray());
 
-        using RentedBuffer<byte> vanilla = _rom.GetVanilla($"Mals/{_locale}.Product.sarc",
-            TkFileAttributes.HasZsExtension | TkFileAttributes.IsProductFile);
+        string canonical = $"Mals/{_locale}.Product.sarc";
+        const TkFileAttributes attributes = TkFileAttributes.HasZsExtension | TkFileAttributes.IsProductFile;
+        TkChangelogEntry fakeEntry = new(canonical, ChangelogEntryType.Changelog, attributes, zsDictionaryId: 1);
 
-        SarcMerger.Instance.Merge(combinedBuffers, vanilla.Segment,
-            _output.OpenWrite($"romfs/Mals/{_locale}.Product.sarc.zs"), _resourceSizeCollector);
+        using RentedBuffer<byte> vanilla = _rom.GetVanilla(canonical, attributes);
+        using Stream output = _output.OpenWrite($"romfs/Mals/{_locale}.Product.sarc.zs");
+        _sarcMerger.Merge(fakeEntry, combinedBuffers, vanilla.Segment, output);
     }
 
-    private static IEnumerable<MergeTarget> GetTargets(TkChangelog[] changelogs)
+    private IEnumerable<MergeTarget> GetTargets(TkChangelog[] changelogs)
     {
         return changelogs
             .SelectMany(
@@ -157,14 +169,16 @@ public sealed class TkMerger(ITkModWriter output, ITkRom rom, string locale = "U
             .Select(GetInputs);
     }
 
-    private static MergeTarget GetInputs(IGrouping<TkChangelogEntry, TkChangelog> group)
+    private MergeTarget GetInputs(IGrouping<TkChangelogEntry, TkChangelog> group)
     {
+        string relativeFilePath = Path.Combine("romfs", group.Key.Canonical);
+        
         if (GetMerger(group.Key.Canonical) is ITkMerger merger) {
             return (
                 Changelog: group.Key,
                 Target: (Merger: merger,
                     Streams: group
-                        .Select(changelog => changelog.Source!.OpenRead(group.Key.Canonical))
+                        .Select(changelog => changelog.Source!.OpenRead(relativeFilePath))
                         .ToArray()
                 )
             );
@@ -172,14 +186,14 @@ public sealed class TkMerger(ITkModWriter output, ITkRom rom, string locale = "U
 
         return (
             Changelog: group.Key,
-            Target: group.Last().Source!.OpenRead(group.Key.Canonical)
+            Target: group.Last().Source!.OpenRead(relativeFilePath)
         );
     }
 
-    public static ITkMerger? GetMerger(ReadOnlySpan<char> canonical)
+    public ITkMerger? GetMerger(ReadOnlySpan<char> canonical)
     {
         return canonical switch {
-            "GameData/GameDataList.byml" => GameDataMerger.Instance,
+            "GameData/GameDataList.Product.byml" => GameDataMerger.Instance,
             "RSDB/Tag.Product.rstbl.byml" => RsdbTagMerger.Instance,
             "RSDB/RumbleCall.Product.rstbl.byml" or "RSDB/UIScreen.Product.rstbl.byml" => RsdbRowMerger.Name,
             "RSDB/TagDef.Product.rstbl.byml" => RsdbRowMerger.FullTagId,
@@ -200,7 +214,7 @@ public sealed class TkMerger(ITkModWriter output, ITkRom rom, string locale = "U
                 "RSDB/XLinkPropertyTable.Product.rstbl.byml" or
                 "RSDB/XLinkPropertyTableList.Product.rstbl.byml" => RsdbRowMerger.RowId,
             _ => Path.GetExtension(canonical) switch {
-                ".bfarc" or ".bkres" or ".blarc" or ".genvb" or ".pack" or ".ta" => SarcMerger.Instance,
+                ".bfarc" or ".bkres" or ".blarc" or ".genvb" or ".pack" or ".ta" => _sarcMerger,
                 ".byml" or ".bgyml" => BymlMerger.Instance,
                 ".msbt" => MsbtMerger.Instance,
                 _ => null
