@@ -4,7 +4,7 @@ using TkSharp.Merging.ResourceSizeTable.Calculators;
 
 namespace TkSharp.Merging.ResourceSizeTable;
 
-public sealed class ResourceSizeCollector(ITkModWriter writer, ITkRom rom)
+public sealed class TkResourceSizeCollector(ITkModWriter writer, ITkRom rom)
 {
     private readonly ITkModWriter _writer = writer;
     private readonly ITkRom _rom = rom;

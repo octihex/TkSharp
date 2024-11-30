@@ -3,7 +3,7 @@ using Revrs.Extensions;
 
 namespace TkSharp.Merging.ResourceSizeTable.Calculators;
 
-public class AinbResourceSizeCalculator : IResourceSizeCalculator
+public class AinbResourceSizeCalculator : ITkResourceSizeCalculator
 {
     public static int MinBufferSize => -1;
 

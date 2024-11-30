@@ -1,6 +1,6 @@
 namespace TkSharp.Merging.ResourceSizeTable;
 
-public interface IResourceSizeCalculator
+public interface ITkResourceSizeCalculator
 {
     static abstract int MinBufferSize { get; }
     
