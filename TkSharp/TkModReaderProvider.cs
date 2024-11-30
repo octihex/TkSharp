@@ -3,7 +3,7 @@ using TkSharp.IO.Readers;
 
 namespace TkSharp;
 
-public class TkModReaderProvider(ITkModWriterProvider tkWriterProvider, ITkRomProvider tkRomProvider)
+public class TkModReaderProvider(ITkSystemProvider tkWriterProvider, ITkRomProvider tkRomProvider)
     : ITkModReaderProvider
 {
     private readonly List<ITkModReader> _readers = [

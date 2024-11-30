@@ -6,9 +6,9 @@ using TkSharp.Merging;
 
 namespace TkSharp.IO.Readers;
 
-public sealed class ArchiveModReader(ITkModWriterProvider writerProvider, ITkRomProvider romProvider) : ITkModReader
+public sealed class ArchiveModReader(ITkSystemProvider systemProvider, ITkRomProvider romProvider) : ITkModReader
 {
-    private readonly ITkModWriterProvider _writerProvider = writerProvider;
+    private readonly ITkSystemProvider _systemProvider = systemProvider;
     private readonly ITkRomProvider _romProvider = romProvider;
 
     public async ValueTask<TkMod?> ReadMod(object? input, Stream? stream = null, TkModContext context = default, CancellationToken ct = default)
@@ -27,7 +27,7 @@ public sealed class ArchiveModReader(ITkModWriterProvider writerProvider, ITkRom
         }
         
         ArchiveModSource source = new(archive, root);
-        ITkModWriter writer = _writerProvider.GetSystemWriter(context);
+        ITkModWriter writer = _systemProvider.GetSystemWriter(context);
 
         TkChangelogBuilder builder = new(source, writer, _romProvider.GetRom());
         TkChangelog changelog = await builder.BuildAsync(ct)
