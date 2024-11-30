@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using TkSharp.Core.Extensions;
 
 namespace TkSharp.Core;

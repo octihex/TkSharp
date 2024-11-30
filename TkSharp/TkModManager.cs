@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using TkSharp.Core;
-using TkSharp.Core.IO.ModSources;
 using TkSharp.Core.Models;
 using TkSharp.IO;
 using TkSharp.IO.Serialization;
