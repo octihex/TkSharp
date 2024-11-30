@@ -1,13 +1,14 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using TkSharp.Core;
+using TkSharp.Core.IO.ModSources;
 using TkSharp.Core.Models;
 using TkSharp.IO;
 using TkSharp.IO.Serialization;
 
 namespace TkSharp;
 
-public sealed partial class TkModManager(string dataFolderPath) : ObservableObject, ITkModWriterProvider
+public sealed partial class TkModManager(string dataFolderPath) : ObservableObject, ITkSystemProvider
 {
     public static TkModManager CreatePortable()
     {
@@ -50,6 +51,12 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
     public ITkModWriter GetSystemWriter(TkModContext modContext)
     {
         return new SystemModWriter(this, modContext.Id);
+    }
+
+    public ITkModSource GetSystemSource(string relativeFolderPath)
+    {
+        return new FolderModSource(
+            Path.Combine(ModsFolderPath, relativeFolderPath));
     }
 
     public void Add(TkMod target, TkProfile? profile = null)
