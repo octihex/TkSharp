@@ -15,4 +15,6 @@ public class TkChangelog
     public List<string> SubSdkFiles { get; } = [];
 
     public List<string> CheatFiles { get; } = [];
+
+    public ITkModSource? Source { get; }
 }
