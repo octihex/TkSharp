@@ -1,9 +1,8 @@
 using CommunityToolkit.HighPerformance;
-using TkSharp.Core;
 using TkSharp.Core.Extensions;
 using TkSharp.Core.Models;
 
-namespace TkSharp.Merging.IO.Serialization;
+namespace TkSharp.Core.IO.Serialization;
 
 public static class TkChangelogWriter
 {

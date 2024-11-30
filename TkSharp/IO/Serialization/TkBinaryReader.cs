@@ -2,8 +2,8 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.HighPerformance;
 using TkSharp.Core;
 using TkSharp.Core.Extensions;
+using TkSharp.Core.IO.Serialization;
 using TkSharp.Core.Models;
-using TkSharp.Merging.IO.Serialization;
 using static TkSharp.IO.Serialization.TkBinaryWriter;
 
 namespace TkSharp.IO.Serialization;
