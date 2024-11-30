@@ -8,7 +8,7 @@ namespace TkSharp.Merging.IO.Serialization;
 
 public static class TkChangelogReader
 {
-    public static TkChangelog Read(in Stream input, ITkModSource? source)
+    public static TkChangelog Read(in Stream input, ITkSystemSource? source)
     {
         if (input.Read<uint>() != MAGIC) {
             throw new InvalidDataException(

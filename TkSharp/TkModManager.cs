@@ -53,9 +53,9 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
         return new SystemModWriter(this, modContext.Id);
     }
 
-    public ITkModSource GetSystemSource(string relativeFolderPath)
+    public ITkSystemSource GetSystemSource(string relativeFolderPath)
     {
-        return new FolderModSource(
+        return new TkSystemSource(
             Path.Combine(ModsFolderPath, relativeFolderPath));
     }
 

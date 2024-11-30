@@ -53,7 +53,7 @@ public static class TkBinaryReader
     {
         var id = input.Read<Ulid>();
         string relativeModFolderPath = id.ToString();
-        ITkModSource source = systemProvider.GetSystemSource(relativeModFolderPath);
+        ITkSystemSource source = systemProvider.GetSystemSource(relativeModFolderPath);
         
         var result = new TkMod {
             Id = id,
@@ -135,7 +135,7 @@ public static class TkBinaryReader
     {
         var id = input.Read<Ulid>();
         string changelogFolderPath = Path.Combine(parentModFolderPath, id.ToString());
-        ITkModSource source = systemProvider.GetSystemSource(changelogFolderPath);
+        ITkSystemSource source = systemProvider.GetSystemSource(changelogFolderPath);
         
         return new TkModOption {
             Id = id,

@@ -1,0 +1,9 @@
+namespace TkSharp.Core;
+
+/// <summary>
+/// Provides an interface for reading system files.
+/// </summary>
+public interface ITkSystemSource
+{
+    Stream OpenRead(string relativeFilePath);
+}

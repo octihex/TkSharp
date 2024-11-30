@@ -16,5 +16,5 @@ public class TkChangelog
 
     public List<string> CheatFiles { get; } = [];
 
-    public ITkModSource? Source { get; init; }
+    public ITkSystemSource? Source { get; init; }
 }

@@ -6,5 +6,5 @@ public interface ITkSystemProvider
 {
     ITkModWriter GetSystemWriter(TkModContext modContext);
     
-    ITkModSource GetSystemSource(string relativeFolderPath);
+    ITkSystemSource GetSystemSource(string relativeFolderPath);
 }
