@@ -15,12 +15,14 @@ public interface ITkRom
     IDictionary<string, string> AddressTable { get; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    RentedBuffer<byte> GetVanilla(string canonical, TkFileAttributes attributes)
+    string CanonicalToRelativePath(string canonical, TkFileAttributes attributes)
     {
-        string relativePath = AddressTable.TryGetValue(canonical, out string? address) ? address : canonical;
+        string result = AddressTable.TryGetValue(canonical, out string? address)
+            ? address
+            : canonical;
         
         if (attributes.HasFlag(TkFileAttributes.HasZsExtension)) {
-            relativePath += ".zs";
+            result += ".zs";
         }
         
         // Until we can decode .mc files this will never be reached
@@ -28,8 +30,16 @@ public interface ITkRom
         // if (attributes.HasFlag(TkFileAttributes.HasMcExtension)) {
         //     relativePath += ".mc";
         // }
-        
-        return GetVanilla(relativePath);
+
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    RentedBuffer<byte> GetVanilla(string canonical, TkFileAttributes attributes)
+    {
+        return GetVanilla(
+            CanonicalToRelativePath(canonical, attributes)
+        );
     }
     
     RentedBuffer<byte> GetVanilla(string relativeFilePath);
