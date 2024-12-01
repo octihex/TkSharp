@@ -15,6 +15,8 @@ public sealed class TkMerger
     private readonly string _locale;
     private readonly TkResourceSizeCollector _resourceSizeCollector;
     private readonly SarcMerger _sarcMerger;
+    private readonly BymlMerger _bymlMerger;
+    private readonly RsdbRowMergers _rsdbRowMergers;
 
     public TkMerger(ITkModWriter output, ITkRom rom, string locale = "USen")
     {
@@ -23,6 +25,8 @@ public sealed class TkMerger
         _locale = locale;
         _resourceSizeCollector = new TkResourceSizeCollector(output, rom);
         _sarcMerger = new SarcMerger(this, _resourceSizeCollector, _rom.Zstd);
+        _bymlMerger = new BymlMerger(_rom.Zstd);
+        _rsdbRowMergers = new RsdbRowMergers(_rom.Zstd);
     }
 
     public async ValueTask MergeAsync(IEnumerable<TkChangelog> changelogs, CancellationToken ct = default)
@@ -56,18 +60,27 @@ public sealed class TkMerger
 
         MergeMals(tkChangelogs);
 
-        // foreach ((TkChangelogEntry changelog, Either<(ITkMerger, Stream[]), Stream> target) in GetTargets(tkChangelogs)) {
-        //     MergeTarget(changelog, target);
-        // }
+        foreach ((TkChangelogEntry changelog, Either<(ITkMerger, Stream[]), Stream> target) in GetTargets(tkChangelogs)) {
+            MergeTarget(changelog, target);
+        }
     }
 
     public void MergeTarget(TkChangelogEntry changelog, Either<(ITkMerger, Stream[]), Stream> target)
     {
-        using Stream output = _output.OpenWrite(changelog.Canonical); // TODO: transpose to real output file
+        string relativeFilePath = _rom.CanonicalToRelativePath(changelog.Canonical, changelog.Attributes);
+        using Stream output = _output.OpenWrite(
+            Path.Combine("romfs", relativeFilePath)
+        );
+        
         switch (target.Case) {
             case (ITkMerger merger, Stream[] streams): {
+                using RentedBuffer<byte> vanilla = _rom.GetVanilla(relativeFilePath);
+                if (vanilla.IsEmpty) {
+                    streams[^1].CopyTo(output);
+                    return;
+                }
+                
                 using RentedBuffers<byte> inputs = RentedBuffers<byte>.Allocate(streams); 
-                using RentedBuffer<byte> vanilla = _rom.GetVanilla(changelog.Canonical, changelog.Attributes);
                 merger.Merge(changelog, inputs, vanilla.Segment, output);
                 break;
             }
@@ -149,9 +162,11 @@ public sealed class TkMerger
         string canonical = $"Mals/{_locale}.Product.sarc";
         const TkFileAttributes attributes = TkFileAttributes.HasZsExtension | TkFileAttributes.IsProductFile;
         TkChangelogEntry fakeEntry = new(canonical, ChangelogEntryType.Changelog, attributes, zsDictionaryId: 1);
+        string relativeFilePath = _rom.CanonicalToRelativePath(canonical, attributes);
 
-        using RentedBuffer<byte> vanilla = _rom.GetVanilla(canonical, attributes);
-        using Stream output = _output.OpenWrite($"romfs/Mals/{_locale}.Product.sarc.zs");
+        using RentedBuffer<byte> vanilla = _rom.GetVanilla(relativeFilePath);
+        using Stream output = _output.OpenWrite(
+            Path.Combine("romfs", relativeFilePath));
         _sarcMerger.Merge(fakeEntry, combinedBuffers, vanilla.Segment, output);
     }
 
@@ -195,8 +210,9 @@ public sealed class TkMerger
         return canonical switch {
             "GameData/GameDataList.Product.byml" => GameDataMerger.Instance,
             "RSDB/Tag.Product.rstbl.byml" => RsdbTagMerger.Instance,
-            "RSDB/RumbleCall.Product.rstbl.byml" or "RSDB/UIScreen.Product.rstbl.byml" => RsdbRowMerger.Name,
-            "RSDB/TagDef.Product.rstbl.byml" => RsdbRowMerger.FullTagId,
+            "RSDB/GameSafetySetting.Product.rstbl.byml" => _rsdbRowMergers.NameHash,
+            "RSDB/RumbleCall.Product.rstbl.byml" or "RSDB/UIScreen.Product.rstbl.byml" => _rsdbRowMergers.Name,
+            "RSDB/TagDef.Product.rstbl.byml" => _rsdbRowMergers.FullTagId,
             "RSDB/ActorInfo.Product.rstbl.byml" or
                 "RSDB/AttachmentActorInfo.Product.rstbl.byml" or
                 "RSDB/Challenge.Product.rstbl.byml" or
@@ -212,10 +228,10 @@ public sealed class TkMerger
                 "RSDB/LocatorData.Product.rstbl.byml" or
                 "RSDB/PouchActorInfo.Product.rstbl.byml" or
                 "RSDB/XLinkPropertyTable.Product.rstbl.byml" or
-                "RSDB/XLinkPropertyTableList.Product.rstbl.byml" => RsdbRowMerger.RowId,
+                "RSDB/XLinkPropertyTableList.Product.rstbl.byml" => _rsdbRowMergers.RowId,
             _ => Path.GetExtension(canonical) switch {
                 ".bfarc" or ".bkres" or ".blarc" or ".genvb" or ".pack" or ".ta" => _sarcMerger,
-                ".byml" or ".bgyml" => BymlMerger.Instance,
+                ".byml" or ".bgyml" => _bymlMerger,
                 ".msbt" => MsbtMerger.Instance,
                 _ => null
             }
