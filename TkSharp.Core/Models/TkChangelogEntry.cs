@@ -20,6 +20,24 @@ public class TkChangelogEntry(string canonical, ChangelogEntryType type, TkFileA
         attributes = Attributes;
         zsDictionaryId = ZsDictionaryId;
     }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is not TkChangelogEntry entry) {
+            return false;
+        }
+
+        return entry.Canonical == Canonical &&
+               entry.Type == Type &&
+               entry.Attributes == Attributes &&
+               entry.ZsDictionaryId == ZsDictionaryId;
+    }
+
+    public override int GetHashCode()
+    {
+        // ReSharper disable once NonReadonlyMemberInGetHashCode
+        return HashCode.Combine(Canonical, Type, Attributes, ZsDictionaryId);
+    }
 }
 
 public enum ChangelogEntryType
