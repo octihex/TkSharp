@@ -8,7 +8,8 @@ public sealed class MsbtMerger : Singleton<MsbtMerger>, ITkMerger
 {
     public void Merge(TkChangelogEntry entry, RentedBuffers<byte> inputs, ArraySegment<byte> vanillaData, Stream output)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException(
+            "Merging memory chained MSBT files is not supported.");
     }
 
     public void MergeSingle(TkChangelogEntry entry, ArraySegment<byte> input, ArraySegment<byte> @base, Stream output)
