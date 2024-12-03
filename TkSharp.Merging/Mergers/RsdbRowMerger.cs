@@ -1,6 +1,5 @@
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
-using CommunityToolkit.HighPerformance.Buffers;
 using Revrs;
 using TkSharp.Core;
 using TkSharp.Core.IO.Buffers;
@@ -10,18 +9,17 @@ using TkSharp.Merging.Mergers.ResourceDatabase;
 
 namespace TkSharp.Merging.Mergers;
 
-public sealed class RsdbRowMergers(BymlMerger bymlMerger, TkZstd zs)
+public sealed class RsdbRowMergers(TkZstd zs)
 {
-    public readonly RsdbRowMerger RowId = new("__RowId", bymlMerger, zs);
-    public readonly RsdbRowMerger Name = new("Name", bymlMerger, zs);
-    public readonly RsdbRowMerger FullTagId = new("FullTagId", bymlMerger, zs);
-    public readonly RsdbRowMerger NameHash = new("NameHash", bymlMerger, zs);
+    public readonly RsdbRowMerger RowId = new("__RowId", zs);
+    public readonly RsdbRowMerger Name = new("Name", zs);
+    public readonly RsdbRowMerger FullTagId = new("FullTagId", zs);
+    public readonly RsdbRowMerger NameHash = new("NameHash", zs);
 }
 
-public sealed class RsdbRowMerger(string keyName, BymlMerger bymlMerger, TkZstd zs) : ITkMerger
+public sealed class RsdbRowMerger(string keyName, TkZstd zs) : ITkMerger
 {
     private readonly string _keyName = keyName;
-    private readonly BymlMerger _bymlMerger = bymlMerger;
     private readonly TkZstd _zs = zs;
     private readonly RsdbRowComparer _rowComparer = new(keyName);
 
@@ -38,7 +36,7 @@ public sealed class RsdbRowMerger(string keyName, BymlMerger bymlMerger, TkZstd 
         tracking.Apply();
 
         rows.Sort(_rowComparer);
-        WriteOutput(entry, merged, endianness, version, output);
+        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
     }
 
     public void Merge(TkChangelogEntry entry, IEnumerable<ArraySegment<byte>> inputs, ArraySegment<byte> vanillaData, Stream output)
@@ -54,7 +52,7 @@ public sealed class RsdbRowMerger(string keyName, BymlMerger bymlMerger, TkZstd 
         tracking.Apply();
 
         rows.Sort(_rowComparer);
-        WriteOutput(entry, merged, endianness, version, output);
+        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
     }
 
     public void MergeSingle(TkChangelogEntry entry, ArraySegment<byte> input, ArraySegment<byte> @base, Stream output)
@@ -65,7 +63,7 @@ public sealed class RsdbRowMerger(string keyName, BymlMerger bymlMerger, TkZstd 
         MergeEntry(rows, input, tracking);
         tracking.Apply();
         rows.Sort(_rowComparer);
-        WriteOutput(entry, merged, endianness, version, output);
+        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
     }
 
     private void MergeEntry(BymlArray rows, Span<byte> input, BymlMergeTracking tracking)
@@ -82,25 +80,6 @@ public sealed class RsdbRowMerger(string keyName, BymlMerger bymlMerger, TkZstd 
         }
     }
 
-    private void WriteOutput(TkChangelogEntry entry, Byml merged, Endianness endianness, ushort version, Stream output)
-    {
-        using MemoryStream ms = new();
-        merged.WriteBinary(ms, endianness, version);
-
-        if (!ms.TryGetBuffer(out ArraySegment<byte> buffer)) {
-            buffer = ms.ToArray();
-        }
-
-        if (!entry.Attributes.HasFlag(TkFileAttributes.HasZsExtension)) {
-            output.Write(buffer);
-            return;
-        }
-
-        using SpanOwner<byte> compressed = SpanOwner<byte>.Allocate(buffer.Count);
-        int compressedSize = _zs.Compress(buffer, compressed.Span, entry.ZsDictionaryId);
-        output.Write(compressed.Span[..compressedSize]);
-    }
-
     private void MergeMap(IDictionary<string, Byml> changelog, BymlArray @base, BymlMergeTracking tracking)
     {
         foreach (Byml entry in @base) {
@@ -111,7 +90,7 @@ public sealed class RsdbRowMerger(string keyName, BymlMerger bymlMerger, TkZstd 
                 continue;
             }
 
-            _bymlMerger.MergeMap(baseMap, changelogEntry.GetMap(), tracking);
+            BymlMerger.MergeMap(baseMap, changelogEntry.GetMap(), tracking);
         }
 
         foreach ((_, Byml value) in changelog) {
@@ -129,7 +108,7 @@ public sealed class RsdbRowMerger(string keyName, BymlMerger bymlMerger, TkZstd 
                 continue;
             }
 
-            _bymlMerger.MergeMap(baseMap, changelogEntry.GetMap(), tracking);
+            BymlMerger.MergeMap(baseMap, changelogEntry.GetMap(), tracking);
         }
 
         foreach ((_, Byml value) in changelog) {

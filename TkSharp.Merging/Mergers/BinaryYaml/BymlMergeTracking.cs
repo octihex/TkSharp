@@ -12,7 +12,7 @@ public class BymlMergeTracking : Dictionary<BymlArray, BymlMergeTrackingEntry>
         }
     }
     
-    public static void ApplyEntry(BymlArray @base, BymlMergeTrackingEntry entry)
+    private static void ApplyEntry(BymlArray @base, BymlMergeTrackingEntry entry)
     {
         foreach (int i in entry.Removals) {
             @base[i] = BymlChangeType.Remove;

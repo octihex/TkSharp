@@ -25,7 +25,7 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
         
         tracking.Apply();
         
-        WriteOutput(entry, merged, endianness, version, output);
+        WriteOutput(entry, merged, endianness, version, output, _zs);
     }
 
     public void Merge(TkChangelogEntry entry, IEnumerable<ArraySegment<byte>> inputs, ArraySegment<byte> vanillaData, Stream output)
@@ -40,7 +40,7 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
         
         tracking.Apply();
         
-        WriteOutput(entry, merged, endianness, version, output);
+        WriteOutput(entry, merged, endianness, version, output, _zs);
     }
 
     public void MergeSingle(TkChangelogEntry entry, ArraySegment<byte> input, ArraySegment<byte> @base, Stream output)
@@ -53,10 +53,10 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
         
         tracking.Apply();
         
-        WriteOutput(entry, merged, endianness, version, output);
+        WriteOutput(entry, merged, endianness, version, output, _zs);
     }
 
-    private void WriteOutput(TkChangelogEntry entry, Byml merged, Endianness endianness, ushort version, Stream output)
+    public static void WriteOutput(TkChangelogEntry entry, Byml merged, Endianness endianness, ushort version, Stream output, TkZstd zs)
     {
         using MemoryStream ms = new();
         merged.WriteBinary(ms, endianness, version);
@@ -71,11 +71,11 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
         }
         
         using SpanOwner<byte> compressed = SpanOwner<byte>.Allocate(buffer.Count);
-        int compressedSize = _zs.Compress(buffer, compressed.Span, entry.ZsDictionaryId);
+        int compressedSize = zs.Compress(buffer, compressed.Span, entry.ZsDictionaryId);
         output.Write(compressed.Span[..compressedSize]);
     }
 
-    public void Merge(Byml @base, Byml changelog, BymlMergeTracking tracking)
+    public static void Merge(Byml @base, Byml changelog, BymlMergeTracking tracking)
     {
         switch (@base.Value) {
             case IDictionary<string, Byml> map:
@@ -99,7 +99,7 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
         }
     }
 
-    internal void MergeMap<T>(IDictionary<T, Byml> @base, IDictionary<T, Byml> changelog, BymlMergeTracking tracking)
+    public static void MergeMap<T>(IDictionary<T, Byml> @base, IDictionary<T, Byml> changelog, BymlMergeTracking tracking)
     {
         foreach ((T key, Byml entry) in changelog) {
             if (entry.Value is BymlChangeType.Remove) {
@@ -121,7 +121,7 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
         }
     }
 
-    internal void MergeArray(BymlArray @base, BymlArrayChangelog changelog, BymlMergeTracking tracking)
+    public static void MergeArray(BymlArray @base, BymlArrayChangelog changelog, BymlMergeTracking tracking)
     {
         foreach ((int i, (BymlChangeType change, Byml entry)) in changelog) {
             switch (change) {

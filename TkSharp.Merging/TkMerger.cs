@@ -18,6 +18,7 @@ public sealed class TkMerger
     private readonly BymlMerger _bymlMerger;
     private readonly RsdbRowMergers _rsdbRowMergers;
     private readonly RsdbTagMerger _rsdbTagMerger;
+    private readonly GameDataMerger _gameDataMerger;
 
     public TkMerger(ITkModWriter output, ITkRom rom, string locale = "USen")
     {
@@ -27,8 +28,9 @@ public sealed class TkMerger
         _resourceSizeCollector = new TkResourceSizeCollector(output, rom);
         _sarcMerger = new SarcMerger(this, _resourceSizeCollector, _rom.Zstd);
         _bymlMerger = new BymlMerger(_rom.Zstd);
-        _rsdbRowMergers = new RsdbRowMergers(_bymlMerger, _rom.Zstd);
+        _rsdbRowMergers = new RsdbRowMergers(_rom.Zstd);
         _rsdbTagMerger = new RsdbTagMerger(_rom.Zstd);
+        _gameDataMerger = new GameDataMerger(_rom.Zstd);
     }
 
     public async ValueTask MergeAsync(IEnumerable<TkChangelog> changelogs, CancellationToken ct = default)
@@ -222,7 +224,7 @@ public sealed class TkMerger
     public ITkMerger? GetMerger(ReadOnlySpan<char> canonical)
     {
         return canonical switch {
-            "GameData/GameDataList.Product.byml" => GameDataMerger.Instance,
+            "GameData/GameDataList.Product.byml" => _gameDataMerger,
             "RSDB/Tag.Product.rstbl.byml" => _rsdbTagMerger,
             "RSDB/GameSafetySetting.Product.rstbl.byml" => _rsdbRowMergers.NameHash,
             "RSDB/RumbleCall.Product.rstbl.byml" or "RSDB/UIScreen.Product.rstbl.byml" => _rsdbRowMergers.Name,

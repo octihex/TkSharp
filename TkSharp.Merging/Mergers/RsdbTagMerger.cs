@@ -1,6 +1,5 @@
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
-using CommunityToolkit.HighPerformance.Buffers;
 using Revrs;
 using TkSharp.Core;
 using TkSharp.Core.IO.Buffers;
@@ -23,7 +22,7 @@ public sealed class RsdbTagMerger(TkZstd zs) : ITkMerger
         }
 
         Byml merged = tagTable.Compile();
-        WriteOutput(entry, merged, endianness, version, output);
+        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
     }
 
     public void Merge(TkChangelogEntry entry, IEnumerable<ArraySegment<byte>> inputs, ArraySegment<byte> vanillaData, Stream output)
@@ -36,7 +35,7 @@ public sealed class RsdbTagMerger(TkZstd zs) : ITkMerger
         }
 
         Byml merged = tagTable.Compile();
-        WriteOutput(entry, merged, endianness, version, output);
+        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
     }
 
     public void MergeSingle(TkChangelogEntry entry, ArraySegment<byte> input, ArraySegment<byte> @base, Stream output)
@@ -47,7 +46,7 @@ public sealed class RsdbTagMerger(TkZstd zs) : ITkMerger
         MergeEntry(tagTable, input);
 
         Byml merged = tagTable.Compile();
-        WriteOutput(entry, merged, endianness, version, output);
+        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
     }
 
     private static void MergeEntry(RsdbTagTable table, ArraySegment<byte> input)
@@ -84,24 +83,5 @@ public sealed class RsdbTagMerger(TkZstd zs) : ITkMerger
                 entryTags.Add(tag);
             }
         }
-    }
-    
-    private void WriteOutput(TkChangelogEntry entry, Byml merged, Endianness endianness, ushort version, Stream output)
-    {
-        using MemoryStream ms = new();
-        merged.WriteBinary(ms, endianness, version);
-
-        if (!ms.TryGetBuffer(out ArraySegment<byte> buffer)) {
-            buffer = ms.ToArray();
-        }
-
-        if (!entry.Attributes.HasFlag(TkFileAttributes.HasZsExtension)) {
-            output.Write(buffer);
-            return;
-        }
-
-        using SpanOwner<byte> compressed = SpanOwner<byte>.Allocate(buffer.Count);
-        int compressedSize = _zs.Compress(buffer, compressed.Span, entry.ZsDictionaryId);
-        output.Write(compressed.Span[..compressedSize]);
     }
 }
