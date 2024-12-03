@@ -26,7 +26,7 @@ public sealed class TkMerger
         _resourceSizeCollector = new TkResourceSizeCollector(output, rom);
         _sarcMerger = new SarcMerger(this, _resourceSizeCollector, _rom.Zstd);
         _bymlMerger = new BymlMerger(_rom.Zstd);
-        _rsdbRowMergers = new RsdbRowMergers(_rom.Zstd);
+        _rsdbRowMergers = new RsdbRowMergers(_bymlMerger, _rom.Zstd);
     }
 
     public async ValueTask MergeAsync(IEnumerable<TkChangelog> changelogs, CancellationToken ct = default)
@@ -73,7 +73,7 @@ public sealed class TkMerger
         );
         
         switch (target.Case) {
-            case (ITkMerger merger, Stream[] streams): {
+            case (ITkMerger merger, Stream[] { Length: >1 } streams): {
                 using RentedBuffer<byte> vanilla = _rom.GetVanilla(relativeFilePath);
                 if (vanilla.IsEmpty) {
                     streams[^1].CopyTo(output);
@@ -82,6 +82,18 @@ public sealed class TkMerger
                 
                 using RentedBuffers<byte> inputs = RentedBuffers<byte>.Allocate(streams); 
                 merger.Merge(changelog, inputs, vanilla.Segment, output);
+                break;
+            }
+            case (ITkMerger merger, Stream[] { Length: 1 } streams): {
+                using RentedBuffer<byte> vanilla = _rom.GetVanilla(relativeFilePath);
+                using Stream single = streams[0];
+                if (vanilla.IsEmpty) {
+                    single.CopyTo(output);
+                    return;
+                }
+                
+                using RentedBuffer<byte> input = RentedBuffer<byte>.Allocate(single); 
+                merger.MergeSingle(changelog, input.Segment, vanilla.Segment, output);
                 break;
             }
             case Stream copy:

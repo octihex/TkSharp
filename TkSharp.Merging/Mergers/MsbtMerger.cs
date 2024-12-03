@@ -12,6 +12,20 @@ public sealed class MsbtMerger : Singleton<MsbtMerger>, ITkMerger
             "Merging memory chained MSBT files is not supported.");
     }
 
+    public void Merge(TkChangelogEntry entry, IEnumerable<ArraySegment<byte>> inputs, ArraySegment<byte> vanillaData, Stream output)
+    {
+        Msbt baseMsbt = Msbt.FromBinary(vanillaData);
+
+        foreach (ArraySegment<byte> input in inputs) {
+            Msbt changelog = Msbt.FromBinary(input);
+            foreach ((string key, MsbtEntry value) in changelog) {
+                baseMsbt[key] = value;
+            }
+        }
+        
+        baseMsbt.WriteBinary(output);
+    }
+
     public void MergeSingle(TkChangelogEntry entry, ArraySegment<byte> input, ArraySegment<byte> @base, Stream output)
     {
         Msbt baseMsbt = Msbt.FromBinary(@base);
