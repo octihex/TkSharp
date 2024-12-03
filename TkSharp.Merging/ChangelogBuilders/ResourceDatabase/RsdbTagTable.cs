@@ -11,7 +11,7 @@ public class RsdbTagTable
     public const string RANK_TABLE = "RankTable";
 
     private readonly byte[] _rankTable;
-    public Dictionary<(string, string, string), List<string>> Entries { get; } = [];
+    public Dictionary<(string, string, string), List<string?>> Entries { get; } = [];
     public List<string> Tags { get; }
 
     public RsdbTagTable(BymlMap root)
@@ -27,7 +27,7 @@ public class RsdbTagTable
                 paths[i].GetString(), paths[++i].GetString(), paths[++i].GetString()
             );
 
-            Entries[key] = GetEntryTags<List<string>>(entryIndex, tags, bitTable);
+            Entries[key] = GetEntryTags<List<string?>>(entryIndex, tags, bitTable);
         }
 
         Tags = [.. tags.Select(x => x.GetString())];
@@ -35,7 +35,7 @@ public class RsdbTagTable
 
     public Byml Compile()
     {
-        List<KeyValuePair<(string, string, string), List<string>>> entries = [..
+        List<KeyValuePair<(string, string, string), List<string?>>> entries = [..
             Entries.OrderBy(x => x.Key, RsdbTagTableKeyComparer.Instance)
         ];
 
@@ -50,16 +50,16 @@ public class RsdbTagTable
         };
     }
 
-    private byte[] CompileBitTable(List<KeyValuePair<(string, string, string), List<string>>> entries)
+    private byte[] CompileBitTable(List<KeyValuePair<(string, string, string), List<string?>>> entries)
     {
         RsdbTagTableWriter writer = new(Tags, entries.Select(x => x.Value), entries.Count);
         return writer.Compile();
     }
 
-    private BymlArray CollectPaths(List<KeyValuePair<(string, string, string), List<string>>> entries)
+    private BymlArray CollectPaths(List<KeyValuePair<(string, string, string), List<string?>>> entries)
     {
         BymlArray paths = new(Entries.Count * 3);
-        foreach (((string Prefix, string Name, string Suffix) entry, List<string> tags) in entries) {
+        foreach (((string Prefix, string Name, string Suffix) entry, List<string?> tags) in entries) {
             paths.Add(entry.Prefix);
             paths.Add(entry.Name);
             paths.Add(entry.Suffix);
@@ -69,7 +69,7 @@ public class RsdbTagTable
         return paths;
     }
 
-    public static unsafe T GetEntryTags<T>(int entryIndex, BymlArray tags, Span<byte> bitTable) where T : ICollection<string>, new()
+    public static unsafe T GetEntryTags<T>(int entryIndex, BymlArray tags, Span<byte> bitTable) where T : ICollection<string?>, new()
     {
         T entryTags = [];
 

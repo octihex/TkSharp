@@ -5,10 +5,10 @@ namespace TkSharp.Merging.ChangelogBuilders.ResourceDatabase;
 public sealed unsafe class RsdbTagTableWriter
 {
     private readonly byte[] _result;
-    private readonly IEnumerable<List<string>> _entries;
+    private readonly IEnumerable<List<string?>> _entries;
     private readonly FrozenDictionary<string, int> _tagLookup;
 
-    public RsdbTagTableWriter(IList<string> tags, IEnumerable<List<string>> entries, int entryCount)
+    public RsdbTagTableWriter(IList<string> tags, IEnumerable<List<string?>> entries, int entryCount)
     {
         int size = (int)double.Ceiling(tags.Count * entryCount / 8.0);
         _result = new byte[size];
@@ -28,7 +28,7 @@ public sealed unsafe class RsdbTagTableWriter
             int bitOffset = 0;
             byte** current = &ptr;
 
-            foreach (List<string> tags in _entries) {
+            foreach (List<string?> tags in _entries) {
                 FillEntry(tags, current, ref bitOffset);
             }
 
@@ -36,11 +36,15 @@ public sealed unsafe class RsdbTagTableWriter
         }
     }
 
-    public void FillEntry(IEnumerable<string> tags, byte** current, ref int bitOffset)
+    public void FillEntry(IEnumerable<string?> tags, byte** current, ref int bitOffset)
     {
         int currentEntryIndex = 0;
 
-        foreach (string tag in tags) {
+        foreach (string? tag in tags) {
+            if (tag is null) {
+                continue;
+            }
+            
             int index = _tagLookup[tag];
             MoveBy(index - currentEntryIndex, current, ref bitOffset);
             **current |= (byte)(0x1 << bitOffset);
