@@ -5,6 +5,7 @@ using Revrs;
 using TkSharp.Core;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.Models;
+using TkSharp.Merging.Mergers.BinaryYaml;
 
 namespace TkSharp.Merging.Mergers;
 
@@ -15,11 +16,29 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
     public void Merge(TkChangelogEntry entry, RentedBuffers<byte> inputs, ArraySegment<byte> vanillaData, Stream output)
     {
         Byml merged = Byml.FromBinary(vanillaData, out Endianness endianness, out ushort version);
+        BymlMergeTracking tracking = new();
 
         foreach (RentedBuffers<byte>.Entry input in inputs) {
             Byml changelog = Byml.FromBinary(input.Span);
-            Merge(merged, changelog);
+            Merge(merged, changelog, tracking);
         }
+        
+        tracking.Apply();
+        
+        WriteOutput(entry, merged, endianness, version, output);
+    }
+
+    public void Merge(TkChangelogEntry entry, IEnumerable<ArraySegment<byte>> inputs, ArraySegment<byte> vanillaData, Stream output)
+    {
+        Byml merged = Byml.FromBinary(vanillaData, out Endianness endianness, out ushort version);
+        BymlMergeTracking tracking = new();
+
+        foreach (ArraySegment<byte> input in inputs) {
+            Byml changelog = Byml.FromBinary(input);
+            Merge(merged, changelog, tracking);
+        }
+        
+        tracking.Apply();
         
         WriteOutput(entry, merged, endianness, version, output);
     }
@@ -28,8 +47,11 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
     {
         Byml merged = Byml.FromBinary(@base, out Endianness endianness, out ushort version);
         Byml changelog = Byml.FromBinary(input);
+        BymlMergeTracking tracking = new();
 
-        Merge(merged, changelog);
+        Merge(merged, changelog, tracking);
+        
+        tracking.Apply();
         
         WriteOutput(entry, merged, endianness, version, output);
     }
@@ -53,20 +75,20 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
         output.Write(compressed.Span[..compressedSize]);
     }
 
-    public static void Merge(Byml @base, Byml changelog)
+    public void Merge(Byml @base, Byml changelog, BymlMergeTracking tracking)
     {
         switch (@base.Value) {
             case IDictionary<string, Byml> map:
-                MergeMap(map, changelog.GetMap());
+                MergeMap(map, changelog.GetMap(), tracking);
                 break;
             case IDictionary<uint, Byml> hashMap32:
-                MergeMap(hashMap32, changelog.GetHashMap32());
+                MergeMap(hashMap32, changelog.GetHashMap32(), tracking);
                 break;
             case IDictionary<ulong, Byml> hashMap64:
-                MergeMap(hashMap64, changelog.GetHashMap64());
+                MergeMap(hashMap64, changelog.GetHashMap64(), tracking);
                 break;
             case BymlArray array when changelog.Value is BymlArrayChangelog arrayChangelog:
-                MergeArray(array, arrayChangelog);
+                MergeArray(array, arrayChangelog, tracking);
                 break;
             case BymlArray existingCustomArray when changelog.Value is BymlArray customArray:
                 existingCustomArray.AddRange(customArray);
@@ -77,7 +99,7 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
         }
     }
 
-    internal static void MergeMap<T>(IDictionary<T, Byml> @base, IDictionary<T, Byml> changelog)
+    internal void MergeMap<T>(IDictionary<T, Byml> @base, IDictionary<T, Byml> changelog, BymlMergeTracking tracking)
     {
         foreach ((T key, Byml entry) in changelog) {
             if (entry.Value is BymlChangeType.Remove) {
@@ -91,7 +113,7 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
             }
 
             if (entry.Value is IBymlNode && baseEntry.Value is IBymlNode) {
-                Merge(baseEntry, entry);
+                Merge(baseEntry, entry, tracking);
                 continue;
             }
 
@@ -99,38 +121,39 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
         }
     }
 
-    internal static void MergeArray(BymlArray @base, BymlArrayChangelog changelog)
+    internal void MergeArray(BymlArray @base, BymlArrayChangelog changelog, BymlMergeTracking tracking)
     {
-        int indexOffset = 0;
-        
-        foreach ((int index, (BymlChangeType change, Byml entry)) in changelog) {
-            int i = index - indexOffset;
+        foreach ((int i, (BymlChangeType change, Byml entry)) in changelog) {
             switch (change) {
-                case BymlChangeType.Add:
-                    int reverseInsertIndex = int.MaxValue - index + indexOffset;
-                    if (reverseInsertIndex < @base.Count) {
-                        @base.Insert(reverseInsertIndex, entry);
-                        break;
+                case BymlChangeType.Add: {
+                    if (!tracking.TryGetValue(@base, out BymlMergeTrackingEntry? trackingEntry)) {
+                        tracking[@base] = trackingEntry = new BymlMergeTrackingEntry();
                     }
                     
-                    @base.Add(entry);
+                    trackingEntry.Additions.Add((int.MaxValue - i, entry));
                     break;
-                case BymlChangeType.Remove:
-                    if (i >= @base.Count) {
-                        continue;
+                }
+                case BymlChangeType.Remove: {
+                    if (!tracking.TryGetValue(@base, out BymlMergeTrackingEntry? trackingEntry)) {
+                        tracking[@base] = trackingEntry = new BymlMergeTrackingEntry();
                     }
-
-                    @base.RemoveAt(i);
-                    indexOffset++;
+                    
+                    trackingEntry.Removals.Add(i);
                     break;
-                case BymlChangeType.Edit:
+                }
+                case BymlChangeType.Edit: {
+                    if (tracking.TryGetValue(@base, out BymlMergeTrackingEntry? trackingEntry)) {
+                        trackingEntry.Removals.Remove(i);
+                    }
+                    
                     if (entry.Value is IBymlNode) {
-                        Merge(@base[i], entry);
+                        Merge(@base[i], entry, tracking);
                         continue;
                     }
 
                     @base[i] = entry;
                     break;
+                }
                 default:
                     throw new InvalidOperationException(
                         $"Invalid array changelog entry type: '{change}'");
