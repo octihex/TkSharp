@@ -1,4 +1,3 @@
-using System.Collections.Frozen;
 using TkSharp.Core.Exceptions;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.IO.Parsers;
@@ -47,6 +46,17 @@ public sealed class ExtractedTkRom : ITkRom
             using RentedBuffer<byte> addressTableBuffer = RentedBuffer<byte>.Allocate(addressTableFs);
             AddressTable = AddressTableParser.ParseAddressTable(addressTableBuffer.Span, Zstd);
         }
+
+        {
+            string eventFlowFileEntryPath = Path.Combine(gamePath, $"{AddressTable["Event/EventFlow/EventFlowFileEntry.Product.byml"]}.zs");
+            if (!File.Exists(eventFlowFileEntryPath)) {
+                throw new GameRomException("Event flow file entry file not found.");
+            }
+            
+            using Stream eventFlowFileEntryFs = File.OpenRead(eventFlowFileEntryPath);
+            using RentedBuffer<byte> eventFlowFileEntryBuffer = RentedBuffer<byte>.Allocate(eventFlowFileEntryFs);
+            EventFlowVersions = EventFlowFileEntryParser.ParseFileEntry(eventFlowFileEntryBuffer.Span, Zstd);
+        }
     }
     
     public int GameVersion { get; }
@@ -56,6 +66,8 @@ public sealed class ExtractedTkRom : ITkRom
     public TkZstd Zstd { get; }
 
     public IDictionary<string, string> AddressTable { get; }
+
+    public Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> EventFlowVersions { get; }
 
     public bool VanillaFileExists(string relativeFilePath)
     {
