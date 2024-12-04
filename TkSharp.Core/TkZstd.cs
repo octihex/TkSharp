@@ -104,10 +104,12 @@ public class TkZstd
 
     public int Compress(ReadOnlySpan<byte> data, Span<byte> dst, int zsDictionaryId = -1)
     {
-        return _compressors.TryGetValue(zsDictionaryId, out Compressor? compressor) switch {
-            true => compressor.Wrap(data, dst),
-            false => _defaultCompressor.Wrap(data, dst)
-        };
+        lock (_compressors) {
+            return _compressors.TryGetValue(zsDictionaryId, out Compressor? compressor) switch {
+                true => compressor.Wrap(data, dst),
+                false => _defaultCompressor.Wrap(data, dst)
+            };
+        }
     }
 
     public static bool IsCompressed(ReadOnlySpan<byte> data)
