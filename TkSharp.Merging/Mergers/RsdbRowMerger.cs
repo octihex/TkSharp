@@ -1,7 +1,6 @@
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
 using Revrs;
-using TkSharp.Core;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.Models;
 using TkSharp.Merging.Mergers.BinaryYaml;
@@ -9,18 +8,17 @@ using TkSharp.Merging.Mergers.ResourceDatabase;
 
 namespace TkSharp.Merging.Mergers;
 
-public sealed class RsdbRowMergers(TkZstd zs)
+public static class RsdbRowMergers
 {
-    public readonly RsdbRowMerger RowId = new("__RowId", zs);
-    public readonly RsdbRowMerger Name = new("Name", zs);
-    public readonly RsdbRowMerger FullTagId = new("FullTagId", zs);
-    public readonly RsdbRowMerger NameHash = new("NameHash", zs);
+    public static readonly RsdbRowMerger RowId = new("__RowId");
+    public static readonly RsdbRowMerger Name = new("Name");
+    public static readonly RsdbRowMerger FullTagId = new("FullTagId");
+    public static readonly RsdbRowMerger NameHash = new("NameHash");
 }
 
-public sealed class RsdbRowMerger(string keyName, TkZstd zs) : ITkMerger
+public sealed class RsdbRowMerger(string keyName) : ITkMerger
 {
     private readonly string _keyName = keyName;
-    private readonly TkZstd _zs = zs;
     private readonly RsdbRowComparer _rowComparer = new(keyName);
 
     public void Merge(TkChangelogEntry entry, RentedBuffers<byte> inputs, ArraySegment<byte> vanillaData, Stream output)
@@ -36,7 +34,7 @@ public sealed class RsdbRowMerger(string keyName, TkZstd zs) : ITkMerger
         tracking.Apply();
 
         rows.Sort(_rowComparer);
-        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
+        merged.WriteBinary(output, endianness, version);
     }
 
     public void Merge(TkChangelogEntry entry, IEnumerable<ArraySegment<byte>> inputs, ArraySegment<byte> vanillaData, Stream output)
@@ -52,7 +50,7 @@ public sealed class RsdbRowMerger(string keyName, TkZstd zs) : ITkMerger
         tracking.Apply();
 
         rows.Sort(_rowComparer);
-        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
+        merged.WriteBinary(output, endianness, version);
     }
 
     public void MergeSingle(TkChangelogEntry entry, ArraySegment<byte> input, ArraySegment<byte> @base, Stream output)
@@ -63,7 +61,7 @@ public sealed class RsdbRowMerger(string keyName, TkZstd zs) : ITkMerger
         MergeEntry(rows, input, tracking);
         tracking.Apply();
         rows.Sort(_rowComparer);
-        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
+        merged.WriteBinary(output, endianness, version);
     }
 
     private void MergeEntry(BymlArray rows, Span<byte> input, BymlMergeTracking tracking)

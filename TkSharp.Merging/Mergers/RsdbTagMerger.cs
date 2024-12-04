@@ -1,17 +1,14 @@
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
 using Revrs;
-using TkSharp.Core;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.Models;
 using TkSharp.Merging.ChangelogBuilders.ResourceDatabase;
 
 namespace TkSharp.Merging.Mergers;
 
-public sealed class RsdbTagMerger(TkZstd zs) : ITkMerger
+public sealed class RsdbTagMerger : Singleton<RsdbTagMerger>, ITkMerger
 {
-    private readonly TkZstd _zs = zs;
-
     public void Merge(TkChangelogEntry entry, RentedBuffers<byte> inputs, ArraySegment<byte> vanillaData, Stream output)
     {
         RsdbTagTable tagTable = new(
@@ -22,7 +19,7 @@ public sealed class RsdbTagMerger(TkZstd zs) : ITkMerger
         }
 
         Byml merged = tagTable.Compile();
-        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
+        merged.WriteBinary(output, endianness, version);
     }
 
     public void Merge(TkChangelogEntry entry, IEnumerable<ArraySegment<byte>> inputs, ArraySegment<byte> vanillaData, Stream output)
@@ -35,7 +32,7 @@ public sealed class RsdbTagMerger(TkZstd zs) : ITkMerger
         }
 
         Byml merged = tagTable.Compile();
-        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
+        merged.WriteBinary(output, endianness, version);
     }
 
     public void MergeSingle(TkChangelogEntry entry, ArraySegment<byte> input, ArraySegment<byte> @base, Stream output)
@@ -46,7 +43,7 @@ public sealed class RsdbTagMerger(TkZstd zs) : ITkMerger
         MergeEntry(tagTable, input);
 
         Byml merged = tagTable.Compile();
-        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
+        merged.WriteBinary(output, endianness, version);
     }
 
     private static void MergeEntry(RsdbTagTable table, ArraySegment<byte> input)

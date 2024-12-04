@@ -1,9 +1,6 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
 using Revrs;
-using TkSharp.Core;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.Models;
 using TkSharp.Merging.Mergers.BinaryYaml;
@@ -11,10 +8,8 @@ using TkSharp.Merging.Mergers.GameData;
 
 namespace TkSharp.Merging.Mergers;
 
-public sealed class GameDataMerger(TkZstd zs) : ITkMerger
+public sealed class GameDataMerger : Singleton<GameDataMerger>, ITkMerger
 {
-    private readonly TkZstd _zs = zs;
-
     public void Merge(TkChangelogEntry entry, RentedBuffers<byte> inputs, ArraySegment<byte> vanillaData, Stream output)
     {
         Byml merged = Byml.FromBinary(vanillaData, out Endianness endianness, out ushort version);
@@ -31,8 +26,7 @@ public sealed class GameDataMerger(TkZstd zs) : ITkMerger
         tracking.Apply();
 
         SaveDataWriter.CalculateMetadata(root["MetaData"].GetMap(), baseData);
-
-        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
+        merged.WriteBinary(output, endianness, version);
     }
 
     public void Merge(TkChangelogEntry entry, IEnumerable<ArraySegment<byte>> inputs, ArraySegment<byte> vanillaData, Stream output)
@@ -51,8 +45,7 @@ public sealed class GameDataMerger(TkZstd zs) : ITkMerger
         tracking.Apply();
 
         SaveDataWriter.CalculateMetadata(root["MetaData"].GetMap(), baseData);
-
-        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
+        merged.WriteBinary(output, endianness, version);
     }
 
     public void MergeSingle(TkChangelogEntry entry, ArraySegment<byte> input, ArraySegment<byte> @base, Stream output)
@@ -69,8 +62,7 @@ public sealed class GameDataMerger(TkZstd zs) : ITkMerger
         tracking.Apply();
 
         SaveDataWriter.CalculateMetadata(root["MetaData"].GetMap(), baseData);
-
-        BymlMerger.WriteOutput(entry, merged, endianness, version, output, _zs);
+        merged.WriteBinary(output, endianness, version);
     }
 
     private static void MergeEntry(BymlMap merged, BymlMap changelog, BymlMergeTracking tracking)

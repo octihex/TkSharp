@@ -1,18 +1,14 @@
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
-using CommunityToolkit.HighPerformance.Buffers;
 using Revrs;
-using TkSharp.Core;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.Models;
 using TkSharp.Merging.Mergers.BinaryYaml;
 
 namespace TkSharp.Merging.Mergers;
 
-public sealed class BymlMerger(TkZstd zs) : ITkMerger
+public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
 {
-    private readonly TkZstd _zs = zs;
-
     public void Merge(TkChangelogEntry entry, RentedBuffers<byte> inputs, ArraySegment<byte> vanillaData, Stream output)
     {
         Byml merged = Byml.FromBinary(vanillaData, out Endianness endianness, out ushort version);
@@ -24,8 +20,7 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
         }
         
         tracking.Apply();
-        
-        WriteOutput(entry, merged, endianness, version, output, _zs);
+        merged.WriteBinary(output, endianness, version);
     }
 
     public void Merge(TkChangelogEntry entry, IEnumerable<ArraySegment<byte>> inputs, ArraySegment<byte> vanillaData, Stream output)
@@ -39,8 +34,7 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
         }
         
         tracking.Apply();
-        
-        WriteOutput(entry, merged, endianness, version, output, _zs);
+        merged.WriteBinary(output, endianness, version);
     }
 
     public void MergeSingle(TkChangelogEntry entry, ArraySegment<byte> input, ArraySegment<byte> @base, Stream output)
@@ -52,27 +46,7 @@ public sealed class BymlMerger(TkZstd zs) : ITkMerger
         Merge(merged, changelog, tracking);
         
         tracking.Apply();
-        
-        WriteOutput(entry, merged, endianness, version, output, _zs);
-    }
-
-    public static void WriteOutput(TkChangelogEntry entry, Byml merged, Endianness endianness, ushort version, Stream output, TkZstd zs)
-    {
-        using MemoryStream ms = new();
-        merged.WriteBinary(ms, endianness, version);
-
-        if (!ms.TryGetBuffer(out ArraySegment<byte> buffer)) {
-            buffer = ms.ToArray();
-        }
-
-        if (!entry.Attributes.HasFlag(TkFileAttributes.HasZsExtension)) {
-            output.Write(buffer);
-            return;
-        }
-        
-        using SpanOwner<byte> compressed = SpanOwner<byte>.Allocate(buffer.Count);
-        int compressedSize = zs.Compress(buffer, compressed.Span, entry.ZsDictionaryId);
-        output.Write(compressed.Span[..compressedSize]);
+        merged.WriteBinary(output, endianness, version);
     }
 
     public static void Merge(Byml @base, Byml changelog, BymlMergeTracking tracking)

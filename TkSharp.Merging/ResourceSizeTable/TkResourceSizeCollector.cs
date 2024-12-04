@@ -1,9 +1,14 @@
 using System.Diagnostics.Contracts;
+using CommunityToolkit.HighPerformance.Buffers;
+using RstbLibrary;
+using RstbLibrary.Helpers;
 using TkSharp.Core;
+using TkSharp.Core.IO.Buffers;
 using TkSharp.Merging.ResourceSizeTable.Calculators;
 
 namespace TkSharp.Merging.ResourceSizeTable;
 
+// ReSharper disable StringLiteralTypo
 public sealed class TkResourceSizeCollector(ITkModWriter writer, ITkRom rom)
 {
     private readonly ITkModWriter _writer = writer;
@@ -13,16 +18,54 @@ public sealed class TkResourceSizeCollector(ITkModWriter writer, ITkRom rom)
 
     public void Write()
     {
+        string relativePath = $"System/Resource/ResourceSizeTable.Product.{_rom.GameVersion}.rsizetable.zs";
+        using RentedBuffer<byte> vanillaRstb = _rom.GetVanilla(relativePath);
+        Rstb result = Rstb.FromBinary(vanillaRstb.Span);
+
+        foreach ((string name, uint value) in _updates) {
+            if (result.OverflowTable.ContainsKey(name)) {
+                result.OverflowTable[name] = value;
+                continue;
+            }
+
+            uint hash = Crc32.Compute(name);
+            result.HashTable[hash] = value;
+        }
+
+        foreach ((string name, uint value) in _additions) {
+            uint hash = Crc32.Compute(name);
+            if (!result.HashTable.TryAdd(hash, value)) {
+                result.OverflowTable[name] = value;
+            }
+        }
+
+        using MemoryStream ms = new();
+        result.WriteBinary(ms);
+
+        if (!ms.TryGetBuffer(out ArraySegment<byte> buffer)) {
+            buffer = ms.ToArray();
+        }
         
+        using SpanOwner<byte> compressed = SpanOwner<byte>.Allocate(buffer.Count);
+        Span<byte> compressedData = compressed.Span;
+        int compressedSize = _rom.Zstd.Compress(buffer, compressedData);
+
+        using Stream output = _writer.OpenWrite(Path.Combine("romfs", relativePath));
+        output.Write(compressedData[..compressedSize]);
     }
 
     public void Collect(int fileSize, string canonical, bool isFileVanillaEntry, in Span<byte> data)
     {
+        ReadOnlySpan<char> extension = Path.GetExtension(canonical.AsSpan());
+        if (canonical is "Pack/ZsDic.pack" || extension is ".rsizetable" or ".bwav" or ".webm") {
+            return;
+        }
+        
         Dictionary<string, uint> resources = isFileVanillaEntry switch {
             true => _updates,
             false => _additions,
         };
-            
+
         lock (resources) {
             resources[canonical] = GetResourceSize(
                 (uint)fileSize,
@@ -41,8 +84,6 @@ public sealed class TkResourceSizeCollector(ITkModWriter writer, ITkRom rom)
     [Pure]
     private static uint GetResourceSize(uint size, ReadOnlySpan<char> canonical, ReadOnlySpan<char> extension, Span<byte> data)
     {
-        // ReSharper disable StringLiteralTypo
-        
         return canonical switch {
             "Event/EventFlow/Dm_ED_0004.bfevfl" => size + 0x1E0,
             "Effect/static.Nin_NX_NVN.esetb.byml" => size + 0x1000,
