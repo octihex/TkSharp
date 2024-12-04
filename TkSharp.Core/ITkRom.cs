@@ -11,7 +11,6 @@ public interface ITkRom
     
     TkZstd Zstd { get; }
     
-    // TODO: Type-specific tables should also be loaded
     IDictionary<string, string> AddressTable { get; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

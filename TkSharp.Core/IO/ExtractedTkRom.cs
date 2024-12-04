@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using TkSharp.Core.Exceptions;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.IO.Parsers;
@@ -39,12 +40,22 @@ public sealed class ExtractedTkRom : ITkRom
         {
             string addressTablePath = Path.Combine(gamePath, "System", "AddressTable", $"Product.{GameVersion}.Nin_NX_NVN.atbl.byml.zs");
             if (!File.Exists(addressTablePath)) {
-                throw new GameRomException("ZsDic file not found.");
+                throw new GameRomException("System address table file not found.");
             }
             
             using Stream addressTableFs = File.OpenRead(addressTablePath);
-            using RentedBuffer<byte> addressTable = RentedBuffer<byte>.Allocate(addressTableFs);
-            AddressTable = AddressTableParser.ParseAddressTable(addressTable.Span, Zstd);
+            using RentedBuffer<byte> addressTableBuffer = RentedBuffer<byte>.Allocate(addressTableFs);
+            Dictionary<string, string> addressTable = AddressTableParser.ParseAddressTable(addressTableBuffer.Span, Zstd);
+
+            using RentedBuffer<byte> eventFlowAddressTableBuffer = GetAddressTableBuffer(gamePath, addressTable,
+                "Event/EventFlow/EventFlowFileEntry.Product.byml", "Event Flow", Zstd);
+            AddressTableParser.Append(addressTable, eventFlowAddressTableBuffer.Span, Zstd);
+            
+            using RentedBuffer<byte> effectAddressTableBuffer = GetAddressTableBuffer(gamePath, addressTable,
+                "Effects/EffectFileInfo.Product.Nin_NX_NVN.byml", "Effect", Zstd);
+            AddressTableParser.Append(addressTable, effectAddressTableBuffer.Span, Zstd);
+
+            AddressTable = addressTable.ToFrozenDictionary();
         }
     }
     
@@ -90,5 +101,16 @@ public sealed class ExtractedTkRom : ITkRom
     public bool IsVanilla(ReadOnlySpan<char> canonical, Span<byte> src, int fileVersion)
     {
         return _checksums.IsFileVanilla(canonical, src, fileVersion);
+    }
+
+    private static RentedBuffer<byte> GetAddressTableBuffer(string gamePath, Dictionary<string, string> systemAddressTable, string canonical, string addressTableName, TkZstd zstd)
+    {
+        string addressTablePath = Path.Combine(gamePath, systemAddressTable[canonical]);
+        if (!File.Exists(addressTablePath)) {
+            throw new GameRomException($"{addressTableName} address table file not found.");
+        }
+            
+        using Stream addressTableFs = File.OpenRead(addressTablePath);
+        return RentedBuffer<byte>.Allocate(addressTableFs);
     }
 }
