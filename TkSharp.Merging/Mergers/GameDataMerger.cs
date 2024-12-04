@@ -1,5 +1,6 @@
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
+using LanguageExt;
 using Revrs;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.Models;
@@ -10,6 +11,8 @@ namespace TkSharp.Merging.Mergers;
 
 public sealed class GameDataMerger : Singleton<GameDataMerger>, ITkMerger
 {
+    private static BymlRowComparer _rowComparer = new("Hash");
+    
     public void Merge(TkChangelogEntry entry, RentedBuffers<byte> inputs, ArraySegment<byte> vanillaData, Stream output)
     {
         Byml merged = Byml.FromBinary(vanillaData, out Endianness endianness, out ushort version);
@@ -80,6 +83,8 @@ public sealed class GameDataMerger : Singleton<GameDataMerger>, ITkMerger
                     throw new NotSupportedException(
                         $"Invalid GameDataList changelog array map type: '{entry.Type}'");
             }
+            
+            @base.Sort(_rowComparer);
         }
     }
 

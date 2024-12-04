@@ -4,7 +4,6 @@ using Revrs;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.Models;
 using TkSharp.Merging.Mergers.BinaryYaml;
-using TkSharp.Merging.Mergers.ResourceDatabase;
 
 namespace TkSharp.Merging.Mergers;
 
@@ -19,7 +18,7 @@ public static class RsdbRowMergers
 public sealed class RsdbRowMerger(string keyName) : ITkMerger
 {
     private readonly string _keyName = keyName;
-    private readonly RsdbRowComparer _rowComparer = new(keyName);
+    private readonly BymlRowComparer _rowComparer = new(keyName);
 
     public void Merge(TkChangelogEntry entry, RentedBuffers<byte> inputs, ArraySegment<byte> vanillaData, Stream output)
     {
