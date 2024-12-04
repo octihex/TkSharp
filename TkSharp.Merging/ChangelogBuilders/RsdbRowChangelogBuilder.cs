@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
 using CommunityToolkit.HighPerformance;
+using Microsoft.Extensions.Logging;
 using Revrs;
 using TkSharp.Core;
 using TkSharp.Merging.ChangelogBuilders.BinaryYaml;
@@ -36,12 +37,14 @@ public sealed class RsdbRowChangelogBuilder<TKey>(string keyName) : ITkChangelog
 
         BymlTrackingInfo bymlTrackingInfo = new(path.Canonical, level: 0);
 
-        foreach (Byml row in rows) {
-            Byml rowEntry = row;
+        for (int i = 0; i < rows.Count; i++) {
+            Byml rowEntry = rows[i];
             BymlMap entry = rowEntry.GetMap();
 
             if (!TryGetKeyHash(entry, out ulong keyHash, out TKey? key)) {
-                // TODO: Log missing key entry
+                TkLog.Instance.LogWarning(
+                    "RSDB file '{Canonical}' has an invalid entry at {Index}. The key field '{KeyName}' is missing.",
+                    canonical, i, _keyName);
                 continue;
             }
             

@@ -1,5 +1,7 @@
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
+using Microsoft.Extensions.Logging;
+using TkSharp.Core;
 
 namespace TkSharp.Merging.ChangelogBuilders.BinaryYaml;
 
@@ -14,8 +16,9 @@ public class BymlKeyedArrayChangelogBuilder<T>(string key) : IBymlArrayChangelog
         for (int i = 0; i < src.Count; i++) {
             Byml element = src[i];
             if (!element.GetMap().TryGetValue(_key, out Byml? keyEntry)) {
-                // TODO: Warn, skipped entry because key was missing
-                Console.WriteLine($"Entry '{i}' in '{info.Type}' was missing an {_key} field.");
+                TkLog.Instance.LogWarning(
+                    "Entry '{Index}' in '{Type}' was missing a {Key} field.",
+                    i, info.Type.ToString(), _key);
                 continue;
             }
             

@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
+using CommunityToolkit.HighPerformance.Buffers;
 using Revrs;
 using TkSharp.Core;
 using TkSharp.Merging.ChangelogBuilders.BinaryYaml;
@@ -69,7 +70,6 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
     {
         info.Level++;
         foreach (T key in src.Keys.Concat(vanilla.Keys).Distinct().ToArray()) {
-            // TODO: Avoid copying keys
             if (!src.TryGetValue(key, out Byml? srcValue)) {
                 src[key] = BymlChangeType.Remove;
                 continue;

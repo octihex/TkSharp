@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
 using CommunityToolkit.HighPerformance;
+using Microsoft.Extensions.Logging;
+using TkSharp.Core;
 using TkSharp.Core.Models;
 
 namespace TkSharp.Merging.Mergers;
@@ -35,7 +37,7 @@ public static class MalsMerger
 
         foreach (string target in targets) {
             if (target.Length < 9) {
-                // TODO: Log: invalid mals file 
+                TkLog.Instance.LogWarning("Invalid mals file name: {FileName}", target);
                 continue;
             }
             

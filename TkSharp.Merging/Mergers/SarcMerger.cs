@@ -13,12 +13,6 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
     private readonly TkMerger _masterMerger = masterMerger;
     private readonly TkResourceSizeCollector _resourceSizeCollector = resourceSizeCollector;
 
-    private readonly TkChangelogEntry _fakeEntry = new(
-        string.Empty,
-        ChangelogEntryType.Changelog,
-        TkFileAttributes.None,
-        zsDictionaryId: -1);
-
     public void Merge(TkChangelogEntry entry, RentedBuffers<byte> inputs, ArraySegment<byte> vanillaData, Stream output)
     {
         Sarc merged = Sarc.FromBinary(vanillaData);
@@ -55,6 +49,12 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
             .GroupBy(x => x.Key, x => x.Value)
             .Select(x => (x.Key, x.ToArray()));
         
+        TkChangelogEntry fakeEntry = new(
+            string.Empty,
+            ChangelogEntryType.Changelog,
+            TkFileAttributes.None,
+            zsDictionaryId: -1);
+        
         foreach ((string name, ArraySegment<byte>[] buffers) in groups) {
             ArraySegment<byte> last = buffers[^1];
             
@@ -75,19 +75,18 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
                 continue;
             }
             
-            // TODO: This is a bit sketchy
-            _fakeEntry.Canonical = name;
+            fakeEntry.Canonical = name;
             
             if (buffers.Length == 1) {
                 using (Stream output = merged.OpenWrite(name)) {
-                    merger.MergeSingle(_fakeEntry, buffers[0], vanillaData, output);
+                    merger.MergeSingle(fakeEntry, buffers[0], vanillaData, output);
                 }
 
                 goto CalculateMergedRstb;
             }
             
             using (Stream output = merged.OpenWrite(name)) {
-                merger.Merge(_fakeEntry, buffers, vanillaData, output);
+                merger.Merge(fakeEntry, buffers, vanillaData, output);
             }
             
         CalculateMergedRstb:
@@ -97,6 +96,12 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
 
     private void MergeSingle(string parentCanonical, in Sarc merged, Sarc changelog)
     {
+        TkChangelogEntry fakeEntry = new(
+            string.Empty,
+            ChangelogEntryType.Changelog,
+            TkFileAttributes.None,
+            zsDictionaryId: -1);
+        
         foreach ((string name, ArraySegment<byte> data) in changelog) {
             if (!merged.TryGetValue(name, out ArraySegment<byte> vanillaData)) {
                 merged[name] = data;
@@ -110,10 +115,10 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
                 continue;
             }
 
-            _fakeEntry.Canonical = name;
+            fakeEntry.Canonical = name;
 
             using (Stream output = merged.OpenWrite(name)) {
-                merger.MergeSingle(_fakeEntry, data, vanillaData, output);
+                merger.MergeSingle(fakeEntry, data, vanillaData, output);
             }
 
             CalculateRstb(parentCanonical, name, merged[name], isFileVanilla: true);

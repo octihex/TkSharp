@@ -1,5 +1,6 @@
 using CommunityToolkit.HighPerformance.Buffers;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using TkSharp.Core;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.Models;
@@ -182,13 +183,14 @@ public sealed class TkMerger
 
         foreach (TkChangelog changelog in changelogs.Reverse()) {
             if (changelog.Source is null) {
-                // TODO: Log: source is un-initialized
+                TkLog.Instance.LogError(
+                    "Changelog '{Changelog}' has not been initialized. Try restarting to resolve the issue.",
+                    changelog);
                 continue;
             }
 
             foreach (string subSdkFile in changelog.SubSdkFiles) {
                 if (index > 9) {
-                    // TODO: Track skipped files
                     index++;
                     continue;
                 }
@@ -200,7 +202,9 @@ public sealed class TkMerger
         }
 
         if (index > 9) {
-            // TODO: Tell user how many subsdk files were skipped
+            TkLog.Instance.LogWarning(
+                "{Count} SubSdk files were skipped when merging from the lowest priority mods.",
+                index - 9);
         }
     }
 
@@ -208,7 +212,9 @@ public sealed class TkMerger
     {
         foreach (TkChangelog changelog in changelogs) {
             if (changelog.Source is null) {
-                // TODO: Log: source is un-initialized
+                TkLog.Instance.LogError(
+                    "Changelog '{Changelog}' has not been initialized. Try restarting to resolve the issue.",
+                    changelog);
                 continue;
             }
 
