@@ -29,14 +29,14 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
             changelogs[i] = Sarc.FromBinary(input.Segment);
         }
         
-        MergeMany(merged, changelogs);
+        MergeMany(entry.Canonical, merged, changelogs);
         merged.Write(output);
     }
 
     public void Merge(TkChangelogEntry entry, IEnumerable<ArraySegment<byte>> inputs, ArraySegment<byte> vanillaData, Stream output)
     {
         Sarc merged = Sarc.FromBinary(vanillaData);
-        MergeMany(merged, inputs.Select(Sarc.FromBinary));
+        MergeMany(entry.Canonical, merged, inputs.Select(Sarc.FromBinary));
         merged.Write(output);
     }
 
@@ -44,11 +44,11 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
     {
         Sarc merged = Sarc.FromBinary(@base);
         Sarc changelog = Sarc.FromBinary(input);
-        MergeSingle(merged, changelog);
+        MergeSingle(entry.Canonical, merged, changelog);
         merged.Write(output);
     }
 
-    private void MergeMany(Sarc merged, IEnumerable<Sarc> changelogs)
+    private void MergeMany(string parentCanonical, Sarc merged, IEnumerable<Sarc> changelogs)
     {
         IEnumerable<(string Name, ArraySegment<byte>[] Buffers)> groups = changelogs
             .SelectMany(x => x)
@@ -60,13 +60,13 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
             
             if (!merged.TryGetValue(name, out ArraySegment<byte> vanillaData)) {
                 merged[name] = last;
-                CalculateRstb(name, last, isFileVanilla: false);
+                CalculateRstb(parentCanonical, name, last, isFileVanilla: false);
                 continue;
             }
 
             if (_masterMerger.GetMerger(name) is not ITkMerger merger) {
                 merged[name] = last;
-                CalculateRstb(name, last, isFileVanilla: false);
+                CalculateRstb(parentCanonical, name, last, isFileVanilla: false);
                 continue;
             }
 
@@ -91,22 +91,22 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
             }
             
         CalculateMergedRstb:
-            CalculateRstb(name, merged[name], isFileVanilla: false);
+            CalculateRstb(parentCanonical, name, merged[name], isFileVanilla: false);
         }
     }
 
-    private void MergeSingle(in Sarc merged, Sarc changelog)
+    private void MergeSingle(string parentCanonical, in Sarc merged, Sarc changelog)
     {
         foreach ((string name, ArraySegment<byte> data) in changelog) {
             if (!merged.TryGetValue(name, out ArraySegment<byte> vanillaData)) {
                 merged[name] = data;
-                CalculateRstb(name, data, isFileVanilla: false);
+                CalculateRstb(parentCanonical, name, data, isFileVanilla: false);
                 continue;
             }
 
             if (_masterMerger.GetMerger(name) is not ITkMerger merger) {
                 merged[name] = data;
-                CalculateRstb(name, data, isFileVanilla: false);
+                CalculateRstb(parentCanonical, name, data, isFileVanilla: false);
                 continue;
             }
 
@@ -116,12 +116,16 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
                 merger.MergeSingle(_fakeEntry, data, vanillaData, output);
             }
 
-            CalculateRstb(name, merged[name], isFileVanilla: true);
+            CalculateRstb(parentCanonical, name, merged[name], isFileVanilla: true);
         }
     }
 
-    private void CalculateRstb(string canonical, Span<byte> data, bool isFileVanilla)
+    private void CalculateRstb(ReadOnlySpan<char> parentCanonical, string canonical, Span<byte> data, bool isFileVanilla)
     {
+        if (Path.GetExtension(parentCanonical) is not ".pack") {
+            canonical = $"{parentCanonical}/{canonical}";
+        }
+        
         _resourceSizeCollector.Collect(data.Length, canonical, isFileVanilla, data);
     }
 }
