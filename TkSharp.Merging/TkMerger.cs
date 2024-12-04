@@ -107,7 +107,8 @@ public sealed class TkMerger
     {
         ReadOnlySpan<char> extension = Path.GetExtension(changelog.Canonical.AsSpan());
 
-        using Stream output = _output.OpenWrite(Path.Combine("romfs", changelog.Canonical));
+        string relativePath = _rom.CanonicalToRelativePath(changelog.Canonical, changelog.Attributes);
+        using Stream output = _output.OpenWrite(Path.Combine("romfs", relativePath));
 
         if (!TkResourceSizeCollector.RequiresDataForCalculation(extension)) {
             int size = TkZstd.IsCompressed(input)
@@ -143,8 +144,9 @@ public sealed class TkMerger
         _resourceSizeCollector.Collect(buffer.Count,
             changelog.Canonical, isFileVanillaEntry: true, buffer);
 
+        string relativePath = _rom.CanonicalToRelativePath(changelog.Canonical, changelog.Attributes);
         using Stream output = _output.OpenWrite(
-            Path.Combine("romfs", changelog.Canonical));
+            Path.Combine("romfs", relativePath));
 
         if (changelog.Attributes.HasFlag(TkFileAttributes.HasZsExtension)) {
             using SpanOwner<byte> compressed = SpanOwner<byte>.Allocate(buffer.Count);
