@@ -67,9 +67,6 @@ public static class SaveDataWriter
             if (saveDataSize > 0) saveDataSize += DEFAULT_SIZE;
         }
 
-        Console.WriteLine(metaDataStore.AllDataSaveOffset);
-        Console.WriteLine(metaDataStore.AllDataSaveSize);
-
         metaData["AllDataSaveOffset"] = metaDataStore.AllDataSaveOffset;
         metaData["AllDataSaveSize"] = metaDataStore.AllDataSaveSize;
         metaData["SaveDataOffsetPos"] = new BymlArray(saveDataOffsets.Select(value => (Byml)value));
