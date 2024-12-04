@@ -118,10 +118,18 @@ public class TkZstd
                data.Read<uint>() == ZSTD_MAGIC;
     }
 
+    public static bool IsCompressed(in Stream stream)
+    {
+        bool result = stream.Read<uint>() == ZSTD_MAGIC;
+        stream.Seek(-sizeof(uint), SeekOrigin.Current);
+        return result;
+    }
+
     public static int GetDecompressedSize(in Stream stream)
     {
         Span<byte> header = stackalloc byte[14];
         _ = stream.Read(header);
+        stream.Seek(-14, SeekOrigin.Current);
         return GetFrameContentSize(header);
     }
 
