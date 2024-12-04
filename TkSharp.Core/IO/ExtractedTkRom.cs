@@ -56,6 +56,12 @@ public sealed class ExtractedTkRom : ITkRom
 
     public IDictionary<string, string> AddressTable { get; }
 
+    public bool VanillaFileExists(string relativeFilePath)
+    {
+        string absolute = Path.Combine(_gamePath, relativeFilePath);
+        return File.Exists(absolute);
+    }
+
     public RentedBuffer<byte> GetVanilla(string relativeFilePath)
     {
         string absolute = Path.Combine(_gamePath, relativeFilePath);
