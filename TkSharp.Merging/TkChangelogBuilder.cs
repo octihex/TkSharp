@@ -91,7 +91,10 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             goto Copy;
         }
 
-        using RentedBuffer<byte> src = _tk.Zstd.Decompress(content, out int zsDictionaryId);
+        using RentedBuffer<byte> raw = RentedBuffer<byte>.Allocate(content);
+        _ = content.Read(raw.Span);
+        using RentedBuffer<byte> src = RentedBuffer<byte>.Allocate(TkZstd.GetDecompressedSize(raw.Span));
+        _tk.Zstd.Decompress(raw.Span, src.Span, out int zsDictionaryId);
 
         if (_tk.IsVanilla(path.Canonical, src.Span, path.FileVersion)) {
             return;
@@ -101,10 +104,10 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             = _tk.GetVanilla(canonical, path.Attributes);
 
         if (vanilla.IsEmpty) {
-            AddChangelogMetadata(path, canonical, ChangelogEntryType.Copy, zsDictionaryId: -1);
+            AddChangelogMetadata(path, canonical, ChangelogEntryType.Copy, zsDictionaryId);
             outputFilePath = Path.Combine(path.Root.ToString(), canonical);
             using Stream output = _writer.OpenWrite(outputFilePath);
-            output.Write(src.Span);
+            output.Write(raw.Span);
             return;
         }
 
