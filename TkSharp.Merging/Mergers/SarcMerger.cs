@@ -114,6 +114,11 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
                 CalculateRstb(parentCanonical, name, data, isFileVanilla: false);
                 continue;
             }
+            
+            if (data.Count == 8 && data.AsSpan().Read<ulong>() == DELETED_MARK) {
+                merged.Remove(name);
+                continue;
+            }
 
             fakeEntry.Canonical = name;
 
