@@ -10,7 +10,7 @@ public static class RegionLangMaskParser
         for (int i = src.Length - 1; i > -1; i--) {
             byte @char = src[i];
             if (@char != '\n') {
-                sb.Append((char)@char);
+                sb.Insert(0, (char)@char);
                 continue;
             }
 
