@@ -162,7 +162,7 @@ public sealed class TkMerger
     {
         IEnumerable<TkPatch> versionMatchedPatchFiles = changelogs
             .SelectMany(entry => entry.PatchFiles
-                .Where(patch => patch.NsoBinaryId == _rom.NsoBinaryId));
+                .Where(patch => patch.NsoBinaryId.Equals(_rom.NsoBinaryId, StringComparison.InvariantCultureIgnoreCase)));
 
         TkPatch merged = new(_rom.NsoBinaryId);
         foreach (TkPatch patch in versionMatchedPatchFiles) {
@@ -242,9 +242,10 @@ public sealed class TkMerger
         string relativeFilePath = _rom.CanonicalToRelativePath(canonical, attributes);
 
         using RentedBuffer<byte> vanilla = _rom.GetVanilla(relativeFilePath);
-        using Stream output = _output.OpenWrite(
-            Path.Combine("romfs", relativeFilePath));
-        _sarcMerger.Merge(fakeEntry, combinedBuffers, vanilla.Segment, output);
+        using MemoryStream ms = new();
+        _sarcMerger.Merge(fakeEntry, combinedBuffers, vanilla.Segment, ms);
+
+        CopyMergedToOutput(ms, relativeFilePath, fakeEntry);
     }
 
     private IEnumerable<MergeTarget> GetTargets(TkChangelog[] changelogs)
