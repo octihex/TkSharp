@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using TkSharp.Core;
 using TkSharp.Core.Models;
 using TkSharp.IO;
@@ -58,7 +59,7 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
             Path.Combine(ModsFolderPath, relativeFolderPath));
     }
 
-    public void Add(TkMod target, TkProfile? profile = null)
+    public void Import(TkMod target, TkProfile? profile = null)
     {
         EnsureProfiles();
 
@@ -66,6 +67,29 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
 
         Mods.Add(target);
         profile.Mods.Add(new TkProfileMod(target));
+    }
+    
+    public void Uninstall(TkMod target)
+    {
+        string targetModFolder = Path.Combine(ModsFolderPath, target.Id.ToString());
+        if (!Directory.Exists(targetModFolder)) {
+            TkLog.Instance.LogDebug("Content for the mod '{TargetName}' could not be found in the system.",
+                target.Name);
+            goto Remove;
+        }
+
+        try {
+            Directory.Delete(targetModFolder, true);
+        }
+        catch (Exception ex) {
+            TkLog.Instance.LogError(ex,
+                "Failed to delete content for the mod '{TargetName}'. Consider manually deleting the folder '{TargetModFolder}' and then uninstalling this mod again.",
+                target.Name, targetModFolder);
+            return;
+        }
+        
+    Remove:
+        Mods.Remove(target);
     }
 
     public void Save()
