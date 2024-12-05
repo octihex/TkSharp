@@ -1,6 +1,6 @@
 using TkSharp.Core;
 
-namespace TkSharp.Debug.IO;
+namespace TkSharp.IO.Writers;
 
 public sealed class FolderModWriter(string outputModFolder) : ITkModWriter
 {
