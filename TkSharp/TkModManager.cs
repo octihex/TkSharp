@@ -22,7 +22,7 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
         if (!File.Exists(portableManagerStateFile)) {
             return new TkModManager(dataFolderPath);
         }
-        
+
         using FileStream fs = File.OpenRead(portableManagerStateFile);
         return TkBinaryReader.Read(fs, dataFolderPath);
     }
@@ -44,7 +44,7 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
     public TkProfile GetCurrentProfile()
     {
         EnsureProfiles();
-        
+
         return CurrentProfile ?? Profiles[0];
     }
 
@@ -68,7 +68,7 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
         Mods.Add(target);
         profile.Mods.Add(new TkProfileMod(target));
     }
-    
+
     public void Uninstall(TkMod target)
     {
         string targetModFolder = Path.Combine(ModsFolderPath, target.Id.ToString());
@@ -87,17 +87,34 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
                 target.Name, targetModFolder);
             return;
         }
-        
+
     Remove:
         Mods.Remove(target);
+
+        foreach (TkProfile profile in Profiles) {
+            if (profile.Mods.FirstOrDefault(x => x.Mod == target) is TkProfileMod profileMod) {
+                profile.Mods.Remove(profileMod);
+            }
+        }
     }
 
     public void Save()
     {
         Directory.CreateDirectory(DataFolderPath);
 
-        using FileStream fs = File.Create(Path.Combine(DataFolderPath, "state.db"));
-        TkBinaryWriter.Write(fs, this);
+        try {
+            using MemoryStream ms = new();
+            TkBinaryWriter.Write(ms, this);
+
+            using FileStream fs = File.Create(Path.Combine(DataFolderPath, "state.db"));
+            fs.Write(ms.GetBuffer());
+        }
+        catch (Exception ex) {
+            TkLog.Instance.LogError(ex, "Failed to save mod manager state.");
+#if DEBUG
+            throw;
+#endif
+        }
     }
 
     private void EnsureProfiles()
