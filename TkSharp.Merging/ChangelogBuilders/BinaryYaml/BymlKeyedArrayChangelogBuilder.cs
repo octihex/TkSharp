@@ -19,6 +19,7 @@ public class BymlKeyedArrayChangelogBuilder<T>(string key) : IBymlArrayChangelog
                 TkLog.Instance.LogWarning(
                     "Entry '{Index}' in '{Type}' was missing a {Key} field.",
                     i, info.Type.ToString(), _key);
+                changelog.Add(int.MaxValue - i, (BymlChangeType.Add, element));
                 continue;
             }
             
