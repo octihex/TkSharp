@@ -19,7 +19,7 @@ public class ConsoleLogger : ILogger
         };
 
         Console.WriteLine(
-            Chalk.Bold + $"[{DateTime.UtcNow:s}] [{eventId}] "
+            Chalk.Bold + $"[{DateTime.UtcNow:s}] [{eventId}] [{Enum.GetName(logLevel)}] "
                        + style + formatter(state, exception)
         );
     }
