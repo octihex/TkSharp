@@ -2,7 +2,7 @@
 using TkSharp;
 using TkSharp.Core;
 using TkSharp.Debug;
-using TkSharp.Debug.IO;
+using TkSharp.IO.Writers;
 using TkSharp.Merging;
 
 // Debug cleanup
