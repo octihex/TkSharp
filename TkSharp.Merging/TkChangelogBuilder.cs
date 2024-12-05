@@ -93,8 +93,17 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
 
         using RentedBuffer<byte> raw = RentedBuffer<byte>.Allocate(content);
         _ = content.Read(raw.Span);
-        using RentedBuffer<byte> src = RentedBuffer<byte>.Allocate(TkZstd.GetDecompressedSize(raw.Span));
-        _tk.Zstd.Decompress(raw.Span, src.Span, out int zsDictionaryId);
+        
+        bool isZsCompressed = TkZstd.IsCompressed(raw.Span);
+        
+        using RentedBuffer<byte> src = isZsCompressed
+            ? RentedBuffer<byte>.Allocate(TkZstd.GetDecompressedSize(raw.Span))
+            : raw;
+
+        int zsDictionaryId = -1;
+        if (isZsCompressed) {
+            _tk.Zstd.Decompress(raw.Span, src.Span, out zsDictionaryId);
+        }
 
         if (_tk.IsVanilla(path.Canonical, src.Span, path.FileVersion)) {
             return;
