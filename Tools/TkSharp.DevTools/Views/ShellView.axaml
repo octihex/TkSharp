@@ -17,6 +17,8 @@
         <StackPanel Orientation="Horizontal" Spacing="10">
             <Button Content="Import" Command="{Binding ImportCommand}" />
             <Button Content="Remove" Command="{Binding RemoveCommand}" />
+            <Button Content="(↑)" Command="{Binding MoveUpCommand}" />
+            <Button Content="(↓)" Command="{Binding MoveDownCommand}" />
             <Button Content="Merge" Command="{Binding MergeCommand}" />
             <Button Content="Merge (Parallel)" Command="{Binding MergeParallelCommand}" />
         </StackPanel>

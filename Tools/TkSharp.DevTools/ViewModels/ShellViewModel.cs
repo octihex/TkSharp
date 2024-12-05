@@ -55,6 +55,39 @@ public partial class ShellViewModel : ObservableObject
         TkApp.ModManager.Uninstall(target);
         TkApp.ModManager.Save();
     }
+
+    [RelayCommand]
+    private static void MoveUp()
+    {
+        TkApp.ModManager.Selected = Move(-1);   
+    }
+
+    [RelayCommand]
+    private static void MoveDown()
+    {
+        TkApp.ModManager.Selected = Move(1);
+    }
+
+    private static TkMod? Move(int direction)
+    {
+        if (TkApp.ModManager.Selected is not TkMod target) {
+            Console.WriteLine(Chalk.BrightRed + "No selection to move.");
+            return default;
+        }
+        
+        int currentIndex = TkApp.ModManager.Mods.IndexOf(target);
+        int newIndex = currentIndex + direction;
+
+        if (newIndex < 0 || newIndex >= TkApp.ModManager.Mods.Count) {
+            return target;
+        }
+
+        TkMod store = TkApp.ModManager.Mods[newIndex];
+        TkApp.ModManager.Mods[newIndex] = target;
+        TkApp.ModManager.Mods[currentIndex] = store;
+
+        return target;
+    }
     
     [RelayCommand]
     private static async Task Merge()
@@ -91,6 +124,7 @@ public partial class ShellViewModel : ObservableObject
                 .GetCurrentProfile()
                 .Mods
                 .Select(x => x.Mod.Changelog)
+                .Reverse()
             );
         }
         catch (Exception ex) {
