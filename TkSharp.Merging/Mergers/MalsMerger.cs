@@ -13,7 +13,9 @@ public static class MalsMerger
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IEnumerable<(TkChangelog Changelog, string MalsFile)> SelectMals(this IEnumerable<TkChangelog> changelogs, string locale)
     {
-        return changelogs.Select(changelog => (changelog, GetBestMals(changelog.MalsFiles, locale)));
+        return changelogs
+            .Where(changelog => changelog.MalsFiles.Count > 0)
+            .Select(changelog => (changelog, GetBestMals(changelog.MalsFiles, locale)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -234,6 +234,10 @@ public sealed class TkMerger
                 .Select(entry => entry.Changelog.Source!.OpenRead($"romfs/{entry.MalsFile}"))
                 .ToArray());
 
+        if (combinedBuffers.Count == 0) {
+            return;
+        }
+
         string canonical = $"Mals/{_locale}.Product.sarc";
         const TkFileAttributes attributes = TkFileAttributes.HasZsExtension | TkFileAttributes.IsProductFile;
         TkChangelogEntry fakeEntry = new(canonical, ChangelogEntryType.Changelog, attributes, zsDictionaryId: 1);
