@@ -70,23 +70,28 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
                 continue;
             }
 
-            if (last.Count == 8 && last.AsSpan().Read<ulong>() == DELETED_MARK) {
+            if (IsRemovedEntry(last)) {
                 merged.Remove(name);
                 continue;
             }
             
             fakeEntry.Canonical = name;
             
-            if (buffers.Length == 1) {
-                using (Stream output = merged.OpenWrite(name)) {
+            switch (buffers.Length) {
+                case 1: {
+                    using Stream output = merged.OpenWrite(name);
                     merger.MergeSingle(fakeEntry, buffers[0], vanillaData, output);
+                    goto CalculateMergedRstb;
                 }
-
-                goto CalculateMergedRstb;
+                case 2 when IsRemovedEntry(buffers[0]): {
+                    Stream output = merged.OpenWrite(name);
+                    merger.MergeSingle(fakeEntry, last, vanillaData, output);
+                    goto CalculateMergedRstb;
+                }
             }
-            
+
             using (Stream output = merged.OpenWrite(name)) {
-                merger.Merge(fakeEntry, buffers, vanillaData, output);
+                merger.Merge(fakeEntry, buffers.Where(buffer => !IsRemovedEntry(buffer)), vanillaData, output);
             }
             
         CalculateMergedRstb:
@@ -137,5 +142,10 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
         }
         
         _resourceSizeCollector.Collect(data.Length, canonical, isFileVanilla, data);
+    }
+
+    private static bool IsRemovedEntry(ReadOnlySpan<byte> data)
+    {
+        return data.Length == 8 && data.Read<ulong>() == DELETED_MARK;
     }
 }
