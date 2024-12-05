@@ -104,7 +104,7 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
                         tracking[@base] = trackingEntry = new BymlMergeTrackingEntry();
                     }
                     
-                    trackingEntry.Additions.Add((int.MaxValue - i, entry));
+                    trackingEntry.Additions.Add((InsertIndex: int.MaxValue - i, entry));
                     break;
                 }
                 case BymlChangeType.Remove: {
