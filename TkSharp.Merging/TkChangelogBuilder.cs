@@ -96,16 +96,16 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         
         bool isZsCompressed = TkZstd.IsCompressed(raw.Span);
         
-        using RentedBuffer<byte> src = isZsCompressed
+        using RentedBuffer<byte> decompressed = isZsCompressed
             ? RentedBuffer<byte>.Allocate(TkZstd.GetDecompressedSize(raw.Span))
-            : raw;
+            : default;
 
         int zsDictionaryId = -1;
         if (isZsCompressed) {
-            _tk.Zstd.Decompress(raw.Span, src.Span, out zsDictionaryId);
+            _tk.Zstd.Decompress(raw.Span, decompressed.Span, out zsDictionaryId);
         }
 
-        if (_tk.IsVanilla(path.Canonical, src.Span, path.FileVersion)) {
+        if (_tk.IsVanilla(path.Canonical, decompressed.Span, path.FileVersion)) {
             return;
         }
 
@@ -120,7 +120,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             return;
         }
 
-        builder.Build(canonical, path, src.Segment, vanilla.Segment, (path, canon) => {
+        builder.Build(canonical, path, decompressed.IsEmpty ? raw.Segment : decompressed.Segment, vanilla.Segment, (path, canon) => {
             AddChangelogMetadata(path, canon, ChangelogEntryType.Changelog, zsDictionaryId);
             string outputFile = Path.Combine(path.Root.ToString(), canon);
             return _writer.OpenWrite(outputFile);
