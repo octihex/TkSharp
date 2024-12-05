@@ -8,6 +8,7 @@ public class TkModReaderProvider(ITkSystemProvider tkWriterProvider, ITkRomProvi
 {
     private readonly List<ITkModReader> _readers = [
         new ArchiveModReader(tkWriterProvider, tkRomProvider),
+        new FolderModReader(tkWriterProvider, tkRomProvider),
         new SevenZipModReader(tkWriterProvider, tkRomProvider),
         new TkPackReader(tkWriterProvider),
     ];
