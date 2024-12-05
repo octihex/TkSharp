@@ -23,7 +23,7 @@
         <ListBox ItemsSource="{Binding Mods, Source={x:Static core:TkApp.ModManager}}"
                  Margin="0,15,0,0"
                  Grid.Row="1"
-                 Selection="{Binding Selected, Source={x:Static core:TkApp.ModManager}}">
+                 SelectedItem="{Binding Selected, Source={x:Static core:TkApp.ModManager}}">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="{x:Type tk:TkMod}">
                     <Grid ColumnDefinitions="Auto,Auto,*">
