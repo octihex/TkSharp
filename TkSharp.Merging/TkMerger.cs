@@ -171,7 +171,7 @@ public sealed class TkMerger
             }
         }
 
-        using Stream output = _output.OpenWrite($"exefs/{_rom.NsoBinaryId}.ips");
+        using Stream output = _output.OpenWrite($"exefs/{_rom.NsoBinaryId.ToUpper()}.ips");
         merged.WriteIps(output);
     }
 
