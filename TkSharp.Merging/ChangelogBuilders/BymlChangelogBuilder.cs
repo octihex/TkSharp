@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
-using CommunityToolkit.HighPerformance.Buffers;
 using Revrs;
 using TkSharp.Core;
 using TkSharp.Merging.ChangelogBuilders.BinaryYaml;
