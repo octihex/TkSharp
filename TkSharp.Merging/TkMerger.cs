@@ -75,7 +75,7 @@ public sealed class TkMerger
             case (ITkMerger merger, Stream[] { Length: > 1 } streams): {
                 using RentedBuffer<byte> vanilla = _rom.GetVanilla(relativeFilePath);
                 if (vanilla.IsEmpty) {
-                    CopyToOutput(streams[^1], changelog, isVanillaFile: false);
+                    CopyToOutput(streams[^1], relativeFilePath, changelog, isVanillaFile: false);
                     return;
                 }
 
@@ -87,7 +87,7 @@ public sealed class TkMerger
                 using RentedBuffer<byte> vanilla = _rom.GetVanilla(relativeFilePath);
                 using Stream single = streams[0];
                 if (vanilla.IsEmpty) {
-                    CopyToOutput(single, changelog, isVanillaFile: false);
+                    CopyToOutput(single, relativeFilePath, changelog, isVanillaFile: false);
                     return;
                 }
 
@@ -96,19 +96,18 @@ public sealed class TkMerger
                 break;
             }
             case Stream copy:
-                CopyToOutput(copy, changelog,
+                CopyToOutput(copy, relativeFilePath, changelog,
                     isVanillaFile: _rom.VanillaFileExists(changelog.Canonical, changelog.Attributes));
                 return;
         }
 
-        CopyMergedToOutput(output, changelog);
+        CopyMergedToOutput(output, relativeFilePath, changelog);
     }
 
-    private void CopyToOutput(in Stream input, TkChangelogEntry changelog, bool isVanillaFile)
+    private void CopyToOutput(in Stream input, string relativePath, TkChangelogEntry changelog, bool isVanillaFile)
     {
         ReadOnlySpan<char> extension = Path.GetExtension(changelog.Canonical.AsSpan());
 
-        string relativePath = _rom.CanonicalToRelativePath(changelog.Canonical, changelog.Attributes);
         using Stream output = _output.OpenWrite(Path.Combine("romfs", relativePath));
 
         if (!TkResourceSizeCollector.RequiresDataForCalculation(extension)) {
@@ -136,7 +135,7 @@ public sealed class TkMerger
         output.Write(raw);
     }
 
-    private void CopyMergedToOutput(in MemoryStream input, TkChangelogEntry changelog)
+    private void CopyMergedToOutput(in MemoryStream input, string relativePath, TkChangelogEntry changelog)
     {
         if (!input.TryGetBuffer(out ArraySegment<byte> buffer)) {
             buffer = input.ToArray();
@@ -145,7 +144,6 @@ public sealed class TkMerger
         _resourceSizeCollector.Collect(buffer.Count,
             changelog.Canonical, isFileVanillaEntry: true, buffer);
 
-        string relativePath = _rom.CanonicalToRelativePath(changelog.Canonical, changelog.Attributes);
         using Stream output = _output.OpenWrite(
             Path.Combine("romfs", relativePath));
 
