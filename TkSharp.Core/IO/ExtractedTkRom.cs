@@ -57,6 +57,17 @@ public sealed class ExtractedTkRom : ITkRom
             using RentedBuffer<byte> eventFlowFileEntryBuffer = RentedBuffer<byte>.Allocate(eventFlowFileEntryFs);
             EventFlowVersions = EventFlowFileEntryParser.ParseFileEntry(eventFlowFileEntryBuffer.Span, Zstd);
         }
+
+        {
+            string effectInfoPath = Path.Combine(gamePath, $"{AddressTable["Effect/EffectFileInfo.Product.Nin_NX_NVN.byml"]}.zs");
+            if (!File.Exists(effectInfoPath)) {
+                throw new GameRomException("Effect info file entry file not found.");
+            }
+            
+            using Stream effectInfoFs = File.OpenRead(effectInfoPath);
+            using RentedBuffer<byte> effectInfoBuffer = RentedBuffer<byte>.Allocate(effectInfoFs);
+            EffectVersions = EffectInfoParser.ParseFileEntry(effectInfoBuffer.Span, Zstd);
+        }
     }
     
     public int GameVersion { get; }
@@ -68,6 +79,8 @@ public sealed class ExtractedTkRom : ITkRom
     public IDictionary<string, string> AddressTable { get; }
 
     public Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> EventFlowVersions { get; }
+
+    public Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> EffectVersions { get; }
 
     public bool VanillaFileExists(string relativeFilePath)
     {
