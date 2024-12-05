@@ -19,7 +19,7 @@ public partial class ShellViewModel : ObservableObject
     {
         TextBox input = new() {
             Width = 350,
-            Watermark = "Input argument (File path, folder path, GameBanana mod URL)"
+            Watermark = "File path, folder path, or GameBanana mod URL"
         };
 
         ContentDialog dialog = new() {
