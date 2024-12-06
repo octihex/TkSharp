@@ -46,17 +46,19 @@ public sealed class TkResourceSizeCollector
         output.Write(compressedData[..compressedSize]);
     }
 
-    public void Collect(int fileSize, string path, string canonical, in Span<byte> data)
+    public void Collect(int fileSize, string path, in Span<byte> data)
     {
+        string canonical = GetResourceName(path);
         ReadOnlySpan<char> extension = GetResourceExtension(path);
-        if (canonical is "Pack/ZsDic.pack" || extension is ".rsizetable" or ".bwav" or ".webm" or ".pack") {
+        
+        if (canonical is "Pack/ZsDic.pack" || extension is ".rsizetable" or ".bwav" or ".webm") {
             return;
         }
 
         uint size = GetResourceSize(
             (uint)fileSize,
             canonical,
-            Path.GetExtension(canonical.AsSpan()),
+            extension,
             data);
         
         size += size.AlignUp(0x20U);
@@ -166,5 +168,31 @@ public sealed class TkResourceSizeCollector
             > 3 when path[^3..] is ".zs" => Path.GetExtension(path)[..^3],
             _ => Path.GetExtension(path)
         };
+    }
+
+    [Pure]
+    private static unsafe string GetResourceName(ReadOnlySpan<char> path)
+    {
+        int size = path.Length switch {
+            > 3 when path[^3..] is ".zs" or ".mc" => path.Length - 3,
+            _ => path.Length
+        };
+        
+        string result = path[..size].ToString();
+        Span<char> canonical;
+
+        fixed (char* ptr = result) {
+            canonical = new Span<char>(ptr, size);
+        }
+
+        for (int i = 0; i < size; i++) {
+            ref char @char = ref canonical[i];
+            @char = @char switch {
+                '\\' => '/',
+                _ => @char
+            };
+        }
+
+        return result;
     }
 }

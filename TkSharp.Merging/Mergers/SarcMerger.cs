@@ -49,7 +49,7 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
         ImmutableSarc sarc = new(ref reader);
 
         foreach ((string name, Span<byte> data) in sarc) {
-            _resourceSizeCollector.Collect(data.Length, name, name, data);
+            _resourceSizeCollector.Collect(data.Length, name, data);
         }
     }
 
@@ -152,7 +152,7 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
             return;
         }
         
-        _resourceSizeCollector.Collect(data.Length, name, name, data);
+        _resourceSizeCollector.Collect(data.Length, name, data);
     }
 
     private static bool IsRemovedEntry(ReadOnlySpan<byte> data)
