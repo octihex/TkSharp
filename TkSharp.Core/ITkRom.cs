@@ -42,11 +42,9 @@ public interface ITkRom
             result += ".zs";
         }
 
-        // Until we can decode .mc files this will never be reached
-        // 
-        // if (attributes.HasFlag(TkFileAttributes.HasMcExtension)) {
-        //     relativePath += ".mc";
-        // }
+        if (attributes.HasFlag(TkFileAttributes.HasMcExtension)) {
+            result += ".mc";
+        }
 
         return result;
     }
