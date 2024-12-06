@@ -46,9 +46,9 @@ public sealed class TkResourceSizeCollector
         output.Write(compressedData[..compressedSize]);
     }
 
-    public void Collect(int fileSize, string canonical, bool isFileVanillaEntry, in Span<byte> data)
+    public void Collect(int fileSize, string path, string canonical, in Span<byte> data)
     {
-        ReadOnlySpan<char> extension = Path.GetExtension(canonical.AsSpan());
+        ReadOnlySpan<char> extension = GetResourceExtension(path);
         if (canonical is "Pack/ZsDic.pack" || extension is ".rsizetable" or ".bwav" or ".webm" or ".pack") {
             return;
         }
@@ -154,6 +154,17 @@ public sealed class TkResourceSizeCollector
                 ".zs" => size + 0x100,
                 _ => (size + 1500) * 4
             }
+        };
+    }
+
+    [Pure]
+    private static ReadOnlySpan<char> GetResourceExtension(ReadOnlySpan<char> path)
+    {
+        return path.Length switch {
+            > 15 when path[^15..] is ".casset.byml.zs" => ".casset.byml",
+            > 6 when path[^6..] is ".ta.zs" => Path.GetExtension(path),
+            > 3 when path[^3..] is ".zs" => Path.GetExtension(path)[..^3],
+            _ => Path.GetExtension(path)
         };
     }
 }

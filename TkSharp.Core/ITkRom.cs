@@ -52,16 +52,6 @@ public interface ITkRom
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    bool VanillaFileExists(string canonical, TkFileAttributes attributes)
-    {
-        return VanillaFileExists(
-            CanonicalToRelativePath(canonical, attributes)
-        );
-    }
-
-    bool VanillaFileExists(string relativeFilePath);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     RentedBuffer<byte> GetVanilla(string canonical, TkFileAttributes attributes)
     {
         return GetVanilla(

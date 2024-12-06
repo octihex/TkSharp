@@ -75,7 +75,7 @@ public sealed class TkMerger
             case (ITkMerger merger, Stream[] { Length: > 1 } streams): {
                 using RentedBuffer<byte> vanilla = _rom.GetVanilla(relativeFilePath);
                 if (vanilla.IsEmpty) {
-                    CopyToOutput(streams[^1], relativeFilePath, changelog, isVanillaFile: false);
+                    CopyToOutput(streams[^1], relativeFilePath, changelog);
                     return;
                 }
 
@@ -87,7 +87,7 @@ public sealed class TkMerger
                 using RentedBuffer<byte> vanilla = _rom.GetVanilla(relativeFilePath);
                 using Stream single = streams[0];
                 if (vanilla.IsEmpty) {
-                    CopyToOutput(single, relativeFilePath, changelog, isVanillaFile: false);
+                    CopyToOutput(single, relativeFilePath, changelog);
                     return;
                 }
 
@@ -96,17 +96,24 @@ public sealed class TkMerger
                 break;
             }
             case Stream copy:
-                CopyToOutput(copy, relativeFilePath, changelog,
-                    isVanillaFile: _rom.VanillaFileExists(changelog.Canonical, changelog.Attributes));
+                CopyToOutput(copy, relativeFilePath, changelog);
                 return;
         }
 
         CopyMergedToOutput(output, relativeFilePath, changelog);
     }
 
-    private void CopyToOutput(in Stream input, string relativePath, TkChangelogEntry changelog, bool isVanillaFile)
+    private void CopyToOutput(in Stream input, string relativePath, TkChangelogEntry changelog)
     {
         ReadOnlySpan<char> extension = Path.GetExtension(changelog.Canonical.AsSpan());
+
+        if (extension is ".pack") {
+            // This buffer may be mutated, so never
+            // write is directly to the output 
+            using RentedBuffer<byte> src = _rom.Zstd.Decompress(input);
+            _sarcMerger.CalculateRstb(src.Span);
+            input.Seek(0, SeekOrigin.Begin);
+        }
 
         using Stream output = _output.OpenWrite(Path.Combine("romfs", relativePath));
 
@@ -114,7 +121,7 @@ public sealed class TkMerger
             int size = TkZstd.IsCompressed(input)
                 ? TkZstd.GetDecompressedSize(input)
                 : (int)input.Length;
-            _resourceSizeCollector.Collect(size, changelog.Canonical, isVanillaFile, []);
+            _resourceSizeCollector.Collect(size, relativePath, changelog.Canonical, []);
             input.CopyTo(output);
             return;
         }
@@ -123,7 +130,7 @@ public sealed class TkMerger
         Span<byte> raw = buffer.Span;
 
         if (!TkZstd.IsCompressed(raw)) {
-            _resourceSizeCollector.Collect(raw.Length, changelog.Canonical, isVanillaFile, raw);
+            _resourceSizeCollector.Collect(raw.Length, relativePath, changelog.Canonical, raw);
             output.Write(raw);
             return;
         }
@@ -131,7 +138,7 @@ public sealed class TkMerger
         using SpanOwner<byte> decompressed = SpanOwner<byte>.Allocate(TkZstd.GetDecompressedSize(raw));
         Span<byte> data = decompressed.Span;
         _rom.Zstd.Decompress(raw, data);
-        _resourceSizeCollector.Collect(data.Length, changelog.Canonical, isVanillaFile, data);
+        _resourceSizeCollector.Collect(data.Length, relativePath, changelog.Canonical, data);
         output.Write(raw);
     }
 
@@ -142,7 +149,7 @@ public sealed class TkMerger
         }
 
         _resourceSizeCollector.Collect(buffer.Count,
-            changelog.Canonical, isFileVanillaEntry: true, buffer);
+            relativePath, changelog.Canonical, buffer);
 
         using Stream output = _output.OpenWrite(
             Path.Combine("romfs", relativePath));

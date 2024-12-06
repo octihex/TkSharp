@@ -82,12 +82,6 @@ public sealed class ExtractedTkRom : ITkRom
 
     public Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> EffectVersions { get; }
 
-    public bool VanillaFileExists(string relativeFilePath)
-    {
-        string absolute = Path.Combine(_gamePath, relativeFilePath);
-        return File.Exists(absolute);
-    }
-
     public RentedBuffer<byte> GetVanilla(string relativeFilePath)
     {
         string absolute = Path.Combine(_gamePath, relativeFilePath);
