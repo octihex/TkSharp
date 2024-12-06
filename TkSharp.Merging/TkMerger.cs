@@ -117,7 +117,7 @@ public sealed class TkMerger
 
         using Stream output = _output.OpenWrite(Path.Combine("romfs", relativePath));
 
-        if (!TkResourceSizeCollector.RequiresDataForCalculation(extension)) {
+        if (!TkResourceSizeCollector.RequiresDataForCalculation(relativePath)) {
             int size = TkZstd.IsCompressed(input)
                 ? TkZstd.GetDecompressedSize(input)
                 : (int)input.Length;

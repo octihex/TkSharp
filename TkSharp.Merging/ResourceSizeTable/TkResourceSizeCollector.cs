@@ -92,9 +92,9 @@ public sealed class TkResourceSizeCollector
     }
 
     [Pure]
-    public static bool RequiresDataForCalculation(ReadOnlySpan<char> extension)
+    public static bool RequiresDataForCalculation(ReadOnlySpan<char> path)
     {
-        return extension is ".ainb" or ".asb" or ".bstar" or ".mc";
+        return GetResourceExtension(path) is ".ainb" or ".asb" or ".bstar" or ".mc";
     }
 
     [Pure]
