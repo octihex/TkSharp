@@ -138,7 +138,7 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
     private void CalculateRstb(ReadOnlySpan<char> parentCanonical, string canonical, Span<byte> data, bool isFileVanilla)
     {
         if (Path.GetExtension(parentCanonical) is not ".pack") {
-            canonical = $"{parentCanonical}/{canonical}";
+            return;
         }
         
         _resourceSizeCollector.Collect(data.Length, canonical, isFileVanilla, data);

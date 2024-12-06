@@ -1,5 +1,6 @@
 using System.Diagnostics.Contracts;
 using CommunityToolkit.HighPerformance.Buffers;
+using Revrs;
 using RstbLibrary;
 using RstbLibrary.Helpers;
 using TkSharp.Core;
@@ -9,38 +10,29 @@ using TkSharp.Merging.ResourceSizeTable.Calculators;
 namespace TkSharp.Merging.ResourceSizeTable;
 
 // ReSharper disable StringLiteralTypo
-public sealed class TkResourceSizeCollector(ITkModWriter writer, ITkRom rom)
+public sealed class TkResourceSizeCollector
 {
-    private readonly ITkModWriter _writer = writer;
-    private readonly ITkRom _rom = rom;
-    private readonly Dictionary<string, uint> _updates = [];
-    private readonly Dictionary<string, uint> _additions = [];
+    private readonly ITkModWriter _writer;
+    private readonly ITkRom _rom;
+    private readonly string _relativePath;
+    private readonly Rstb _result;
+    private readonly Rstb _vanilla;
 
+    public TkResourceSizeCollector(ITkModWriter writer, ITkRom rom)
+    {
+        _writer = writer;
+        _rom = rom;
+        _relativePath = $"System/Resource/ResourceSizeTable.Product.{_rom.GameVersion}.rsizetable.zs";
+        
+        using RentedBuffer<byte> vanillaRstb = _rom.GetVanilla(_relativePath);
+        _result = Rstb.FromBinary(vanillaRstb.Span);
+        _vanilla = Rstb.FromBinary(vanillaRstb.Span);
+    }
+    
     public void Write()
     {
-        string relativePath = $"System/Resource/ResourceSizeTable.Product.{_rom.GameVersion}.rsizetable.zs";
-        using RentedBuffer<byte> vanillaRstb = _rom.GetVanilla(relativePath);
-        Rstb result = Rstb.FromBinary(vanillaRstb.Span);
-
-        foreach ((string name, uint value) in _updates) {
-            if (result.OverflowTable.ContainsKey(name)) {
-                result.OverflowTable[name] = value;
-                continue;
-            }
-
-            uint hash = Crc32.Compute(name);
-            result.HashTable[hash] = value;
-        }
-
-        foreach ((string name, uint value) in _additions) {
-            uint hash = Crc32.Compute(name);
-            if (!result.HashTable.TryAdd(hash, value)) {
-                result.OverflowTable[name] = value;
-            }
-        }
-
         using MemoryStream ms = new();
-        result.WriteBinary(ms);
+        _result.WriteBinary(ms);
 
         if (!ms.TryGetBuffer(out ArraySegment<byte> buffer)) {
             buffer = ms.ToArray();
@@ -50,28 +42,50 @@ public sealed class TkResourceSizeCollector(ITkModWriter writer, ITkRom rom)
         Span<byte> compressedData = compressed.Span;
         int compressedSize = _rom.Zstd.Compress(buffer, compressedData);
 
-        using Stream output = _writer.OpenWrite(Path.Combine("romfs", relativePath));
+        using Stream output = _writer.OpenWrite(Path.Combine("romfs", _relativePath));
         output.Write(compressedData[..compressedSize]);
     }
 
     public void Collect(int fileSize, string canonical, bool isFileVanillaEntry, in Span<byte> data)
     {
         ReadOnlySpan<char> extension = Path.GetExtension(canonical.AsSpan());
-        if (canonical is "Pack/ZsDic.pack" || extension is ".rsizetable" or ".bwav" or ".webm") {
+        if (canonical is "Pack/ZsDic.pack" || extension is ".rsizetable" or ".bwav" or ".webm" or ".pack") {
+            return;
+        }
+
+        uint size = GetResourceSize(
+            (uint)fileSize,
+            canonical,
+            Path.GetExtension(canonical.AsSpan()),
+            data);
+        
+        size += size.AlignUp(0x20U);
+
+        if (_result.OverflowTable.ContainsKey(canonical)) {
+            lock (_result) {
+                _result.OverflowTable[canonical] = size;
+            }
+
+            return;
+        }
+
+        uint hash = Crc32.Compute(canonical);
+        if (_result.HashTable.TryAdd(hash, size)) {
             return;
         }
         
-        Dictionary<string, uint> resources = isFileVanillaEntry switch {
-            true => _updates,
-            false => _additions,
-        };
+        // If the hash is not in the vanilla
+        // RSTB it is a hash collision
+        if (!_vanilla.HashTable.ContainsKey(hash)) {
+            lock (_result) {
+                _result.OverflowTable[canonical] = size;
+            }
 
-        lock (resources) {
-            resources[canonical] = GetResourceSize(
-                (uint)fileSize,
-                canonical,
-                Path.GetExtension(canonical.AsSpan()),
-                data);
+            return;
+        }
+
+        lock (_result) {
+            _result.HashTable[hash] = size;
         }
     }
 
