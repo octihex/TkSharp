@@ -97,14 +97,20 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
 
     public static void MergeArray(BymlArray @base, BymlArrayChangelog changelog, BymlMergeTracking tracking)
     {
+        List<(int InsertIndex, Byml Entry)>? additions = null;
+        
         foreach ((int i, (BymlChangeType change, Byml entry)) in changelog) {
             switch (change) {
                 case BymlChangeType.Add: {
                     if (!tracking.TryGetValue(@base, out BymlMergeTrackingEntry? trackingEntry)) {
                         tracking[@base] = trackingEntry = new BymlMergeTrackingEntry();
                     }
+
+                    if (additions is null) {
+                        trackingEntry.Additions.Add(additions = []);
+                    } 
                     
-                    trackingEntry.Additions.Add((InsertIndex: int.MaxValue - i, entry));
+                    additions.Add((InsertIndex: int.MaxValue - i, entry));
                     break;
                 }
                 case BymlChangeType.Remove: {
