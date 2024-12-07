@@ -18,14 +18,14 @@ public class BymlNameHashArrayChangelogBuilder : Singleton<BymlNameHashArrayChan
             switch (element.GetMap()[KEY].Value) {
                 case uint u32:
                     if (!TryGetIndex(vanilla, u32, out vanillaIndex)) {
-                        changelog.Add(int.MaxValue - i, (BymlChangeType.Add, element));
+                        changelog.Add((i, BymlChangeType.Add, element));
                         continue;
                     }
                     
                     break;
                 case int s32:
                     if (!TryGetIndex(vanilla, s32, out vanillaIndex)) {
-                        changelog.Add(int.MaxValue - i, (BymlChangeType.Add, element));
+                        changelog.Add((i, BymlChangeType.Add, element));
                         continue;
                     }
                     
@@ -40,7 +40,7 @@ public class BymlNameHashArrayChangelogBuilder : Singleton<BymlNameHashArrayChan
                 goto UpdateVanilla;
             }
 
-            changelog.Add(vanillaIndex, (BymlChangeType.Edit, element));
+            changelog.Add((vanillaIndex, BymlChangeType.Edit, element));
 
         UpdateVanilla:
             vanilla[vanillaIndex] = BymlChangeType.Remove;
@@ -51,7 +51,7 @@ public class BymlNameHashArrayChangelogBuilder : Singleton<BymlNameHashArrayChan
                 continue;
             }
 
-            changelog.Add(i, (BymlChangeType.Remove, new Byml()));
+            changelog.Add((i, BymlChangeType.Remove, new Byml()));
         }
 
         root = changelog;

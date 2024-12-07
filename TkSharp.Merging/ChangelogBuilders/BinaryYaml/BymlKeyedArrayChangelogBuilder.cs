@@ -12,6 +12,7 @@ public class BymlKeyedArrayChangelogBuilder<T>(string key) : IBymlArrayChangelog
     public bool LogChanges(ref BymlTrackingInfo info, ref Byml root, BymlArray src, BymlArray vanilla)
     {
         BymlArrayChangelog changelog = [];
+        int detectedAdditions = 0;
 
         for (int i = 0; i < src.Count; i++) {
             Byml element = src[i];
@@ -19,12 +20,18 @@ public class BymlKeyedArrayChangelogBuilder<T>(string key) : IBymlArrayChangelog
                 TkLog.Instance.LogWarning(
                     "Entry '{Index}' in '{Type}' was missing a {Key} field.",
                     i, info.Type.ToString(), _key);
-                changelog.Add(int.MaxValue - i, (BymlChangeType.Add, element));
+                changelog.Add((i - detectedAdditions, BymlChangeType.Add, element));
+                detectedAdditions++;
                 continue;
             }
             
             if (!TryGetIndex(vanilla, keyEntry.Get<T>(), _key, out int vanillaIndex)) {
-                changelog.Add(int.MaxValue - i, (BymlChangeType.Add, element));
+                int relativeIndex = i - detectedAdditions;
+                changelog.Add(((vanilla.Count > relativeIndex) switch {
+                    true => relativeIndex, false => i
+                }, BymlChangeType.Add, element));
+                
+                detectedAdditions++;
                 continue;
             }
 
@@ -33,7 +40,7 @@ public class BymlKeyedArrayChangelogBuilder<T>(string key) : IBymlArrayChangelog
                 goto UpdateVanilla;
             }
 
-            changelog.Add(vanillaIndex, (BymlChangeType.Edit, element));
+            changelog.Add((vanillaIndex, BymlChangeType.Edit, element));
 
         UpdateVanilla:
             vanilla[vanillaIndex] = BymlChangeType.Remove;
@@ -44,7 +51,7 @@ public class BymlKeyedArrayChangelogBuilder<T>(string key) : IBymlArrayChangelog
                 continue;
             }
 
-            changelog.Add(i, (BymlChangeType.Remove, new Byml()));
+            changelog.Add((i, BymlChangeType.Remove, new Byml()));
         }
 
         root = changelog;

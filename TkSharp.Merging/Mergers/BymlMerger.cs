@@ -99,7 +99,7 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
     {
         List<(int InsertIndex, Byml Entry)>? additions = null;
         
-        foreach ((int i, (BymlChangeType change, Byml entry)) in changelog) {
+        foreach ((int i, BymlChangeType change, Byml entry) in changelog) {
             switch (change) {
                 case BymlChangeType.Add: {
                     if (!tracking.TryGetValue(@base, out BymlMergeTrackingEntry? trackingEntry)) {
@@ -110,7 +110,7 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
                         trackingEntry.Additions.Add(additions = []);
                     } 
                     
-                    additions.Add((InsertIndex: int.MaxValue - i, entry));
+                    additions.Add((InsertIndex: i, entry));
                     break;
                 }
                 case BymlChangeType.Remove: {

@@ -65,11 +65,11 @@ public sealed class RsdbTagChangelogBuilder : Singleton<RsdbTagChangelogBuilder>
         BymlArrayChangelog changelog = [];
 
         foreach (string tag in removed) {
-            changelog[++index] = (BymlChangeType.Remove, tag);
+            changelog.Add((++index, BymlChangeType.Remove, tag));
         }
 
         foreach (string tag in entryTags) {
-            changelog[++index] = (BymlChangeType.Add, tag);
+            changelog.Add((++index, BymlChangeType.Add, tag));
         }
 
         return changelog;

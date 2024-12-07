@@ -20,17 +20,17 @@ public class BymlDirectIndexArrayChangelogBuilder : IBymlArrayChangelogBuilder
         for (; i < smaller.Count; i++) {
             Byml srcEntry = src[i];
             if (!BymlChangelogBuilder.LogChangesInline(ref info, ref srcEntry, vanilla[i])) {
-                changelog[i] = (BymlChangeType.Edit, srcEntry);
+                changelog.Add((i, BymlChangeType.Edit, srcEntry));
             }
         }
 
         for (; i < larger.Count; i++) {
             if (isVanillaSmaller) {
-                changelog[int.MaxValue - i] = (BymlChangeType.Add, src[i]);
+                changelog.Add((i, BymlChangeType.Add, src[i]));
                 continue;
             }
             
-            changelog[i] = (BymlChangeType.Remove, new Byml());
+            changelog.Add((i, BymlChangeType.Remove, new Byml()));
         }
 
         root = changelog;

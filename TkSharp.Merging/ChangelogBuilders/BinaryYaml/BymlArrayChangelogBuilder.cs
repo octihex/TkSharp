@@ -12,6 +12,7 @@ public class BymlArrayChangelogBuilder : IBymlArrayChangelogBuilder
     {
         BymlArrayChangelog changelog = [];
         List<int> editedVanillaIndices = [];
+        int detectedAdditions = 0;
 
         for (int i = 0; i < src.Count; i++) {
             Byml element = src[i];
@@ -33,7 +34,7 @@ public class BymlArrayChangelogBuilder : IBymlArrayChangelogBuilder
                 continue;
             }
 
-            changelog.Add(i, (BymlChangeType.Remove, new Byml()));
+            changelog.Add((i, BymlChangeType.Remove, new Byml()));
         }
 
         for (int i = 0; i < src.Count; i++) {
@@ -45,12 +46,13 @@ public class BymlArrayChangelogBuilder : IBymlArrayChangelogBuilder
             if (editedVanillaIndices.Count > 0) {
                 int vanillaIndex = editedVanillaIndices[0];
                 BymlChangelogBuilder.LogChangesInline(ref info, ref element, vanilla[vanillaIndex]);
-                changelog.Add(vanillaIndex, (BymlChangeType.Edit, element));
+                changelog.Add((vanillaIndex, BymlChangeType.Edit, element));
                 editedVanillaIndices.RemoveAt(0);
                 continue;
             }
 
-            changelog.Add(int.MaxValue - i, (BymlChangeType.Add, element));
+            changelog.Add((i - detectedAdditions, BymlChangeType.Add, element));
+            detectedAdditions++;
         }
 
         root = changelog;
