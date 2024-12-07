@@ -72,8 +72,10 @@ public sealed class TkResourceSizeCollector
         }
 
         uint hash = Crc32.Compute(canonical);
-        if (_result.HashTable.TryAdd(hash, size)) {
-            return;
+        lock (_result) {
+            if (_result.HashTable.TryAdd(hash, size)) {
+                return;
+            }
         }
         
         // If the hash is not in the vanilla
