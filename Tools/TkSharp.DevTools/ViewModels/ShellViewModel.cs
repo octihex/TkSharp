@@ -85,6 +85,8 @@ public partial class ShellViewModel : ObservableObject
         TkMod store = TkApp.ModManager.Mods[newIndex];
         TkApp.ModManager.Mods[newIndex] = target;
         TkApp.ModManager.Mods[currentIndex] = store;
+        
+        TkApp.ModManager.Save();
 
         return target;
     }
@@ -121,9 +123,8 @@ public partial class ShellViewModel : ObservableObject
 
         try {
             await run(merger, TkApp.ModManager
-                .GetCurrentProfile()
                 .Mods
-                .Select(x => x.Mod.Changelog)
+                .Select(x => x.Changelog)
                 .Reverse()
             );
         }
