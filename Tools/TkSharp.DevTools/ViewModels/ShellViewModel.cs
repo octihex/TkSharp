@@ -6,6 +6,7 @@ using FluentAvalonia.UI.Controls;
 using Kokuban;
 using Microsoft.Extensions.Logging;
 using TkSharp.Core;
+using TkSharp.Core.Extensions;
 using TkSharp.Core.Models;
 using TkSharp.IO.Writers;
 using TkSharp.Merging;

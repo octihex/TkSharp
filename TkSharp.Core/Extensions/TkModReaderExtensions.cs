@@ -1,8 +1,8 @@
 using TkSharp.Core.Models;
 
-namespace TkSharp.Core;
+namespace TkSharp.Core.Extensions;
 
-public static class TkModReader
+public static class TkModReaderExtensions
 {
     public static async Task<TkMod?> ReadFromInput(this ITkModReaderProvider readerProvider, object input, CancellationToken ct = default)
     {

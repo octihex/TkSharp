@@ -6,6 +6,7 @@ using Avalonia.Platform.Storage;
 using FluentAvalonia.UI.Windowing;
 using Microsoft.Extensions.Logging;
 using TkSharp.Core;
+using TkSharp.Core.Extensions;
 using TkSharp.Core.Models;
 
 namespace TkSharp.DevTools.Views;
