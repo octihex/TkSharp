@@ -30,7 +30,9 @@ public sealed class SevenZipModReader(ITkSystemProvider systemProvider, ITkRomPr
         ArchiveModSource source = new(archive, root);
         ITkModWriter writer = _systemProvider.GetSystemWriter(context);
 
-        TkChangelogBuilder builder = new(source, writer, _romProvider.GetRom());
+        TkChangelogBuilder builder = new(source, writer, _romProvider.GetRom(),
+            _systemProvider.GetSystemSource(context.Id.ToString())
+        );
         TkChangelog changelog = await builder.BuildAsync(ct);
 
         return new TkMod {
