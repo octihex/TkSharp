@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using TkSharp.Core;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.Models;
@@ -30,7 +31,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
     {
         return Task.Run(Build, ct);
     }
-    
+
     public TkChangelog Build()
     {
         foreach ((string file, object entry) in _source.Files) {
@@ -46,7 +47,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         if (isInvalid) {
             return;
         }
-        
+
         string canonical = path.Canonical.ToString();
 
         using Stream content = _source.OpenRead(entry);
@@ -93,9 +94,9 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
 
         using RentedBuffer<byte> raw = RentedBuffer<byte>.Allocate(content);
         _ = content.Read(raw.Span);
-        
+
         bool isZsCompressed = TkZstd.IsCompressed(raw.Span);
-        
+
         using RentedBuffer<byte> decompressed = isZsCompressed
             ? RentedBuffer<byte>.Allocate(TkZstd.GetDecompressedSize(raw.Span))
             : default;
@@ -125,6 +126,26 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             string outputFile = Path.Combine(path.Root.ToString(), canon);
             return _writer.OpenWrite(outputFile);
         });
+    }
+
+    public static IEnumerable<ArraySegment<byte>> CreateChangelogsExternal(string canonical, ArraySegment<byte> @base, IEnumerable<ArraySegment<byte>> changelogs, TkFileAttributes attributes)
+    {
+        TkPath path = new(canonical, 100, attributes, "romfs", "");
+
+        if (GetChangelogBuilder(path) is not ITkChangelogBuilder builder) {
+            TkLog.Instance.LogWarning(
+                "Target file {TargetFile} cannot be merged as a custom file because no changelog builder could be found.",
+                canonical);
+            throw new InvalidOperationException();
+        }
+
+        // ReSharper disable once AccessToDisposedClosure
+        foreach (ArraySegment<byte> changelog in changelogs) {
+            using MemoryStream output = new();
+            TkPath pathIteratorStackInstance = new(canonical, 100, attributes, "romfs", "");
+            builder.Build(canonical, pathIteratorStackInstance, changelog, @base, (_, _) => output);
+            yield return output.GetBuffer();
+        }
     }
 
     private void AddChangelogMetadata(in TkPath path, string canonical, ChangelogEntryType type, int zsDictionaryId)
