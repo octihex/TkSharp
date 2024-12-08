@@ -133,10 +133,8 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         TkPath path = new(canonical, 100, attributes, "romfs", "");
 
         if (GetChangelogBuilder(path) is not ITkChangelogBuilder builder) {
-            TkLog.Instance.LogWarning(
-                "Target file {TargetFile} cannot be merged as a custom file because no changelog builder could be found.",
-                canonical);
-            throw new InvalidOperationException();
+            throw new InvalidOperationException(
+                $"Target file {canonical} cannot be merged as a custom file because no changelog builder could be found.");
         }
 
         // ReSharper disable once AccessToDisposedClosure
