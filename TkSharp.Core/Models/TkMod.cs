@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace TkSharp.Core.Models;
@@ -25,6 +26,7 @@ public sealed partial class TkMod : TkStoredItem
     /// <summary>
     /// The option groups in this mod.
     /// </summary>
+    [JsonIgnore]
     public ObservableCollection<TkModOptionGroup> OptionGroups { get; init; } = [];
 
     /// <summary>
