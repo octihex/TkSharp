@@ -10,6 +10,11 @@ namespace TkSharp.DevTools.ViewModels;
 
 public partial class PackagingPageViewModel : ObservableObject
 {
+    public PackagingPageViewModel()
+    {
+        TkProjectManager.Load();
+    }
+    
     [ObservableProperty]
     private TkProject? _project;
     
@@ -29,6 +34,7 @@ public partial class PackagingPageViewModel : ObservableObject
         }
         
         Project = TkProjectManager.NewProject(localFolderPath);
+        TkProjectManager.Save();
     }
     
     [RelayCommand]
@@ -59,6 +65,7 @@ public partial class PackagingPageViewModel : ObservableObject
         }
         
         Project = TkProjectManager.OpenProject(localFolderPath);
+        TkProjectManager.Save();
     }
     
     [RelayCommand]
@@ -66,6 +73,7 @@ public partial class PackagingPageViewModel : ObservableObject
     {
         Project?.Save();
         Project = null;
+        TkProjectManager.Save();
     }
     
     [RelayCommand]

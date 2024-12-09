@@ -20,6 +20,7 @@
 
             <ListBox ItemsSource="{x:Static core:TkProjectManager.RecentProjects}"
                      Margin="0,15,0,0"
+                     DoubleTapped="InputElement_OnDoubleTapped"
                      Grid.Row="1">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="{x:Type core:TkProject}">

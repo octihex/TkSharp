@@ -125,7 +125,11 @@ public partial class MergingPageViewModel : ObservableObject
         try {
             await run(merger, TkApp.ModManager
                 .Mods
-                .Select(x => x.Changelog)
+                .SelectMany(mod => mod.OptionGroups
+                    .SelectMany(group => group.Options)
+                    .Select(option => option.Changelog)
+                    .Prepend(mod.Changelog)
+                )
                 .Reverse()
             );
         }
