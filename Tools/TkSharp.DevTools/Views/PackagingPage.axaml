@@ -22,10 +22,10 @@
                      Margin="0,15,0,0"
                      Grid.Row="1">
                 <ListBox.ItemTemplate>
-                    <DataTemplate x:DataType="{x:Type tk:TkMod}">
+                    <DataTemplate x:DataType="{x:Type core:TkProject}">
                         <Grid ColumnDefinitions="Auto,Auto,*">
-                            <TextBlock Text="{Binding Name}" />
-                            <TextBlock Text="{Binding Version}" />
+                            <TextBlock Text="{Binding Mod.Name}" />
+                            <TextBlock Text="{Binding Mod.Version}" />
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
@@ -35,9 +35,9 @@
         <Grid RowDefinitions="Auto,*"
               IsVisible="{Binding Project, Converter={x:Static ObjectConverters.IsNotNull}}">
             <StackPanel Orientation="Horizontal" Spacing="10">
-                <Button Content="Save" Command="{Binding SaveCommand}" />
+                <Button Content="Save &amp; Exit" Command="{Binding SaveCommand}" />
                 <Button Content="Package" Command="{Binding PackageCommand}" />
-                <Button Content="Package &amp; Install" Command="{Binding PackageAndInstallCommand}" />
+                <Button Content="Install" Command="{Binding InstallCommand}" />
             </StackPanel>
 
             <StackPanel Grid.Row="1" Margin="0,15,0,0">
