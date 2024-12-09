@@ -24,7 +24,7 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
         }
 
         using FileStream fs = File.OpenRead(portableManagerStateFile);
-        return TkBinaryReader.Read(fs, dataFolderPath);
+        return TkModManagerSerializer.Read(fs, dataFolderPath);
     }
 
     public string DataFolderPath { get; } = dataFolderPath;
@@ -104,7 +104,7 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
 
         try {
             using MemoryStream ms = new();
-            TkBinaryWriter.Write(ms, this);
+            TkModManagerSerializer.Write(ms, this);
 
             using FileStream fs = File.Create(Path.Combine(DataFolderPath, "state.db"));
             fs.Write(ms.GetBuffer());

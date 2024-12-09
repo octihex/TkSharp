@@ -1,55 +1,13 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.HighPerformance;
-using TkSharp.Core;
 using TkSharp.Core.Extensions;
-using TkSharp.Core.IO.Serialization;
 using TkSharp.Core.Models;
-using static TkSharp.IO.Serialization.TkBinaryWriter;
 
-namespace TkSharp.IO.Serialization;
+namespace TkSharp.Core.IO.Serialization;
 
 public static class TkBinaryReader
 {
-    public static TkModManager Read(in Stream input, string dataFolderPath)
-    {
-        TkModManager manager = new(dataFolderPath);
-
-        if (input.Read<uint>() != MAGIC) {
-            throw new InvalidDataException("Invalid mod manager magic.");
-        }
-
-        if (input.Read<uint>() != VERSION) {
-            throw new InvalidDataException("Invalid mod manager version, expected 1.1.0.");
-        }
-
-        int modCount = input.Read<int>();
-        for (int i = 0; i < modCount; i++) {
-            manager.Mods.Add(
-                ReadTkMod(input, manager)
-            );
-        }
-        
-        int profileCount = input.Read<int>();
-        for (int i = 0; i < profileCount; i++) {
-            manager.Profiles.Add(
-                ReadTkProfile(input, manager.Mods)
-            );
-        }
-        
-        int selectedModIndex = input.Read<int>();
-        if (selectedModIndex > -1) {
-            manager.Selected = manager.Mods[selectedModIndex];
-        }
-        
-        int currentProfileIndex = input.Read<int>();
-        if (currentProfileIndex > -1) {
-            manager.CurrentProfile = manager.Profiles[currentProfileIndex];
-        }
-
-        return manager;
-    }
-
-    internal static TkMod ReadTkMod(in Stream input, ITkSystemProvider systemProvider)
+    public static TkMod ReadTkMod(in Stream input, ITkSystemProvider systemProvider)
     {
         var id = input.Read<Ulid>();
         string relativeModFolderPath = id.ToString();
@@ -92,7 +50,7 @@ public static class TkBinaryReader
         return result;
     }
 
-    private static TkModOptionGroup ReadTkModOptionGroup(in Stream input,
+    public static TkModOptionGroup ReadTkModOptionGroup(in Stream input,
         ITkSystemProvider systemProvider, string parentModFolderPath)
     {
         var id = input.Read<Ulid>();
@@ -131,7 +89,7 @@ public static class TkBinaryReader
         return result;
     }
 
-    private static TkModOption ReadTkModOption(in Stream input, ITkSystemProvider systemProvider, string parentModFolderPath)
+    public static TkModOption ReadTkModOption(in Stream input, ITkSystemProvider systemProvider, string parentModFolderPath)
     {
         var id = input.Read<Ulid>();
         string changelogFolderPath = Path.Combine(parentModFolderPath, id.ToString());
@@ -146,7 +104,7 @@ public static class TkBinaryReader
         };
     }
 
-    private static TkModDependency ReadTkModDependency(in Stream input)
+    public static TkModDependency ReadTkModDependency(in Stream input)
     {
         return new TkModDependency {
             DependentName = input.ReadString()!,
@@ -154,7 +112,7 @@ public static class TkBinaryReader
         };
     }
 
-    private static TkProfile ReadTkProfile(in Stream input, ObservableCollection<TkMod> mods)
+    public static TkProfile ReadTkProfile(in Stream input, ObservableCollection<TkMod> mods)
     {
         var result = new TkProfile {
             Name = input.ReadString()!,
@@ -181,7 +139,7 @@ public static class TkBinaryReader
         return result;
     }
 
-    private static TkThumbnail? ReadTkThumbnail(in Stream input)
+    public static TkThumbnail? ReadTkThumbnail(in Stream input)
     {
         return input.Read<bool>()
             ? new TkThumbnail {

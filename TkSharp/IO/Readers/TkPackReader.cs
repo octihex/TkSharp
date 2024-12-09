@@ -2,9 +2,9 @@ using Revrs.Extensions;
 using SharpCompress.Common.Zip;
 using SharpCompress.Readers.Zip;
 using TkSharp.Core;
+using TkSharp.Core.IO.Serialization;
 using TkSharp.Core.Models;
-using TkSharp.IO.Serialization;
-using static TkSharp.IO.Serialization.TkPackWriter;
+using static TkSharp.Core.IO.Serialization.TkBinaryWriter;
 
 namespace TkSharp.IO.Readers;
 
@@ -26,12 +26,12 @@ public sealed class TkPackReader(ITkSystemProvider systemProvider) : ITkModReade
             );
         }
 
-        if (stream.Read<uint>() != MAGIC) {
+        if (stream.Read<uint>() != TKPK_MAGIC) {
             throw new InvalidDataException(
                 "Invalid TotK mod pack magic.");
         }
 
-        if (stream.Read<uint>() != VERSION) {
+        if (stream.Read<uint>() != TKPK_VERSION) {
             throw new InvalidDataException(
                 "Unexpected TotK mod pack version. Expected 1.0.0");
         }

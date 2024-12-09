@@ -1,44 +1,15 @@
 using CommunityToolkit.HighPerformance;
 using TkSharp.Core.Extensions;
-using TkSharp.Core.IO.Serialization;
 using TkSharp.Core.Models;
 
-namespace TkSharp.IO.Serialization;
+namespace TkSharp.Core.IO.Serialization;
 
 public static class TkBinaryWriter
 {
-    internal const uint MAGIC = 0x4D4D4B54;
-    internal const uint VERSION = 0x10100000;
-
-    public static void Write(in Stream output, TkModManager manager)
-    {
-        output.Write(MAGIC);
-        output.Write(VERSION);
-
-        Dictionary<TkMod, int> modsIndexLookup = [];
-
-        output.Write(manager.Mods.Count);
-        for (int i = 0; i < manager.Mods.Count; i++) {
-            TkMod mod = manager.Mods[i];
-            WriteTkMod(output, mod);
-            modsIndexLookup[mod] = i;
-        }
-        
-        output.Write(manager.Profiles.Count);
-        foreach (TkProfile profile in manager.Profiles) {
-            WriteTkProfile(output, profile, modsIndexLookup);
-        }
-        
-        output.Write(manager.Selected is not null
-            ? modsIndexLookup[manager.Selected]
-            : -1);
-        
-        output.Write(manager.CurrentProfile is not null
-            ? manager.Profiles.IndexOf(manager.CurrentProfile)
-            : -1);
-    }
-
-    internal static void WriteTkMod(in Stream output, in TkMod mod)
+    public const uint TKPK_MAGIC = 0x504D4B54;
+    public const uint TKPK_VERSION = 0x10;
+    
+    public static void WriteTkMod(in Stream output, in TkMod mod)
     {
         WriteTkStoredItem(output, mod);
         output.WriteString(mod.Version);
@@ -61,7 +32,7 @@ public static class TkBinaryWriter
         }
     }
 
-    private static void WriteTkModOptionGroup(in Stream output, in TkModOptionGroup optionGroup)
+    public static void WriteTkModOptionGroup(in Stream output, in TkModOptionGroup optionGroup)
     {
         WriteTkItem(output, optionGroup);
         output.Write(optionGroup.Type);
@@ -87,13 +58,13 @@ public static class TkBinaryWriter
         }
     }
 
-    private static void WriteTkModDependency(in Stream output, in TkModDependency dependency)
+    public static void WriteTkModDependency(in Stream output, in TkModDependency dependency)
     {
         output.WriteString(dependency.DependentName);
         output.Write(dependency.DependentId);
     }
 
-    private static void WriteTkProfile(in Stream output, TkProfile profile, Dictionary<TkMod, int> modsIndexLookup)
+    public static void WriteTkProfile(in Stream output, TkProfile profile, Dictionary<TkMod, int> modsIndexLookup)
     {
         WriteTkItem(output, profile);
         
@@ -110,21 +81,21 @@ public static class TkBinaryWriter
         );
     }
 
-    private static void WriteTkStoredItem(in Stream output, in TkStoredItem item)
+    public static void WriteTkStoredItem(in Stream output, in TkStoredItem item)
     {
         output.Write(item.Id);
         WriteTkItem(output, item);
         TkChangelogWriter.Write(output, item.Changelog);
     }
 
-    private static void WriteTkItem(in Stream output, in TkItem item)
+    public static void WriteTkItem(in Stream output, in TkItem item)
     {
         output.WriteString(item.Name);
         output.WriteString(item.Description);
         WriteTkThumbnail(output, item.Thumbnail);
     }
 
-    private static void WriteTkThumbnail(in Stream output, in TkThumbnail? thumbnail)
+    public static void WriteTkThumbnail(in Stream output, in TkThumbnail? thumbnail)
     {
         output.Write(thumbnail is not null);
         
