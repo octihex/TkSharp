@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:TkSharp.DevTools.ViewModels"
+             xmlns:core="using:TkSharp.Packaging"
+             xmlns:tk="using:TkSharp.Core.Models"
+             x:DataType="vm:PackagingPageViewModel"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="TkSharp.DevTools.Views.PackagingPage">
+    <Grid Margin="15" Background="Transparent"
+          DragDrop.AllowDrop="True" Name="DropTarget">
+        
+        <Grid RowDefinitions="Auto,*" IsVisible="{Binding Project, Converter={x:Static ObjectConverters.IsNull}}">
+            <StackPanel Orientation="Horizontal"
+                        Spacing="10">
+                <Button Content="New Project" Command="{Binding NewProjectCommand}" />
+                <Button Content="Open Project" Command="{Binding OpenProjectCommand}" />
+            </StackPanel>
+
+            <ListBox ItemsSource="{x:Static core:TkProjectManager.RecentProjects}"
+                     Margin="0,15,0,0"
+                     Grid.Row="1">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="{x:Type tk:TkMod}">
+                        <Grid ColumnDefinitions="Auto,Auto,*">
+                            <TextBlock Text="{Binding Name}" />
+                            <TextBlock Text="{Binding Version}" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+
+        <Grid RowDefinitions="Auto,*"
+              IsVisible="{Binding Project, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Content="Save" Command="{Binding SaveCommand}" />
+                <Button Content="Package" Command="{Binding PackageCommand}" />
+                <Button Content="Package &amp; Install" Command="{Binding PackageAndInstallCommand}" />
+            </StackPanel>
+
+            <StackPanel Grid.Row="1" Margin="0,15,0,0">
+                <TextBox Text="{Binding Project.Mod.Name}" Watermark="Name" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

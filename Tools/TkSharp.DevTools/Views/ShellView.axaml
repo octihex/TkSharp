@@ -9,32 +9,22 @@
                      x:DataType="vm:ShellViewModel"
                      xmlns:core="using:TkSharp.DevTools"
                      xmlns:tk="using:TkSharp.Core.Models"
+                     xmlns:ui="using:FluentAvalonia.UI.Controls"
                      Width="650"
                      Height="450"
                      Title="TkSharp Dev Tools">
-    <Grid RowDefinitions="Auto,*" Margin="15" Background="Transparent"
-          DragDrop.AllowDrop="True" Name="DropTarget">
-        <StackPanel Orientation="Horizontal" Spacing="10">
-            <Button Content="Import" Command="{Binding ImportCommand}" />
-            <Button Content="Remove" Command="{Binding RemoveCommand}" />
-            <Button Content="(↑)" Command="{Binding MoveUpCommand}" />
-            <Button Content="(↓)" Command="{Binding MoveDownCommand}" />
-            <Button Content="Merge" Command="{Binding MergeCommand}" />
-            <Button Content="Merge (Parallel)" Command="{Binding MergeParallelCommand}" />
-        </StackPanel>
-
-        <ListBox ItemsSource="{Binding Mods, Source={x:Static core:TkApp.ModManager}}"
-                 Margin="0,15,0,0"
-                 Grid.Row="1"
-                 SelectedItem="{Binding Selected, Source={x:Static core:TkApp.ModManager}}">
-            <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="{x:Type tk:TkMod}">
-                    <Grid ColumnDefinitions="Auto,Auto,*">
-                        <TextBlock Text="{Binding Name}" />
-                        <TextBlock Text="{Binding Version}" />
-                    </Grid>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-    </Grid>
+    <windowing:AppWindow.Resources>
+        <ui:SymbolIconSource x:Key="MergeIcon" Symbol="ViewAll" />
+        <ui:SymbolIconSource x:Key="PackageIcon" Symbol="CodeHTML" />
+    </windowing:AppWindow.Resources>
+    <ui:NavigationView Content="{Binding PageContent}" IsSettingsVisible="False" SelectedItem="{Binding CurrentPageItem}">
+        <ui:NavigationView.MenuItems>
+            <ui:NavigationViewItem IconSource="{StaticResource MergeIcon}"
+                                   Content="Merging"
+                                   IsSelected="True" />
+            <ui:NavigationViewItem IconSource="{StaticResource PackageIcon}"
+                                   Content="Studio"
+                                   Tag="PackagingPage" />
+        </ui:NavigationView.MenuItems>
+    </ui:NavigationView>
 </windowing:AppWindow>

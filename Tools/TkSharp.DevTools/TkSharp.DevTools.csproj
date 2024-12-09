@@ -29,6 +29,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\Extensions\TkSharp.Extensions.GameBanana\TkSharp.Extensions.GameBanana.csproj" />
       <ProjectReference Include="..\..\TkSharp.Data.Embedded\TkSharp.Data.Embedded.csproj" />
+      <ProjectReference Include="..\..\TkSharp.Packaging\TkSharp.Packaging.csproj" />
       <ProjectReference Include="..\..\TkSharp\TkSharp.csproj" />
     </ItemGroup>
 </Project>

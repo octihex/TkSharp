@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:TkSharp.DevTools.ViewModels"
+             xmlns:core="using:TkSharp.DevTools"
+             xmlns:tk="using:TkSharp.Core.Models"
+             x:DataType="vm:MergingPageViewModel"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="TkSharp.DevTools.Views.MergingPage">
+    <Grid RowDefinitions="Auto,*" Margin="15" Background="Transparent"
+          DragDrop.AllowDrop="True" Name="DropTarget">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Content="Import" Command="{Binding ImportCommand}" />
+            <Button Content="Remove" Command="{Binding RemoveCommand}" />
+            <Button Content="(↑)" Command="{Binding MoveUpCommand}" />
+            <Button Content="(↓)" Command="{Binding MoveDownCommand}" />
+            <Button Content="Merge" Command="{Binding MergeCommand}" />
+            <Button Content="Merge (Parallel)" Command="{Binding MergeParallelCommand}" />
+        </StackPanel>
+
+        <ListBox ItemsSource="{Binding Mods, Source={x:Static core:TkApp.ModManager}}"
+                 Margin="0,15,0,0"
+                 Grid.Row="1"
+                 SelectedItem="{Binding Selected, Source={x:Static core:TkApp.ModManager}}">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="{x:Type tk:TkMod}">
+                    <Grid ColumnDefinitions="Auto,Auto,*">
+                        <TextBlock Text="{Binding Name}" />
+                        <TextBlock Text="{Binding Version}" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</UserControl>
