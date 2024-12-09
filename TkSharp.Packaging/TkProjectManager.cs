@@ -61,7 +61,7 @@ public static class TkProjectManager
             }
             
             RecentProjects.RemoveAt(i);
-            RecentProjects.Insert(i, project);
+            goto Default;
         }
         
     Default:

@@ -17,20 +17,20 @@ public partial class TkProject(string folderPath) : ObservableObject
     [ObservableProperty]
     private TkMod _mod = new();
 
-    public async ValueTask Package(Stream output, ITkRom rom)
+    public async ValueTask Package(Stream output, ITkRom rom, CancellationToken ct = default)
     {
         using MemoryStream contentArchiveOutput = new();
         ArchiveModWriter writer = new(contentArchiveOutput);
-        await Build(writer, rom);
+        await Build(writer, rom, ct: ct);
         
         TkPackWriter.Write(output, Mod, contentArchiveOutput.GetBuffer());
     }
 
-    public async ValueTask<TkChangelog> Build(ITkModWriter writer, ITkRom rom, ITkSystemSource? systemSource = null)
+    public async ValueTask<TkChangelog> Build(ITkModWriter writer, ITkRom rom, ITkSystemSource? systemSource = null, CancellationToken ct = default)
     {
         FolderModSource source = new(FolderPath);
         TkChangelogBuilder builder = new(source, writer, rom, systemSource);
-        return await builder.BuildAsync()
+        return await builder.BuildAsync(ct)
             .ConfigureAwait(false);
     }
 
