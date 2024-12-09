@@ -53,9 +53,6 @@ public static class TkBinaryReader
     public static TkModOptionGroup ReadTkModOptionGroup(in Stream input,
         ITkSystemProvider systemProvider, string parentModFolderPath)
     {
-        var id = input.Read<Ulid>();
-        parentModFolderPath = Path.Combine(parentModFolderPath, "options", id.ToString());
-        
         var result = new TkModOptionGroup {
             Name = input.ReadString()!,
             Description = input.ReadString()!,
