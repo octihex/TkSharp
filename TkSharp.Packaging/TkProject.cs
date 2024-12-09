@@ -1,6 +1,8 @@
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using TkSharp.Core;
+using TkSharp.Core.Extensions;
 using TkSharp.Core.IO.ModSources;
 using TkSharp.Core.Models;
 using TkSharp.Merging;
@@ -19,19 +21,30 @@ public partial class TkProject(string folderPath) : ObservableObject
 
     public async ValueTask Package(Stream output, ITkRom rom, CancellationToken ct = default)
     {
-        using MemoryStream contentArchiveOutput = new();
-        ArchiveModWriter writer = new(contentArchiveOutput);
-        await Build(writer, rom, ct: ct);
+        TkLog.Instance.LogInformation("Packaging '{ModName}'", Mod.Name);
         
-        TkPackWriter.Write(output, Mod, contentArchiveOutput.GetBuffer());
+        ArchiveModWriter writer = new();
+        Mod.Changelog = await Build(writer, rom, ct: ct);
+        
+        using MemoryStream contentArchiveOutput = new();
+        writer.Compile(contentArchiveOutput);
+
+        TkPackWriter.Write(output, Mod, contentArchiveOutput.GetSpan());
+        
+        TkLog.Instance.LogInformation("'{ModName}' packaging completed", Mod.Name);
     }
 
     public async ValueTask<TkChangelog> Build(ITkModWriter writer, ITkRom rom, ITkSystemSource? systemSource = null, CancellationToken ct = default)
     {
+        TkLog.Instance.LogInformation("Building '{ModName}'", Mod.Name);
+        
         FolderModSource source = new(FolderPath);
         TkChangelogBuilder builder = new(source, writer, rom, systemSource);
-        return await builder.BuildAsync(ct)
+        TkChangelog result = await builder.BuildAsync(ct)
             .ConfigureAwait(false);
+        
+        TkLog.Instance.LogInformation("'{ModName}' build completed", Mod.Name);
+        return result;
     }
 
     public void Save()
