@@ -34,7 +34,7 @@ public partial class TkProject(string folderPath) : ObservableObject
 
         TkPackWriter.Write(output, Mod, contentArchiveOutput.GetSpan());
         
-        TkLog.Instance.LogInformation("'{ModName}' packaging completed", Mod.Name);
+        TkLog.Instance.LogInformation("Packaged: '{ModName}'", Mod.Name);
     }
 
     public async ValueTask Build(ITkModWriter writer, ITkRom rom, ITkSystemSource? systemSource = null, CancellationToken ct = default)
@@ -51,17 +51,19 @@ public partial class TkProject(string folderPath) : ObservableObject
             writer.SetRelativeFolder(option.Id.ToString());
             option.Changelog = await Build(option, optionSource, writer, rom, ct: ct);
         }
+        
+        TkLog.Instance.LogInformation("Build completed");
     }
 
     private static async ValueTask<TkChangelog> Build(TkStoredItem item, ITkModSource source, ITkModWriter writer, ITkRom rom, ITkSystemSource? systemSource = null, CancellationToken ct = default)
     {
-        TkLog.Instance.LogInformation("Building '{ItemName}'", item.Name);
+        TkLog.Instance.LogInformation("Building: '{ItemName}'", item.Name);
         
         TkChangelogBuilder builder = new(source, writer, rom, systemSource);
         TkChangelog result = await builder.BuildAsync(ct)
             .ConfigureAwait(false);
         
-        TkLog.Instance.LogInformation("'{ItemName}' build completed", item.Name);
+        TkLog.Instance.LogInformation("Built: '{ItemName}'", item.Name);
         return result;
     }
 
