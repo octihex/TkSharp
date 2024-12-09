@@ -5,7 +5,7 @@ using TkSharp.Merging.ChangelogBuilders;
 
 namespace TkSharp.Merging;
 
-public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom tk, ITkSystemSource systemSource)
+public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom tk, ITkSystemSource? systemSource)
 {
     private readonly ITkModSource _source = source;
     private readonly ITkModWriter _writer = writer;
