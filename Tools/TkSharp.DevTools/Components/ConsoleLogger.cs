@@ -26,11 +26,11 @@ public class ConsoleLogger : ILogger
 
     public bool IsEnabled(LogLevel logLevel)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 }
