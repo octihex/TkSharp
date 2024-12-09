@@ -4,6 +4,7 @@ using Revrs;
 using RstbLibrary;
 using RstbLibrary.Helpers;
 using TkSharp.Core;
+using TkSharp.Core.Extensions;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Merging.ResourceSizeTable.Calculators;
 
@@ -34,9 +35,7 @@ public sealed class TkResourceSizeCollector
         using MemoryStream ms = new();
         _result.WriteBinary(ms);
 
-        if (!ms.TryGetBuffer(out ArraySegment<byte> buffer)) {
-            buffer = ms.ToArray();
-        }
+        ArraySegment<byte> buffer = ms.GetSpan();
         
         using SpanOwner<byte> compressed = SpanOwner<byte>.Allocate(buffer.Count);
         Span<byte> compressedData = compressed.Span;

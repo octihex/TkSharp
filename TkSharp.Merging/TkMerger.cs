@@ -2,6 +2,7 @@ using CommunityToolkit.HighPerformance.Buffers;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using TkSharp.Core;
+using TkSharp.Core.Extensions;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.Models;
 using TkSharp.Merging.Mergers;
@@ -156,10 +157,7 @@ public sealed class TkMerger
 
     private void CopyMergedToOutput(in MemoryStream input, string relativePath, TkChangelogEntry changelog)
     {
-        if (!input.TryGetBuffer(out ArraySegment<byte> buffer)) {
-            buffer = input.ToArray();
-        }
-
+        ArraySegment<byte> buffer = input.GetSpan();
         _resourceSizeCollector.Collect(buffer.Count, relativePath, buffer);
 
         using Stream output = _output.OpenWrite(

@@ -1,4 +1,5 @@
 using TkSharp.Core;
+using TkSharp.Core.Extensions;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.Models;
 using TkSharp.Merging.ChangelogBuilders;
@@ -142,7 +143,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             using MemoryStream output = new();
             TkPath pathIteratorStackInstance = new(canonical, 100, attributes, "romfs", "");
             builder.Build(canonical, pathIteratorStackInstance, changelog, @base, (_, _) => output);
-            yield return output.GetBuffer();
+            yield return output.GetSpan();
         }
     }
 

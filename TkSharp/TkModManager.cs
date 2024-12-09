@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Logging;
 using TkSharp.Core;
+using TkSharp.Core.Extensions;
 using TkSharp.Core.Models;
 using TkSharp.IO;
 using TkSharp.IO.Serialization;
@@ -107,7 +108,7 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
             TkModManagerSerializer.Write(ms, this);
 
             using FileStream fs = File.Create(Path.Combine(DataFolderPath, "state.db"));
-            fs.Write(ms.GetBuffer());
+            fs.Write(ms.GetSpan());
         }
         catch (Exception ex) {
             TkLog.Instance.LogError(ex, "Failed to save mod manager state.");
