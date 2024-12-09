@@ -6,11 +6,12 @@ namespace TkSharp.Packaging.IO.Writers;
 
 public sealed class ArchiveModWriter : ITkModWriter
 {
+    private string _root = string.Empty; 
     private readonly Dictionary<string, MemoryStream> _entries = [];
     
     public Stream OpenWrite(string filePath)
     {
-        return _entries[filePath] = new MemoryStream();
+        return _entries[Path.Combine(_root, filePath)] = new MemoryStream();
     }
 
     public void Compile(Stream output)
@@ -22,5 +23,10 @@ public sealed class ArchiveModWriter : ITkModWriter
             entry.Write(ms.GetSpan());
             ms.Dispose();
         }
+    }
+
+    public void SetRelativeFolder(string rootFolderPath)
+    {
+        _root = rootFolderPath;
     }
 }
