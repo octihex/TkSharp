@@ -2,7 +2,7 @@ using SharpCompress.Common;
 using SharpCompress.Writers.Zip;
 using TkSharp.Core;
 
-namespace TkSharp.IO.Writers;
+namespace TkSharp.Packaging.IO.Writers;
 
 public sealed class ArchiveModWriter(Stream output) : ITkModWriter
 {
@@ -12,10 +12,5 @@ public sealed class ArchiveModWriter(Stream output) : ITkModWriter
     public Stream OpenWrite(string filePath)
     {
         return _writer.WriteToStream(filePath, _defaultEntryOptions);
-    }
-
-    public ITkModSource GetSource()
-    {
-        throw new NotSupportedException("Getting the source from an archive writer is not supported.");
     }
 }
