@@ -4,5 +4,5 @@ public abstract class TkStoredItem : TkItem
 {
     public Ulid Id { get; init; }
 
-    public TkChangelog Changelog { get; init; } = null!;
+    public TkChangelog Changelog { get; set; } = null!;
 }
