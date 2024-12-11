@@ -105,7 +105,7 @@ public class BymlArrayChangelogBuilderProvider : Singleton<BymlArrayChangelogBui
             "EffectLimiterGroup" or "HiddenMaterialGroupList" => new BymlKeyedArrayChangelogBuilder<string>("GroupName"),
             "Textures" => new BymlKeyedArrayChangelogBuilder<uint>("guid"),
             /* "AiGroups" or */ "Points" => new BymlKeyedArrayChangelogBuilder<ulong>("Hash"),
-            "Rails" => info.Level switch {
+            "Rails" => info.Depth switch {
                 0 => new BymlKeyedArrayChangelogBuilder<ulong>("Hash"),
                 _ => BymlArrayChangelogBuilder.Instance
             },

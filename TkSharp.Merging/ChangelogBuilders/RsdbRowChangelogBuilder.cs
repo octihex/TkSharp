@@ -35,7 +35,7 @@ public sealed class RsdbRowChangelogBuilder<TKey>(string keyName) : ITkChangelog
 
         BymlArray? vanillaRows = null;
 
-        BymlTrackingInfo bymlTrackingInfo = new(path.Canonical, level: 0);
+        BymlTrackingInfo bymlTrackingInfo = new(path.Canonical, depth: 0);
 
         for (int i = 0; i < rows.Count; i++) {
             Byml rowEntry = rows[i];

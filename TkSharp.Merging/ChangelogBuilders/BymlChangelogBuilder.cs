@@ -13,7 +13,7 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
     {
         Byml vanillaByml = Byml.FromBinary(vanillaBuffer);
         Byml srcByml = Byml.FromBinary(srcBuffer, out Endianness endianness, out ushort version);
-        BymlTrackingInfo info = new(path.Canonical, level: 0);
+        BymlTrackingInfo info = new(path.Canonical, depth: 0);
         bool isVanilla = LogChangesInline(ref info, ref srcByml, vanillaByml);
 
         if (isVanilla) {
@@ -44,7 +44,7 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
             BymlNodeType.HashMap32 => LogMapChanges(ref info, src.GetHashMap32(), vanilla.GetHashMap32(), arrayChangelogBuilderProvider),
             BymlNodeType.HashMap64 => LogMapChanges(ref info, src.GetHashMap64(), vanilla.GetHashMap64(), arrayChangelogBuilderProvider),
             BymlNodeType.Array => info switch {
-                { Type: "ecocat", Level: 0 } => new BymlKeyedArrayChangelogBuilder<int>("AreaNumber")
+                { Type: "ecocat", Depth: 0 } => new BymlKeyedArrayChangelogBuilder<int>("AreaNumber")
                     .LogChanges(ref info, ref src, src.GetArray(), vanilla.GetArray()),
                 _ => BymlArrayChangelogBuilder.Instance.LogChanges(ref info, ref src, src.GetArray(), vanilla.GetArray())
             },
@@ -67,7 +67,7 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
     
     private static bool LogMapChanges<T>(ref BymlTrackingInfo info, IDictionary<T, Byml> src, IDictionary<T, Byml> vanilla, IBymlArrayChangelogBuilderProvider bymlArrayChangelogBuilderProvider) 
     {
-        info.Level++;
+        info.Depth++;
         foreach (T key in src.Keys.Concat(vanilla.Keys).Distinct().ToArray()) {
             if (!src.TryGetValue(key, out Byml? srcValue)) {
                 src[key] = BymlChangeType.Remove;
@@ -100,7 +100,7 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
             src[key] = srcValue;
         }
 
-        info.Level--;
+        info.Depth--;
         return src.Count == 0;
     }
 }

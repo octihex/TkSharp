@@ -25,7 +25,7 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
 
     private void ApplyEntry(BymlArray @base, BymlMergeTrackingEntry entry, ref BymlTrackingInfo info)
     {
-        info.Level = entry.Depth;
+        info.Depth = entry.Depth;
 
         int newEntryOffset = 0;
 
@@ -63,7 +63,7 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
                 return;
         }
 
-        if (entry.ArrayName is string arrayName && BymlMergerKeyNameProvider.Instance.GetKeyName(arrayName, info.Type, info.Level) is string keyName) {
+        if (entry.ArrayName is string arrayName && BymlMergerKeyNameProvider.Instance.GetKeyName(arrayName, info.Type, info.Depth) is string keyName) {
             ProcessKeyedAdditions(ref newEntryOffset, @base, insertIndex, additions, keyName, ref info);
             return;
         }
