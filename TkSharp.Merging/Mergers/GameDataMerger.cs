@@ -17,7 +17,7 @@ public sealed class GameDataMerger : Singleton<GameDataMerger>, ITkMerger
         Byml merged = Byml.FromBinary(vanillaData, out Endianness endianness, out ushort version);
         BymlMap root = merged.GetMap();
         BymlMap baseData = root["Data"].GetMap();
-        BymlMergeTracking tracking = new();
+        BymlMergeTracking tracking = new(entry.Canonical);
 
         foreach (RentedBuffers<byte>.Entry input in inputs) {
             BymlMap changelog = Byml.FromBinary(input.Span)
@@ -36,7 +36,7 @@ public sealed class GameDataMerger : Singleton<GameDataMerger>, ITkMerger
         Byml merged = Byml.FromBinary(vanillaData, out Endianness endianness, out ushort version);
         BymlMap root = merged.GetMap();
         BymlMap baseData = root["Data"].GetMap();
-        BymlMergeTracking tracking = new();
+        BymlMergeTracking tracking = new(entry.Canonical);
 
         foreach (ArraySegment<byte> input in inputs) {
             BymlMap changelog = Byml.FromBinary(input)
@@ -55,7 +55,7 @@ public sealed class GameDataMerger : Singleton<GameDataMerger>, ITkMerger
         Byml merged = Byml.FromBinary(@base, out Endianness endianness, out ushort version);
         BymlMap root = merged.GetMap();
         BymlMap baseData = root["Data"].GetMap();
-        BymlMergeTracking tracking = new();
+        BymlMergeTracking tracking = new(entry.Canonical);
 
         BymlMap changelog = Byml.FromBinary(input)
             .GetMap();

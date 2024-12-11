@@ -24,7 +24,7 @@ public sealed class RsdbRowMerger(string keyName) : ITkMerger
     {
         Byml merged = Byml.FromBinary(vanillaData, out Endianness endianness, out ushort version);
         BymlArray rows = merged.GetArray();
-        BymlMergeTracking tracking = new();
+        BymlMergeTracking tracking = new(entry.Canonical);
 
         foreach (RentedBuffers<byte>.Entry input in inputs) {
             MergeEntry(rows, input.Span, tracking);
@@ -40,7 +40,7 @@ public sealed class RsdbRowMerger(string keyName) : ITkMerger
     {
         Byml merged = Byml.FromBinary(vanillaData, out Endianness endianness, out ushort version);
         BymlArray rows = merged.GetArray();
-        BymlMergeTracking tracking = new();
+        BymlMergeTracking tracking = new(entry.Canonical);
 
         foreach (ArraySegment<byte> input in inputs) {
             MergeEntry(rows, input, tracking);
@@ -56,7 +56,7 @@ public sealed class RsdbRowMerger(string keyName) : ITkMerger
     {
         Byml merged = Byml.FromBinary(@base, out Endianness endianness, out ushort version);
         BymlArray rows = merged.GetArray();
-        BymlMergeTracking tracking = new();
+        BymlMergeTracking tracking = new(entry.Canonical);
         MergeEntry(rows, input, tracking);
         tracking.Apply();
         rows.Sort(_rowComparer);

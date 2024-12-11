@@ -12,7 +12,7 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
     public void Merge(TkChangelogEntry entry, RentedBuffers<byte> inputs, ArraySegment<byte> vanillaData, Stream output)
     {
         Byml merged = Byml.FromBinary(vanillaData, out Endianness endianness, out ushort version);
-        BymlMergeTracking tracking = new();
+        BymlMergeTracking tracking = new(entry.Canonical);
 
         foreach (RentedBuffers<byte>.Entry input in inputs) {
             Byml changelog = Byml.FromBinary(input.Span);
@@ -26,7 +26,7 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
     public void Merge(TkChangelogEntry entry, IEnumerable<ArraySegment<byte>> inputs, ArraySegment<byte> vanillaData, Stream output)
     {
         Byml merged = Byml.FromBinary(vanillaData, out Endianness endianness, out ushort version);
-        BymlMergeTracking tracking = new();
+        BymlMergeTracking tracking = new(entry.Canonical);
 
         foreach (ArraySegment<byte> input in inputs) {
             Byml changelog = Byml.FromBinary(input);
@@ -41,7 +41,7 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
     {
         Byml merged = Byml.FromBinary(@base, out Endianness endianness, out ushort version);
         Byml changelog = Byml.FromBinary(input);
-        BymlMergeTracking tracking = new();
+        BymlMergeTracking tracking = new(entry.Canonical);
 
         Merge(merged, changelog, tracking);
         
@@ -62,7 +62,7 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
                 MergeMap(hashMap64, changelog.GetHashMap64(), tracking);
                 break;
             case BymlArray array when changelog.Value is BymlArrayChangelog arrayChangelog:
-                MergeArray(array, arrayChangelog, tracking);
+                MergeArray(array, arrayChangelog, keyName: null, tracking);
                 break;
             case BymlArray existingCustomArray when changelog.Value is BymlArray customArray:
                 existingCustomArray.AddRange(customArray);
@@ -75,6 +75,8 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
 
     public static void MergeMap<T>(IDictionary<T, Byml> @base, IDictionary<T, Byml> changelog, BymlMergeTracking tracking)
     {
+        tracking.Depth++;
+        
         foreach ((T key, Byml entry) in changelog) {
             if (entry.Value is BymlChangeType.Remove) {
                 @base.Remove(key);
@@ -86,6 +88,11 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
                 continue;
             }
 
+            if (key is string keyName && entry.Value is BymlArrayChangelog arrayChangelog && baseEntry.Value is BymlArray baseArray) {
+                MergeArray(baseArray, arrayChangelog, keyName, tracking);
+                continue;
+            }
+
             if (entry.Value is IBymlNode && baseEntry.Value is IBymlNode) {
                 Merge(baseEntry, entry, tracking);
                 continue;
@@ -93,9 +100,11 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
 
             @base[key] = entry;
         }
+        
+        tracking.Depth--;
     }
 
-    public static void MergeArray(BymlArray @base, BymlArrayChangelog changelog, BymlMergeTracking tracking)
+    public static void MergeArray(BymlArray @base, BymlArrayChangelog changelog, string? keyName, BymlMergeTracking tracking)
     {
         List<(int InsertIndex, Byml Entry)>? additions = null;
         
@@ -103,7 +112,10 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
             switch (change) {
                 case BymlChangeType.Add: {
                     if (!tracking.TryGetValue(@base, out BymlMergeTrackingEntry? trackingEntry)) {
-                        tracking[@base] = trackingEntry = new BymlMergeTrackingEntry();
+                        tracking[@base] = trackingEntry = new BymlMergeTrackingEntry {
+                            ArrayName = keyName,
+                            Depth = tracking.Depth
+                        };
                     }
 
                     if (additions is null) {
