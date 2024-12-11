@@ -165,7 +165,7 @@ public class BymlArrayChangelogBuilderProvider : Singleton<BymlArrayChangelogBui
             "BGParamArray" => new BymlKeyedArrayChangelogBuilder<string>("TexName"),
             "TipsSetArray" => new BymlKeyedArrayChangelogBuilder<string>("TipsType"),
             "TmbMesh" => new BymlKeyedArrayChangelogBuilder<string>("TmbMeshPath"),
-            "ActorPositionData" or "EventEntry" => new BymlKeyedArrayChangelogBuilder<string> ("$type"),
+            "ActorPositionData" or "EventEntry" => new BymlKeyedArrayChangelogBuilder<string>("$type"),
             "SB" or "T" or "U" => new BymlKeyedArrayChangelogBuilder<string>("Umii"),
             "AlreadyReadInfo" => new BymlKeyedArrayChangelogBuilder<string>("UpdateGameDataFlag"),
             "ConditionList" => new BymlKeyedArrayChangelogBuilder<string>("WeaponEssence"),
