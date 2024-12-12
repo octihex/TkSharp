@@ -18,14 +18,16 @@ public sealed class GameDataMerger : Singleton<GameDataMerger>, ITkMerger
         BymlMap root = merged.GetMap();
         BymlMap baseData = root["Data"].GetMap();
         BymlMergeTracking tracking = new(entry.Canonical);
+        GameDataMergeTracking gameDataTracking = new(entry.Canonical);
 
         foreach (RentedBuffers<byte>.Entry input in inputs) {
             BymlMap changelog = Byml.FromBinary(input.Span)
                 .GetMap();
-            MergeEntry(baseData, changelog, tracking);
+            MergeEntry(baseData, changelog, gameDataTracking, tracking);
         }
 
         tracking.Apply();
+        gameDataTracking.Apply();
 
         SaveDataWriter.CalculateMetadata(root["MetaData"].GetMap(), baseData);
         merged.WriteBinary(output, endianness, version);
@@ -37,14 +39,16 @@ public sealed class GameDataMerger : Singleton<GameDataMerger>, ITkMerger
         BymlMap root = merged.GetMap();
         BymlMap baseData = root["Data"].GetMap();
         BymlMergeTracking tracking = new(entry.Canonical);
+        GameDataMergeTracking gameDataTracking = new(entry.Canonical);
 
         foreach (ArraySegment<byte> input in inputs) {
             BymlMap changelog = Byml.FromBinary(input)
                 .GetMap();
-            MergeEntry(baseData, changelog, tracking);
+            MergeEntry(baseData, changelog, gameDataTracking, tracking);
         }
 
         tracking.Apply();
+        gameDataTracking.Apply();
 
         SaveDataWriter.CalculateMetadata(root["MetaData"].GetMap(), baseData);
         merged.WriteBinary(output, endianness, version);
@@ -56,27 +60,29 @@ public sealed class GameDataMerger : Singleton<GameDataMerger>, ITkMerger
         BymlMap root = merged.GetMap();
         BymlMap baseData = root["Data"].GetMap();
         BymlMergeTracking tracking = new(entry.Canonical);
+        GameDataMergeTracking gameDataTracking = new(entry.Canonical);
 
         BymlMap changelog = Byml.FromBinary(input)
             .GetMap();
-        MergeEntry(baseData, changelog, tracking);
+        MergeEntry(baseData, changelog, gameDataTracking, tracking);
 
         tracking.Apply();
+        gameDataTracking.Apply();
 
         SaveDataWriter.CalculateMetadata(root["MetaData"].GetMap(), baseData);
         merged.WriteBinary(output, endianness, version);
     }
 
-    private static void MergeEntry(BymlMap merged, BymlMap changelog, BymlMergeTracking tracking)
+    private static void MergeEntry(BymlMap merged, BymlMap changelog, GameDataMergeTracking gameDataTracking, BymlMergeTracking tracking)
     {
         foreach ((string key, Byml entry) in changelog) {
             BymlArray @base = merged[key].GetArray();
             switch (entry.Value) {
                 case IDictionary<uint, Byml> hashMap32:
-                    MergeHashMap32(@base, hashMap32, tracking);
+                    MergeHashMap32(@base, hashMap32, gameDataTracking, tracking, key == "Struct");
                     break;
                 case IDictionary<ulong, Byml> hashMap64:
-                    MergeHashMap64(@base, hashMap64, tracking);
+                    MergeHashMap64(@base, hashMap64, gameDataTracking, tracking);
                     break;
                 default:
                     throw new NotSupportedException(
@@ -87,7 +93,7 @@ public sealed class GameDataMerger : Singleton<GameDataMerger>, ITkMerger
         }
     }
 
-    private static void MergeHashMap32(BymlArray @base, IDictionary<uint, Byml> changelog, BymlMergeTracking tracking)
+    private static void MergeHashMap32(BymlArray @base, IDictionary<uint, Byml> changelog, GameDataMergeTracking gameDataTracking, BymlMergeTracking tracking, bool isStructTable)
     {
         foreach (Byml baseEntry in @base) {
             if (baseEntry.Value is not IDictionary<string, Byml> map ||
@@ -100,15 +106,21 @@ public sealed class GameDataMerger : Singleton<GameDataMerger>, ITkMerger
                 continue;
             }
 
+            if (gameDataTracking.TryGetValue(hash, out GameDataMergeTrackingEntry? entry)) {
+                entry.Changes.Add(changelogEntry);
+                continue;
+            }
+
             BymlMerger.Merge(baseEntry, changelogEntry, tracking);
         }
 
-        foreach ((uint _, Byml entry) in changelog) {
+        foreach ((uint hash, Byml entry) in changelog) {
             @base.Add(entry);
+            gameDataTracking[hash] = new GameDataMergeTrackingEntry(entry, isStructTable);
         }
     }
 
-    private static void MergeHashMap64(BymlArray @base, IDictionary<ulong, Byml> changelog, BymlMergeTracking tracking)
+    private static void MergeHashMap64(BymlArray @base, IDictionary<ulong, Byml> changelog, GameDataMergeTracking gameDataTracking, BymlMergeTracking tracking)
     {
         foreach (Byml baseEntry in @base) {
             if (baseEntry.Value is not IDictionary<string, Byml> map ||
@@ -120,12 +132,18 @@ public sealed class GameDataMerger : Singleton<GameDataMerger>, ITkMerger
             if (!changelog.Remove(hash, out Byml? changelogEntry)) {
                 continue;
             }
+            
+            if (gameDataTracking.TryGetValue(hash, out GameDataMergeTrackingEntry? entry)) {
+                entry.Changes.Add(changelogEntry);
+                continue;
+            }
 
             BymlMerger.Merge(baseEntry, changelogEntry, tracking);
         }
 
-        foreach ((ulong _, Byml entry) in changelog) {
+        foreach ((ulong hash, Byml entry) in changelog) {
             @base.Add(entry);
+            gameDataTracking[hash] = new GameDataMergeTrackingEntry(entry, isStructTable: false);
         }
     }
 }
