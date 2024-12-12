@@ -10,7 +10,7 @@ namespace TkSharp.Merging.Mergers;
 
 public sealed class GameDataMerger : Singleton<GameDataMerger>, ITkMerger
 {
-    private static BymlRowComparer _rowComparer = new("Hash");
+    private static readonly BymlRowComparer _rowComparer = new("Hash");
     
     public void Merge(TkChangelogEntry entry, RentedBuffers<byte> inputs, ArraySegment<byte> vanillaData, Stream output)
     {
