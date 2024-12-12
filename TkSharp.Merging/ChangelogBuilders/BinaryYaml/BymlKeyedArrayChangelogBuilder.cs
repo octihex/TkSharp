@@ -1,7 +1,9 @@
+using System.Collections;
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
 using Microsoft.Extensions.Logging;
 using TkSharp.Core;
+using TkSharp.Core.IO.Buffers;
 
 namespace TkSharp.Merging.ChangelogBuilders.BinaryYaml;
 
@@ -13,6 +15,8 @@ public class BymlKeyedArrayChangelogBuilder<T>(string key) : IBymlArrayChangelog
     {
         BymlArrayChangelog changelog = [];
         int detectedAdditions = 0;
+
+        using var vanillaRecordsFound = RentedBitArray.Create(vanilla.Count);
 
         for (int i = 0; i < src.Count; i++) {
             Byml element = src[i];
@@ -43,11 +47,11 @@ public class BymlKeyedArrayChangelogBuilder<T>(string key) : IBymlArrayChangelog
             changelog.Add((vanillaIndex, BymlChangeType.Edit, element));
 
         UpdateVanilla:
-            vanilla[vanillaIndex] = BymlChangeType.Remove;
+            vanillaRecordsFound[vanillaIndex] = true;
         }
 
         for (int i = 0; i < vanilla.Count; i++) {
-            if (vanilla[i].Type is BymlNodeType.Changelog) {
+            if (vanillaRecordsFound[i]) {
                 continue;
             }
 
