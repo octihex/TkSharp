@@ -15,8 +15,8 @@ public sealed class GameDataChangelogBuilder : Singleton<GameDataChangelogBuilde
     public void Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
     {
         BymlMap changelog = [];
-        BymlMap src = Byml.FromBinary(srcBuffer, out Endianness endianness, out ushort version).GetMap()["Data"].GetMap();
-        BymlMap vanilla = Byml.FromBinary(vanillaBuffer).GetMap()["Data"].GetMap();
+        BymlMap src = Byml.FromBinary(srcBuffer).GetMap()["Data"].GetMap();
+        BymlMap vanilla = Byml.FromBinary(vanillaBuffer, out Endianness endianness, out ushort version).GetMap()["Data"].GetMap();
 
         BymlTrackingInfo bymlTrackingInfo = new(path.Canonical, 0);
 

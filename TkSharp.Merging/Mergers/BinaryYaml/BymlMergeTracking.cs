@@ -11,6 +11,8 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
 
     public int Depth { get; set; }
 
+    public string? Type { get; set; }
+
     public void Apply()
     {
         ReadOnlySpan<char> type = GetBgymlType();
@@ -38,7 +40,7 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
             .GroupBy(x => x.InsertIndex, x => x.Entry)
             .OrderBy(x => x.Key)
             .Select(x => (x.Key, x.ToArray()));
-        
+
         foreach ((int insertIndex, Byml[] entries) in additions) {
             ProcessAdditions(ref newEntryOffset, @base, entry, insertIndex, entries, ref info);
         }
@@ -63,7 +65,8 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
                 return;
         }
 
-        if (entry.ArrayName is string arrayName && BymlMergerKeyNameProvider.Instance.GetKeyName(arrayName, info.Type, info.Depth) is string keyName) {
+        if (entry.ArrayName is string arrayName &&
+            BymlMergerKeyNameProvider.Instance.GetKeyName(arrayName, Type ?? info.Type, info.Depth) is string keyName) {
             ProcessKeyedAdditions(ref newEntryOffset, @base, insertIndex, additions, keyName, ref info);
             return;
         }
@@ -90,7 +93,7 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
                 InsertAdditions(ref newEntryOffset, @base, insertIndex, additions);
                 continue;
             }
-            
+
             MergeKeyedAdditions(entries[0], entries.AsSpan(1..), ref newEntryOffset, @base, insertIndex, ref info);
         }
     }
@@ -107,7 +110,7 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
         foreach (Byml changelog in entries) {
             BymlMerger.Merge(@base, changelog, tracking);
         }
-        
+
         tracking.Apply();
         InsertAddition(ref newEntryOffset, baseArray, insertIndex, @base);
     }
@@ -118,7 +121,7 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
             InsertAddition(ref newEntryOffset, @base, insertIndex, addition);
         }
     }
-    
+
     private static void InsertAddition(ref int newEntryOffset, BymlArray @base, int insertIndex, Byml addition)
     {
         int relativeIndex = insertIndex + newEntryOffset;
@@ -138,7 +141,7 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
         ReadOnlySpan<char> result = Path.GetExtension(
             Path.GetFileNameWithoutExtension(_canonical.AsSpan())
         );
-        
+
         return result.IsEmpty ? default : result[1..];
     }
 }
