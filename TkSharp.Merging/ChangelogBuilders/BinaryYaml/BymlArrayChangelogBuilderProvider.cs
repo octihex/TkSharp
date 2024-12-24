@@ -56,7 +56,7 @@ public class BymlArrayChangelogBuilderProvider : Singleton<BymlArrayChangelogBui
             "BindActorInfo" => new BymlKeyedArrayChangelogBuilder<string>("ActorHolderKey"),
             "RegisteredActorArray" or "RequirementList"
                 or "Rewards" => new BymlKeyedArrayChangelogBuilder<string>("ActorName"),
-            "SharpInfoBowList" => new BymlKeyedArrayChangelogBuilder<uint>("ActorNameHash"),
+            "SharpInfoList" or "SharpInfoBowList" or "SharpInfoShieldList" => new BymlKeyedArrayChangelogBuilder<uint>("ActorNameHash"),
             "PictureBookParamArray" => new BymlKeyedArrayChangelogBuilder<string>("ActorNameShort"),
             "WeakPointActorArray" => new BymlKeyedArrayChangelogBuilder<string>("ActorPath"),
             "NavMeshObjects" => new BymlKeyedArrayChangelogBuilder<string>("Alias"),

@@ -169,6 +169,7 @@ public sealed class BymlMergerKeyNameProvider : Singleton<BymlMergerKeyNameProvi
             "AlreadyReadInfo" => "UpdateGameDataFlag",
             "ConditionList" => "WeaponEssence",
             "WeaponTypeAndSubModelMapping" => "WeaponType",
+            "SharpInfoList" or "SharpInfoBowList" or "SharpInfoShieldList" => "ActorNameHash",
             "DefaultValue" => type switch {
                 // Workaround for selective DefaultValue arrays in GDL
                 "Struct" => "Hash",
