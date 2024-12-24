@@ -41,8 +41,10 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
             .OrderBy(x => x.Key)
             .Select(x => (x.Key, x.ToArray()));
 
+        Dictionary<Byml, int> keyedAdditions = new(Byml.ValueEqualityComparer.Default);
+
         foreach ((int insertIndex, Byml[] entries) in additions) {
-            ProcessAdditions(ref newEntryOffset, @base, entry, insertIndex, entries, ref info);
+            ProcessAdditions(ref newEntryOffset, @base, entry, insertIndex, entries, ref info, keyedAdditions);
         }
 
         for (int i = 0; i < @base.Count; i++) {
@@ -55,42 +57,55 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
         }
     }
 
-    private void ProcessAdditions(ref int newEntryOffset, BymlArray @base, BymlMergeTrackingEntry entry, int insertIndex, Byml[] additions, ref BymlTrackingInfo info)
+    private void ProcessAdditions(ref int newEntryOffset, BymlArray @base, BymlMergeTrackingEntry entry, int insertIndex,
+        Byml[] additions, ref BymlTrackingInfo info, Dictionary<Byml, int> keyedAdditions)
     {
-        switch (additions.Length) {
-            case 0:
-                return;
-            case 1:
-                InsertAddition(ref newEntryOffset, @base, insertIndex, additions[0]);
-                return;
+        if (additions.Length == 0) {
+            return;
         }
 
         if (entry.ArrayName is string arrayName &&
             BymlMergerKeyNameProvider.Instance.GetKeyName(arrayName, Type ?? info.Type, info.Depth) is string keyName) {
-            ProcessKeyedAdditions(ref newEntryOffset, @base, insertIndex, additions, keyName, ref info);
+            ProcessKeyedAdditions(ref newEntryOffset, @base, insertIndex, additions, keyName, ref info, keyedAdditions);
+            return;
+        }
+        
+        if (additions.Length == 1) {
+            InsertAddition(ref newEntryOffset, @base, insertIndex, additions[0]);
             return;
         }
 
         InsertAdditions(ref newEntryOffset, @base, insertIndex, additions);
     }
 
-    private void ProcessKeyedAdditions(ref int newEntryOffset, BymlArray @base, int insertIndex, Byml[] additions, string keyName, ref BymlTrackingInfo info)
+    private void ProcessKeyedAdditions(ref int newEntryOffset, BymlArray @base, int insertIndex, Byml[] additions,
+        string keyName, ref BymlTrackingInfo info, Dictionary<Byml, int> keyedAdditions)
     {
         IEnumerable<(Byml? Key, Byml[])> elements = additions
             .GroupBy(x => (x.Value as BymlMap)?.GetValueOrDefault(keyName), Byml.ValueEqualityComparer.Default)
             .Select(x => (x.Key, x.ToArray()));
 
         foreach ((Byml? key, Byml[] entries) in elements) {
-            switch (entries.Length) {
-                case 0:
-                    continue;
-                case 1:
-                    InsertAddition(ref newEntryOffset, @base, insertIndex, entries[0]);
-                    continue;
+            if (entries.Length == 0) {
+                continue;
             }
 
             if (key is null) {
-                InsertAdditions(ref newEntryOffset, @base, insertIndex, additions);
+                InsertAdditions(ref newEntryOffset, @base, insertIndex, entries);
+                continue;
+            }
+
+            if (keyedAdditions.TryGetValue(key, out int oldIndex)) {
+                ref Byml existingEntry = ref entries[oldIndex];
+                MergeKeyedAdditions(existingEntry, entries, ref newEntryOffset, @base, insertIndex, ref info);
+                existingEntry = BymlChangeType.Remove;
+                return;
+            }
+
+            keyedAdditions.Add(key, insertIndex);
+
+            if (entries.Length == 1) {
+                InsertAddition(ref newEntryOffset, @base, insertIndex, entries[0]);
                 continue;
             }
 
