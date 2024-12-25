@@ -1,7 +1,8 @@
-using System.Text.Json;
 using TkSharp.Core;
 using TkSharp.Core.IO;
 using TkSharp.Data.Embedded;
+using TkSharp.Extensions.LibHac;
+using Config = TkSharp.DevTools.ViewModels.SettingsPageViewModel;
 
 namespace TkSharp.DevTools.Helpers;
 
@@ -10,22 +11,18 @@ public class RomHelper
     private static readonly TkChecksums _checksums = TkChecksums.FromStream(
         TkEmbeddedDataSource.GetChecksumsBin());
     
-    private static readonly string _tkConfigPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "totk", "Config.json");
-    
     public static ITkRom GetRom()
     {
-        if (!File.Exists(_tkConfigPath)) {
-            throw new Exception("The TotK configuration file does not exist.");
+        if (Config.Shared.GameDumpFolderPath is string gamePath && Directory.Exists(gamePath)) {
+            return new ExtractedTkRom(gamePath, _checksums);
         }
-        
-        using Stream fs = File.OpenRead(_tkConfigPath);
-        if (JsonSerializer.Deserialize<TkConfig>(fs) is not TkConfig config) {
-            throw new Exception("The TotK configuration file was invalid.");
-        }
-        
-        return new ExtractedTkRom(config.GamePath, _checksums);
-    }
 
-    private record TkConfig(string GamePath);
+        if (Config.Shared.KeysFolderPath is string keysFolderPath
+            && Config.Shared.BaseGameFilePath is string baseGameFilePath
+            && Config.Shared.GameUpdateFilePath is string gameUpdateFilePath) {
+            return new PackedTkRom(_checksums, keysFolderPath, baseGameFilePath, gameUpdateFilePath);
+        }
+
+        throw new InvalidOperationException("Invalid configuration.");
+    }
 }
