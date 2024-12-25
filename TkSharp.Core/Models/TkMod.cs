@@ -33,4 +33,9 @@ public sealed partial class TkMod : TkStoredItem
     /// The dependencies of this mod.
     /// </summary>
     public ObservableCollection<TkModDependency> Dependencies { get; init; } = [];
+
+    public TkProfileMod GetProfileMod()
+    {
+        return new TkProfileMod(this);
+    }
 }
