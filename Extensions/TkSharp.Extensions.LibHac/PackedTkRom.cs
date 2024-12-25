@@ -93,6 +93,10 @@ public sealed class PackedTkRom : ITkRom, IDisposable
         
         UniqueRef<IFile> file = new();
         _fileSystem.OpenFile(ref file, relativeFilePath.ToU8Span(), OpenMode.Read);
+
+        if (!file.HasValue) {
+            return default;
+        }
         
         file.Get.GetSize(out long size);
         RentedBuffer<byte> rawBuffer = RentedBuffer<byte>.Allocate((int)size);
