@@ -14,6 +14,10 @@ public partial class ShellViewModel : ObservableObject
         DataContext = new PackagingPageViewModel()
     };
     
+    private static readonly SettingsPage _settingsPage = new() {
+        DataContext = SettingsPageViewModel.Shared
+    };
+    
     [ObservableProperty]
     private object? _pageContent = _mergingPage;
     
@@ -24,6 +28,7 @@ public partial class ShellViewModel : ObservableObject
     {
         PageContent = value?.Tag switch {
             nameof(PackagingPage) => _packagingPage,
+            nameof(SettingsPage) => _settingsPage,
             _ => _mergingPage
         };
     }

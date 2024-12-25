@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm="using:TkSharp.DevTools.ViewModels"
+             xmlns:core="using:TkSharp.Packaging"
+             xmlns:tk="using:TkSharp.Core"
+             x:DataType="vm:SettingsPageViewModel"
+             x:Class="TkSharp.DevTools.Views.SettingsPage">
+    <Grid Margin="20" RowDefinitions="Auto,*">
+        <StackPanel Spacing="15" Orientation="Horizontal" Margin="0,0,0,15">
+            <Button Content="Load from Ryujinx" Command="{Binding LoadFromRyujinxCommand}" />
+            <Button Content="Save" Command="{Binding SaveCommand}" />
+        </StackPanel>
+        
+        <StackPanel Grid.Row="1" Spacing="15">
+            <TextBox Watermark="Keys Folder Path"
+                     UseFloatingWatermark="True"
+                     Text="{Binding KeysFolderPath}" />
+            <TextBox Watermark="Base Game File Path (XCI/NSP)"
+                     UseFloatingWatermark="True"
+                     Text="{Binding BaseGameFilePath}" />
+            <TextBox Watermark="Game Update File Path (NSP)"
+                     UseFloatingWatermark="True"
+                     Text="{Binding GameUpdateFilePath}" />
+            <TextBox Watermark="Game Dump Folder Path (romfs)"
+                     UseFloatingWatermark="True"
+                     Text="{Binding GameDumpFolderPath}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

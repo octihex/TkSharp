@@ -16,6 +16,7 @@
     <windowing:AppWindow.Resources>
         <ui:SymbolIconSource x:Key="MergeIcon" Symbol="ViewAll" />
         <ui:SymbolIconSource x:Key="PackageIcon" Symbol="CodeHTML" />
+        <ui:SymbolIconSource x:Key="CogIcon" Symbol="Settings" />
     </windowing:AppWindow.Resources>
     <ui:NavigationView Content="{Binding PageContent}" IsSettingsVisible="False" SelectedItem="{Binding CurrentPageItem}">
         <ui:NavigationView.MenuItems>
@@ -26,5 +27,10 @@
                                    Content="Studio"
                                    Tag="PackagingPage" />
         </ui:NavigationView.MenuItems>
+        <ui:NavigationView.FooterMenuItems>
+            <ui:NavigationViewItem IconSource="{StaticResource CogIcon}"
+                                   Content="Settings"
+                                   Tag="SettingsPage" />
+        </ui:NavigationView.FooterMenuItems>
     </ui:NavigationView>
 </windowing:AppWindow>
