@@ -16,10 +16,9 @@ namespace TkSharp.Extensions.LibHac;
 
 public sealed class PackedTkRom : ITkRom, IDisposable
 {
-    internal const ulong EX_KING_APP_ID = 0x0100F2C0115B6000;
+    public const ulong EX_KING_APP_ID = 0x0100F2C0115B6000;
     
     private readonly IStorage _baseStorage, _updateStorage;
-    private SharedRef<IFileSystem> _updateFs;
     private readonly SwitchFs _baseSwitchFs, _updateSwitchFs;
     
     private readonly TkChecksums _checksums;
@@ -48,10 +47,10 @@ public sealed class PackedTkRom : ITkRom, IDisposable
         );
 
         _baseStorage = new LocalStorage(baseGameFilePath, FileAccess.Read);
-        _baseSwitchFs = _baseStorage.GetSwitchFs(baseGameFilePath, keys, out _);
+        _baseSwitchFs = _baseStorage.GetSwitchFs(baseGameFilePath, keys);
         
         _updateStorage = new LocalStorage(gameUpdateFilePath, FileAccess.Read);
-        _updateSwitchFs = _updateStorage.GetSwitchFs(gameUpdateFilePath, keys, out _updateFs);
+        _updateSwitchFs = _updateStorage.GetSwitchFs(gameUpdateFilePath, keys);
         
         _fileSystem = _baseSwitchFs.Applications[EX_KING_APP_ID].Main.MainNca.Nca
             .OpenFileSystemWithPatch(_updateSwitchFs.Applications[EX_KING_APP_ID].Patch.MainNca.Nca, NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
@@ -127,7 +126,6 @@ public sealed class PackedTkRom : ITkRom, IDisposable
     {
         _baseStorage.Dispose();
         _updateStorage.Dispose();
-        _updateFs.Destroy();
         _baseSwitchFs.Dispose();
         _updateSwitchFs.Dispose();
         _fileSystem.Dispose();

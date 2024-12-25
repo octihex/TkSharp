@@ -16,22 +16,21 @@ namespace TkSharp.Extensions.LibHac.Extensions;
 
 public static class FileSystemExtensions
 {
-    public static SwitchFs GetSwitchFs(this IStorage storage, string filePath, KeySet keys, out SharedRef<IFileSystem> outputFs)
+    public static SwitchFs GetSwitchFs(this IStorage storage, string filePath, KeySet keys)
     {
         ReadOnlySpan<char> extension = Path.GetExtension(filePath.AsSpan());
-        outputFs = default;
 
         return extension switch {
-            ".nsp" => OpenNsp(keys, storage, out outputFs),
+            ".nsp" => OpenNsp(keys, storage),
             ".xci" => OpenXci(keys, storage),
             _ => throw new ArgumentException($"Unsupported file extension: '{extension}'", nameof(filePath)),
         };
     }
 
-    private static SwitchFs OpenNsp(KeySet keys, IStorage storage, out SharedRef<IFileSystem> outputFs)
+    private static SwitchFs OpenNsp(KeySet keys, IStorage storage)
     {
         SharedRef<IStorage> storageShared = new(storage);
-        outputFs = new SharedRef<IFileSystem>();
+        SharedRef<IFileSystem> outputFs = new();
         new PartitionFileSystemCreator().Create(ref outputFs, ref storageShared);
 
         ImportTikFiles(keys, outputFs.Get);
