@@ -13,10 +13,15 @@ public sealed class DebugRomProvider : Singleton<DebugRomProvider>, ITkRomProvid
         //     TkChecksums.FromStream(TkEmbeddedDataSource.GetChecksumsBin())
         // );
 
-        return new PackedTkRom(
+        // return new PackedTkRom(
+        //     TkChecksums.FromStream(TkEmbeddedDataSource.GetChecksumsBin()),
+        //     @"C:\Users\ArchLeaders\AppData\Roaming\Ryujinx\system",
+        //     @"D:\Games\Emulation\Packaged\Tears-of-the-Kingdom\TotK-1.0.0.xci",
+        //     @"D:\Games\Emulation\Packaged\Tears-of-the-Kingdom\TotK-1.2.1.nsp");
+
+        return new SdCardTkRom(
             TkChecksums.FromStream(TkEmbeddedDataSource.GetChecksumsBin()),
-            @"C:\Users\ArchLeaders\AppData\Roaming\Ryujinx\system",
-            @"D:\Games\Emulation\Packaged\Tears-of-the-Kingdom\TotK-1.0.0.xci",
-            @"D:\Games\Emulation\Packaged\Tears-of-the-Kingdom\TotK-1.2.1.nsp");
+            @"D:\dev\KEYS",
+            @"D:\Nintendo\Contents");
     }
 }
