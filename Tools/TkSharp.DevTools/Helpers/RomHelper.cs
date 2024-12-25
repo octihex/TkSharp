@@ -28,6 +28,12 @@ public class RomHelper : ITkRomProvider
             return new PackedTkRom(_checksums, keys, baseGameFilePath, gameUpdateFilePath);
         }
 
+        if (Config.Shared.KeysFolderPath is string sdKeysFolderPath
+            && Config.Shared.SdCardContentsPath is string contentsPath
+            && Directory.Exists(contentsPath)) {
+            return new SdCardTkRom(_checksums, sdKeysFolderPath, contentsPath);
+        }
+
         throw new InvalidOperationException("Invalid configuration.");
     }
     

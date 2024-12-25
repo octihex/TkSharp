@@ -6,6 +6,9 @@ using LibHac.Common.Keys;
 using Microsoft.Extensions.Logging;
 using TkSharp.Core;
 using TkSharp.DevTools.Helpers.Ryujinx;
+using TkSharp.DevTools.Helpers;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 
 namespace TkSharp.DevTools.ViewModels;
 
@@ -30,6 +33,9 @@ public partial class SettingsPageViewModel : ObservableObject
 
     [ObservableProperty]
     private string? _gameDumpFolderPath;
+
+    [ObservableProperty]
+    private string? _sdCardContentsPath;
 
     public static SettingsPageViewModel Load()
     {
@@ -79,6 +85,28 @@ public partial class SettingsPageViewModel : ObservableObject
 
         BaseGameFilePath = foundTotkFiles[0].FilePath;
         GameUpdateFilePath = foundTotkFiles[^1].FilePath;
+    }
+
+    [RelayCommand]
+    [property: JsonIgnore]
+    private void LoadFromSdCard()
+    {
+        if (App.Storage.OpenFolderPickerAsync(new FolderPickerOpenOptions {
+            Title = "Select SD Card root folder",
+            AllowMultiple = false
+        }).Result is { Count: > 0 } result)
+        {
+            string sdRoot = result[0].Path.LocalPath;
+            string contentsPath = Path.Combine(sdRoot, "Nintendo", "Contents");
+            string keysPath = Path.Combine(sdRoot, "switch");
+
+            if (!Directory.Exists(contentsPath)) {
+                return;
+            }
+
+            SdCardContentsPath = contentsPath;
+            KeysFolderPath = keysPath;
+        }
     }
 
     [RelayCommand]
