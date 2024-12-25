@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Revrs;
@@ -7,10 +8,39 @@ namespace TkSharp.Core;
 
 public class TkPatch(string nsoBinaryId)
 {
+    private const uint MOV_W8_NO_VALUE_BE = 0x52800008;
+
+    private const string NSO_BINARY_ID_110 = "d5ad6ac71ef53e3e52417c1b81dbc9b4142aa3b3";
+    private const string NSO_BINARY_ID_111 = "168dd518d925c7a327677286e72feda833314919";
+    private const string NSO_BINARY_ID_112 = "9a10ed9435c06733da597d8094d9000ab5d3ee60";
+    private const string NSO_BINARY_ID_120 = "6f32c68dd3bc7d77aa714b80e92a096a737cda77";
+    private const string NSO_BINARY_ID_121 = "9b4e43650501a4d4489b4bbfdb740f26af3cf850";
+
     private const uint IPS32_MAGIC_PREFIX = 0x33535049;
     private const byte IPS32_MAGIC_SUFFIX = 0x32;
     private const uint EOF_MARK = 0x45454F46;
     private const uint NSO_HEADER_LENGTH = 0x100;
+
+    private static readonly Dictionary<string, uint> _shopParamPatchAddresses = new() {
+        [NSO_BINARY_ID_110] = 0x01ada148,
+        [NSO_BINARY_ID_111] = 0x01ad7938,
+        [NSO_BINARY_ID_112] = 0x01ace2b8,
+        [NSO_BINARY_ID_120] = 0x01ac0128,
+        [NSO_BINARY_ID_121] = 0x01acb308,
+    };
+
+    public static TkPatch CreateWithDefaults(string nsoBinaryId, uint shopParamLimit = 512)
+    {
+        TkPatch result = new(nsoBinaryId);
+        
+        if (_shopParamPatchAddresses.TryGetValue(nsoBinaryId, out uint shopParamPatchAddress)) {
+            uint beByteCode = MOV_W8_NO_VALUE_BE | (shopParamLimit << 5);
+            uint leByteCode = BinaryPrimitives.ReverseEndianness(beByteCode);
+            result.Entries[shopParamPatchAddress] = leByteCode;
+        }
+        
+        return result;
+    }
 
     public string NsoBinaryId { get; } = nsoBinaryId;
 
@@ -26,7 +56,7 @@ public class TkPatch(string nsoBinaryId)
             output.Write<short>(sizeof(uint), Endianness.Big);
             output.Write(value, Endianness.Big);
         }
-        
+
         output.Write(EOF_MARK);
     }
 

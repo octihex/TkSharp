@@ -180,7 +180,8 @@ public sealed class TkMerger
             .SelectMany(entry => entry.PatchFiles
                 .Where(patch => patch.NsoBinaryId.Equals(_rom.NsoBinaryId, StringComparison.InvariantCultureIgnoreCase)));
 
-        TkPatch merged = new(_rom.NsoBinaryId);
+        var merged = TkPatch.CreateWithDefaults(_rom.NsoBinaryId, shopParamLimit: 512);
+        
         foreach (TkPatch patch in versionMatchedPatchFiles) {
             foreach ((uint key, uint value) in patch.Entries) {
                 merged.Entries[key] = value;
