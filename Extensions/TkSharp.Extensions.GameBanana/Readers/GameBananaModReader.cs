@@ -69,7 +69,9 @@ public sealed class GameBananaModReader(ITkModReaderProvider readerProvider) : I
             UnknownTags = Config.UnknownTagsOption.Bypass
         }).Convert(gbMod.Text);
         mod.Thumbnail = new TkThumbnail {
-            ThumbnailPath = gbMod.Media.Images.First().File
+            ThumbnailPath = gbMod.Media.Images.First() switch {
+                var image => $"{image.BaseUrl}/{image.File}"
+            }
         };
         mod.Version = gbMod.Version;
 
