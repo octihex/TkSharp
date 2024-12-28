@@ -36,15 +36,9 @@ public sealed class PackedTkRom : ITkRom, IDisposable
 
     public Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> EffectVersions { get; }
 
-    public PackedTkRom(TkChecksums checksums, string keysFolderPath, string baseGameFilePath, string gameUpdateFilePath)
+    public PackedTkRom(TkChecksums checksums, KeySet keys, string baseGameFilePath, string gameUpdateFilePath)
     {
         _checksums = checksums;
-        
-        KeySet keys = new();
-        ExternalKeyReader.ReadKeyFile(keys,
-            prodKeysFilename: Path.Combine(keysFolderPath, "prod.keys"),
-            titleKeysFilename: Path.Combine(keysFolderPath, "title.keys")
-        );
 
         _baseStorage = new LocalStorage(baseGameFilePath, FileAccess.Read);
         _baseSwitchFs = _baseStorage.GetSwitchFs(baseGameFilePath, keys);
