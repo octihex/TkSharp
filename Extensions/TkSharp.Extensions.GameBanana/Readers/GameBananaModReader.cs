@@ -12,10 +12,13 @@ public sealed class GameBananaModReader(ITkModReaderProvider readerProvider) : I
 
     public async ValueTask<TkMod?> ReadMod(object? input, Stream? stream = null, TkModContext context = default, CancellationToken ct = default)
     {
-        if (input is GameBananaFile file) {
-            return await ParseFromFileUrl(file.DownloadUrl, file.Id, file, ct);
+        switch (input) {
+            case GameBananaFile file:
+                return await ParseFromFileUrl(file.DownloadUrl, file.Id, file, ct);
+            case ValueTuple<GameBananaMod, GameBananaFile> pair:
+                return await ParseFromModId(pair.Item1.Id, pair.Item1, pair.Item2, ct);
         }
-        
+
         if (input is not string arg) {
             return null;
         }
@@ -25,7 +28,7 @@ public sealed class GameBananaModReader(ITkModReaderProvider readerProvider) : I
         }
 
         if (arg.Contains("/mods/")) {
-            return await ParseFromModId(id, ct);
+            return await ParseFromModId(id, ct: ct);
         }
 
         return await ParseFromFileUrl(arg, id, ct: ct);
@@ -33,18 +36,18 @@ public sealed class GameBananaModReader(ITkModReaderProvider readerProvider) : I
 
     public bool IsKnownInput(object? input)
     {
-        return input is GameBananaFile
+        return input is GameBananaFile or ValueTuple<GameBananaMod, GameBananaFile>
                || (input is string arg && (
                    arg.Contains("gamebanana.com/mods/") || arg.Contains("gamebanana.com/dl/")
                ) && GbUrlHelper.TryGetId(arg, out _));
     }
 
-    public async ValueTask<TkMod?> ParseFromModId(long modId, CancellationToken ct)
+    public async ValueTask<TkMod?> ParseFromModId(long modId, GameBananaMod? gbMod = null, GameBananaFile? target = null, CancellationToken ct = default)
     {
-        GameBananaMod? gbMod = await GameBanana.GetMod(modId, ct);
-        GameBananaFile? target = gbMod?.Files
-            .FirstOrDefault(file => file.IsTkcl);
+        gbMod ??= await GameBanana.GetMod(modId, ct);
 
+        target ??= gbMod?.Files
+            .FirstOrDefault(file => file.IsTkcl);
         target ??= gbMod?.Files
             .FirstOrDefault(file => _readerProvider.CanRead(file.Name));
 
@@ -65,7 +68,9 @@ public sealed class GameBananaModReader(ITkModReaderProvider readerProvider) : I
             ListBulletChar = '*',
             UnknownTags = Config.UnknownTagsOption.Bypass
         }).Convert(gbMod.Text);
-        mod.Thumbnail = new TkThumbnail();
+        mod.Thumbnail = new TkThumbnail {
+            ThumbnailPath = gbMod.Media.Images.First().File
+        };
         mod.Version = gbMod.Version;
 
         foreach (GameBananaAuthor author in gbMod.Credits.SelectMany(group => group.Authors)) {
@@ -75,7 +80,7 @@ public sealed class GameBananaModReader(ITkModReaderProvider readerProvider) : I
         return mod;
     }
 
-    public async ValueTask<TkMod?> ParseFromFileUrl(string fileUrl, long fileId, GameBananaFile? target = default, CancellationToken ct = default)
+    public async ValueTask<TkMod?> ParseFromFileUrl(string fileUrl, long fileId, GameBananaFile? target = null, CancellationToken ct = default)
     {
         target ??= await GameBanana.Get<GameBananaFile>($"File/{fileId}", GameBananaModJsonContext.Default.GameBananaFile, ct);
         
