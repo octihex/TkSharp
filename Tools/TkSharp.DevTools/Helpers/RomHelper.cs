@@ -8,12 +8,14 @@ using Config = TkSharp.DevTools.ViewModels.SettingsPageViewModel;
 
 namespace TkSharp.DevTools.Helpers;
 
-public class RomHelper
+public class RomHelper : ITkRomProvider
 {
     private static readonly TkChecksums _checksums = TkChecksums.FromStream(
         TkEmbeddedDataSource.GetChecksumsBin());
     
-    public static ITkRom GetRom()
+    public static readonly RomHelper Instance = new();
+    
+    public ITkRom GetRom()
     {
         if (Config.Shared.GameDumpFolderPath is string gamePath && Directory.Exists(gamePath)) {
             return new ExtractedTkRom(gamePath, _checksums);

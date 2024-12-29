@@ -12,10 +12,8 @@ public static class TkApp
         TkLog.Instance.Register(new ConsoleLogger());
         ReaderProvider.Register(new GameBananaModReader(ReaderProvider));
     }
-    
-    public static readonly ITkRomProvider TkRomProvider = new DirectRomProvider(
-        RomHelper.GetRom()
-    );
+
+    public static ITkRomProvider TkRomProvider => RomHelper.Instance;
 
     public static readonly TkModManager ModManager = TkModManager.CreatePortable();
 
