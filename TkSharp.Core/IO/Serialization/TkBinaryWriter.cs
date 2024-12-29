@@ -127,11 +127,12 @@ public static class TkBinaryWriter
     }
 
     public static void WriteTkThumbnail(in Stream output, in TkThumbnail? thumbnail)
-    {   
-        output.Write(!(thumbnail is null || thumbnail.IsDefault));
+    {
+        bool writeThumbnail = !(thumbnail is null || thumbnail.IsDefault);
         
-        if (thumbnail is not null) {
-            output.WriteString(thumbnail.ThumbnailPath);
+        output.Write(writeThumbnail);
+        if (writeThumbnail) {
+            output.WriteString(thumbnail!.ThumbnailPath);
         }
     }
 }
