@@ -85,7 +85,6 @@ public static class TkBinaryWriter
             WriteTkProfileMod(output, mod, lookup);
         }
         
-        
         output.Write(
             profile.Selected is not null ? lookup.Mods[profile.Selected.Mod] : -1
         );
@@ -97,7 +96,8 @@ public static class TkBinaryWriter
         output.Write(mod.IsEnabled);
         output.Write(mod.IsEditingOptions);
         
-        output.Write(mod.SelectedOptions.Count(x => x.Value.Count > 0));
+        output.Write(mod.SelectedOptions.Count(x => x.Value.Count != 0));
+        
         foreach ((TkModOptionGroup groupKey, ObservableCollection<TkModOption> selection) in mod.SelectedOptions) {
             if (selection.Count == 0) {
                 continue;
