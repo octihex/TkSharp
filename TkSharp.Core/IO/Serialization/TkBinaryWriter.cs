@@ -37,6 +37,7 @@ public static class TkBinaryWriter
         WriteTkItem(output, optionGroup);
         output.Write(optionGroup.Type);
         output.WriteString(optionGroup.IconName);
+        output.Write(optionGroup.Priority);
 
         Dictionary<TkModOption, int> indexLookup = [];
         
@@ -56,6 +57,12 @@ public static class TkBinaryWriter
         foreach (TkModDependency dependency in optionGroup.Dependencies) {
             WriteTkModDependency(output, dependency);
         }
+    }
+    
+    public static void WriteTkModOption(in Stream output, in TkModOption item)
+    {
+        WriteTkStoredItem(output, item);
+        output.Write(item.Priority);
     }
 
     public static void WriteTkModDependency(in Stream output, in TkModDependency dependency)

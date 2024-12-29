@@ -59,6 +59,7 @@ public static class TkBinaryReader
             Thumbnail = ReadTkThumbnail(input),
             Type = input.Read<OptionGroupType>(),
             IconName = input.ReadString(),
+            Priority = input.Read<int>()
         };
         
         int optionCount = input.Read<int>();
@@ -97,7 +98,8 @@ public static class TkBinaryReader
             Name = input.ReadString()!,
             Description = input.ReadString()!,
             Thumbnail = ReadTkThumbnail(input),
-            Changelog = TkChangelogReader.Read(input, source)
+            Changelog = TkChangelogReader.Read(input, source),
+            Priority = input.Read<int>()
         };
     }
 
