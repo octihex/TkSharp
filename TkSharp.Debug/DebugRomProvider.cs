@@ -1,7 +1,7 @@
 using TkSharp.Core;
 using TkSharp.Core.Common;
-using TkSharp.Core.IO;
 using TkSharp.Data.Embedded;
+using TkSharp.Extensions.LibHac;
 
 namespace TkSharp.Debug;
 
