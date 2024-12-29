@@ -6,8 +6,6 @@ using LibHac.Common.Keys;
 using Microsoft.Extensions.Logging;
 using TkSharp.Core;
 using TkSharp.DevTools.Helpers.Ryujinx;
-using TkSharp.DevTools.Helpers;
-using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 
 namespace TkSharp.DevTools.ViewModels;
