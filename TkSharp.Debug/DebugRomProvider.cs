@@ -21,7 +21,7 @@ public sealed class DebugRomProvider : Singleton<DebugRomProvider>, ITkRomProvid
 
         return new SdCardTkRom(
             TkChecksums.FromStream(TkEmbeddedDataSource.GetChecksumsBin()),
-            @"D:\dev\KEYS",
-            @"D:\Nintendo\Contents");
+            @"F:\switch",
+            @"F:\");
     }
 }
