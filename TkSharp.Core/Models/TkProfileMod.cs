@@ -11,7 +11,7 @@ public sealed partial class TkProfileMod(TkMod mod) : ObservableObject
     private TkMod _mod = mod;
     
     [ObservableProperty]
-    private bool _isEnabled;
+    private bool _isEnabled = true;
     
     [ObservableProperty]
     private bool _isEditingOptions;
