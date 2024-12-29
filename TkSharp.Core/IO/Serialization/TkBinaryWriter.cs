@@ -44,7 +44,7 @@ public static class TkBinaryWriter
         output.Write(optionGroup.Options.Count);
         for (int i = 0; i < optionGroup.Options.Count; i++) {
             TkModOption option = optionGroup.Options[i];
-            WriteTkStoredItem(output, option);
+            WriteTkModOption(output, option);
             indexLookup[option] = i;
         }
 
