@@ -122,17 +122,33 @@ public static class TkBinaryReader
         int modCount = input.Read<int>();
         for (int i = 0; i < modCount; i++) {
             int index = input.Read<int>();
-            result.Mods.Add(
-                new TkProfileMod(mods[index]) {
-                    IsEnabled = input.Read<bool>(),
-                    IsEditingOptions = input.Read<bool>()
-                }
-            );
+            result.Mods.Add(ReadTkProfileMod(input, mods[index]));
         }
         
         int selectedIndex = input.Read<int>();
         if (selectedIndex > -1) {
             result.Selected = result.Mods[selectedIndex];
+        }
+        
+        return result;
+    }
+
+    public static TkProfileMod ReadTkProfileMod(in Stream input, TkMod mod)
+    {
+        TkProfileMod result = new(mod) {
+            IsEnabled = input.Read<bool>(),
+            IsEditingOptions = input.Read<bool>(),
+        };
+        
+        int selectionGroupCount = input.Read<int>();
+
+        for (int i = 0; i < selectionGroupCount; i++) {
+            int groupKeyIndex = input.Read<int>();
+            int indexCount = input.Read<int>();
+            TkModOptionGroup group = mod.OptionGroups[groupKeyIndex];
+            result.SelectedOptions[group] = [
+                .. Enumerable.Range(0, indexCount).Select(optionIndex => group.Options[optionIndex])
+            ];
         }
         
         return result;
