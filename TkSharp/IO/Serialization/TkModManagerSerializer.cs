@@ -1,5 +1,6 @@
 using CommunityToolkit.HighPerformance;
 using TkSharp.Core.IO.Serialization;
+using TkSharp.Core.IO.Serialization.Models;
 using TkSharp.Core.Models;
 
 namespace TkSharp.IO.Serialization;
@@ -14,22 +15,22 @@ internal static class TkModManagerSerializer
         output.Write(MAGIC);
         output.Write(VERSION);
 
-        Dictionary<TkMod, int> modsIndexLookup = [];
+        TkLookupContext lookup = new();
 
         output.Write(manager.Mods.Count);
         for (int i = 0; i < manager.Mods.Count; i++) {
             TkMod mod = manager.Mods[i];
-            TkBinaryWriter.WriteTkMod(output, mod);
-            modsIndexLookup[mod] = i;
+            TkBinaryWriter.WriteTkMod(output, mod, lookup);
+            lookup.Mods[mod] = i;
         }
         
         output.Write(manager.Profiles.Count);
         foreach (TkProfile profile in manager.Profiles) {
-            TkBinaryWriter.WriteTkProfile(output, profile, modsIndexLookup);
+            TkBinaryWriter.WriteTkProfile(output, profile, lookup);
         }
         
         output.Write(manager.Selected is not null
-            ? modsIndexLookup[manager.Selected]
+            ? lookup.Mods[manager.Selected]
             : -1);
         
         output.Write(manager.CurrentProfile is not null

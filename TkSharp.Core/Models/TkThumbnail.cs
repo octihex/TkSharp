@@ -16,4 +16,7 @@ public partial class TkThumbnail : ObservableObject
 
     [JsonIgnore]
     public bool IsResolved { get; set; }
+
+    [JsonIgnore]
+    public bool IsDefault { get; set; }
 }

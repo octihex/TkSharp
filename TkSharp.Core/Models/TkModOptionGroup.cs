@@ -19,6 +19,9 @@ public sealed partial class TkModOptionGroup : TkItem
 
     [ObservableProperty]
     private string? _iconName;
+    
+    [ObservableProperty]
+    private int _priority = -1;
 
     [JsonIgnore]
     public ObservableCollection<TkModOption> Options { get; } = [];

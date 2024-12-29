@@ -22,7 +22,7 @@ public static class TkBinaryReader
             Version = input.ReadString()!,
             Author = input.ReadString()!
         };
-
+        
         int contributorCount = input.Read<int>();
         for (int i = 0; i < contributorCount; i++) {
             result.Contributors.Add(
@@ -59,6 +59,7 @@ public static class TkBinaryReader
             Thumbnail = ReadTkThumbnail(input),
             Type = input.Read<OptionGroupType>(),
             IconName = input.ReadString(),
+            Priority = input.Read<int>()
         };
         
         int optionCount = input.Read<int>();
@@ -97,7 +98,8 @@ public static class TkBinaryReader
             Name = input.ReadString()!,
             Description = input.ReadString()!,
             Thumbnail = ReadTkThumbnail(input),
-            Changelog = TkChangelogReader.Read(input, source)
+            Changelog = TkChangelogReader.Read(input, source),
+            Priority = input.Read<int>()
         };
     }
 
@@ -120,17 +122,35 @@ public static class TkBinaryReader
         int modCount = input.Read<int>();
         for (int i = 0; i < modCount; i++) {
             int index = input.Read<int>();
-            result.Mods.Add(
-                new TkProfileMod(mods[index]) {
-                    IsEnabled = input.Read<bool>(),
-                    IsEditingOptions = input.Read<bool>()
-                }
-            );
+            result.Mods.Add(ReadTkProfileMod(input, mods[index]));
         }
         
         int selectedIndex = input.Read<int>();
         if (selectedIndex > -1) {
             result.Selected = result.Mods[selectedIndex];
+        }
+        
+        return result;
+    }
+
+    public static TkProfileMod ReadTkProfileMod(in Stream input, TkMod mod)
+    {
+        TkProfileMod result = new(mod) {
+            IsEnabled = input.Read<bool>(),
+            IsEditingOptions = input.Read<bool>(),
+        };
+        
+        int selectionGroupCount = input.Read<int>();
+
+        for (int i = 0; i < selectionGroupCount; i++) {
+            int groupKeyIndex = input.Read<int>();
+            int indexCount = input.Read<int>();
+            TkModOptionGroup group = mod.OptionGroups[groupKeyIndex];
+            ObservableCollection<TkModOption> selection = result.SelectedOptions[group] = [];
+
+            for (int _ = 0; _ < indexCount; _++) {
+                selection.Add(group.Options[input.Read<int>()]);
+            }
         }
         
         return result;

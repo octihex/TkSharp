@@ -50,6 +50,22 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
         return CurrentProfile ?? Profiles[0];
     }
 
+    public IEnumerable<TkChangelog> GetMergeTargets() => GetMergeTargets(GetCurrentProfile());
+
+    public static IEnumerable<TkChangelog> GetMergeTargets(TkProfile profile)
+    {
+        return profile
+            .Mods
+            .Where(x => x.IsEnabled)
+            .SelectMany(x => x.SelectedOptions.Values
+                .SelectMany(group => group)
+                .OrderBy(option => option.Priority)
+                .Select(option => option.Changelog)
+                .Prepend(x.Mod.Changelog)
+            )
+            .Reverse();
+    }
+
     public ITkModWriter GetSystemWriter(TkModContext modContext)
     {
         return new SystemModWriter(this, modContext.Id);

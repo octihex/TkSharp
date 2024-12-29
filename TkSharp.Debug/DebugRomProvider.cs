@@ -1,7 +1,7 @@
 using TkSharp.Core;
 using TkSharp.Core.Common;
+using TkSharp.Core.IO;
 using TkSharp.Data.Embedded;
-using TkSharp.Extensions.LibHac;
 
 namespace TkSharp.Debug;
 
@@ -23,5 +23,6 @@ public sealed class DebugRomProvider : Singleton<DebugRomProvider>, ITkRomProvid
             TkChecksums.FromStream(TkEmbeddedDataSource.GetChecksumsBin()),
             @"F:\switch",
             @"F:\");
+
     }
 }

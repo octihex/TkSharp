@@ -5,7 +5,7 @@ namespace TkSharp.Extensions.GameBanana;
 public sealed class GameBananaMod
 {
     [JsonPropertyName("_idRow")]
-    public ulong Id { get; set; }
+    public long Id { get; set; }
 
     [JsonPropertyName("_sName")]
     public string Name { get; set; } = string.Empty;

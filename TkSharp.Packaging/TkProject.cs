@@ -101,7 +101,7 @@ public partial class TkProject(string folderPath) : ObservableObject
             
             string metadataFilePath = Path.Combine(optionPath, "info.json");
             using FileStream fs = File.Create(metadataFilePath);
-            JsonSerializer.Serialize(fs, group);
+            JsonSerializer.Serialize(fs, option);
         }
     }
 

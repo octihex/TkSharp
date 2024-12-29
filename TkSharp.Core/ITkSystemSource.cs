@@ -6,4 +6,6 @@ namespace TkSharp.Core;
 public interface ITkSystemSource
 {
     Stream OpenRead(string relativeFilePath);
+    
+    bool Exists(string relativeFilePath);
 }
