@@ -22,7 +22,7 @@ public static class TkBinaryReader
             Version = input.ReadString()!,
             Author = input.ReadString()!
         };
-
+        
         int contributorCount = input.Read<int>();
         for (int i = 0; i < contributorCount; i++) {
             result.Contributors.Add(
@@ -146,9 +146,11 @@ public static class TkBinaryReader
             int groupKeyIndex = input.Read<int>();
             int indexCount = input.Read<int>();
             TkModOptionGroup group = mod.OptionGroups[groupKeyIndex];
-            result.SelectedOptions[group] = [
-                .. Enumerable.Range(0, indexCount).Select(optionIndex => group.Options[optionIndex])
-            ];
+            ObservableCollection<TkModOption> selection = result.SelectedOptions[group] = [];
+
+            for (int _ = 0; _ < indexCount; _++) {
+                selection.Add(group.Options[input.Read<int>()]);
+            }
         }
         
         return result;
