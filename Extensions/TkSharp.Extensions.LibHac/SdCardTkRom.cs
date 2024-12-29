@@ -59,7 +59,7 @@ public sealed class SdCardTkRom : ITkRom, IDisposable
         contentDirFs.Initialize(in contentDirPath).ThrowIfFailure();
 
         var encFs = new AesXtsFileSystem(contentDirFs, keys.SdCardEncryptionKeys[1].DataRo.ToArray(), 0x4000);
-        _baseSwitchFs = encFs.GetSwitchFs(sdCardPath, keys);
+        _baseSwitchFs = new SwitchFs(keys, encFs, null);
         _updateSwitchFs = _baseSwitchFs;
 
         _fileSystem = _baseSwitchFs.Applications[EX_KING_APP_ID].Main.MainNca.Nca
@@ -70,9 +70,6 @@ public sealed class SdCardTkRom : ITkRom, IDisposable
             using RentedBuffer<byte> regionLangMask = RentedBuffer<byte>.Allocate(regionLangMaskFs);
             GameVersion = RegionLangMaskParser.ParseVersion(regionLangMask.Span, out string nsoBinaryId);
             NsoBinaryId = nsoBinaryId;
-            
-            Console.WriteLine($"Game Version: {GameVersion}");
-            Console.WriteLine($"NSO Binary ID: {NsoBinaryId}");
         }
 
         {
