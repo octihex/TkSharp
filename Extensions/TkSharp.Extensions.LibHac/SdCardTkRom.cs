@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using LibHac.Common;
 using LibHac.Common.Keys;
 using LibHac.Fs;
@@ -19,7 +18,6 @@ public sealed class SdCardTkRom : ITkRom, IDisposable
 {
     public const ulong EX_KING_APP_ID = 0x0100F2C0115B6000;
     
-    private readonly IStorage _baseStorage;
     private readonly SwitchFs _baseSwitchFs, _updateSwitchFs;
     
     private readonly TkChecksums _checksums;
@@ -134,7 +132,6 @@ public sealed class SdCardTkRom : ITkRom, IDisposable
 
     public void Dispose()
     {
-        _baseStorage.Dispose();
         _baseSwitchFs.Dispose();
         _updateSwitchFs.Dispose();
         _fileSystem.Dispose();
