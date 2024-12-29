@@ -57,7 +57,9 @@ public static class TkProjectManager
     private static void LoadProjectMetadataFromFolder(TkProject project)
     {
         string projectFilePath = Path.Combine(project.FolderPath, ".tkproj");
-        if (!File.Exists(projectFilePath)) {
+        FileInfo projectFile = new(projectFilePath);
+        
+        if (!projectFile.Exists || projectFile.Length == 0) {
             project.Mod = new TkMod {
                 Name = Path.GetFileNameWithoutExtension(projectFilePath)
             };
@@ -66,7 +68,7 @@ public static class TkProjectManager
             return;
         }
 
-        using FileStream fs = File.OpenRead(projectFilePath);
+        using FileStream fs = projectFile.OpenRead();
         project.Mod = JsonSerializer.Deserialize<TkMod>(fs)
                       ?? new TkMod();
 
@@ -90,7 +92,9 @@ public static class TkProjectManager
         TkModOptionGroup group;
 
         string metadataFilePath = Path.Combine(optionGroupFolderPath, "info.json");
-        if (File.Exists(metadataFilePath)) {
+        FileInfo metadataFile = new(metadataFilePath);
+        
+        if (metadataFile is { Exists: true, Length: > 0 }) {
             using FileStream fs = File.OpenRead(metadataFilePath);
             group = JsonSerializer.Deserialize<TkModOptionGroup>(fs)
                     ?? new TkModOptionGroup();
@@ -115,7 +119,9 @@ public static class TkProjectManager
         TkModOption option;
 
         string metadataFilePath = Path.Combine(optionFolderPath, "info.json");
-        if (File.Exists(metadataFilePath)) {
+        FileInfo metadataFile = new(metadataFilePath);
+        
+        if (metadataFile is { Exists: true, Length: > 0 }) {
             using FileStream fs = File.OpenRead(metadataFilePath);
             option = JsonSerializer.Deserialize<TkModOption>(fs) ?? new TkModOption();
             goto Result;
