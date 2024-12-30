@@ -1,9 +1,11 @@
+using TkSharp.Merging.Common.BinaryYaml;
+
 namespace TkSharp.Merging.Mergers.BinaryYaml;
 
 public sealed class BymlMergerKeyNameProvider : Singleton<BymlMergerKeyNameProvider>, IBymlMergerKeyNameProvider
 {
     // ReSharper disable StringLiteralTypo
-    public string? GetKeyName(ReadOnlySpan<char> key, ReadOnlySpan<char> type, int depth)
+    public BymlKeyName GetKeyName(ReadOnlySpan<char> key, ReadOnlySpan<char> type, int depth)
     {
         return key switch {
             "Animal" or "Enemy" or "FallFloorInsect" or "Fish" or "GrassCut" or "Insect" or "NotDecayedLargeSwordList"
@@ -118,8 +120,8 @@ public sealed class BymlMergerKeyNameProvider : Singleton<BymlMergerKeyNameProvi
                 or "TriggerParams" or "Triggers" => "Key",
             "OverrideReactionVerbSettings" => "KeyActionVerb",
             "ShootableActorSettings" => "KeyHash",
-            "AttachmentGroupList" or "EnemyGroupList" or "ShopWeaponGroupList"
-                or "WeaponGroupList" => "Label",
+            "AttachmentGroupList" or "EnemyGroupList" => "Label",
+            "ShopWeaponGroupList" or "WeaponGroupList" => ("Label", "EquipmentType"),
             "ActionSeqs" => "LabelHash",
             "CaveEntranceNormal" or "CaveEntranceSpecial" or "CaveEntranceWell" or "CheckPoint" or "City"
                 or "District" or "DragonTears" or "Dungeon" or "Ground" or "ShopArmor" or "ShopDye" or "ShopGeneral"

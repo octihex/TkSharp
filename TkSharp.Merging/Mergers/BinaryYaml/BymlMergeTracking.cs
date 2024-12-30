@@ -3,6 +3,7 @@ using BymlLibrary.Nodes.Containers;
 using CommunityToolkit.HighPerformance;
 using TkSharp.Merging.ChangelogBuilders;
 using TkSharp.Merging.ChangelogBuilders.BinaryYaml;
+using TkSharp.Merging.Common.BinaryYaml;
 
 namespace TkSharp.Merging.Mergers.BinaryYaml;
 
@@ -42,7 +43,7 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
             .OrderBy(x => x.Key)
             .Select(x => (x.Key, x.ToArray()));
 
-        Dictionary<Byml, int> keyedAdditions = new(Byml.ValueEqualityComparer.Default);
+        Dictionary<BymlKey, int> keyedAdditions = new(BymlKey.Comparer.Default);
 
         foreach ((int insertIndex, Byml[] entries) in additions) {
             ProcessAdditions(ref newEntryOffset, @base, entry, insertIndex, entries, ref info, keyedAdditions);
@@ -59,14 +60,14 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
     }
 
     private void ProcessAdditions(ref int newEntryOffset, BymlArray @base, BymlMergeTrackingEntry entry, int insertIndex,
-        Byml[] additions, ref BymlTrackingInfo info, Dictionary<Byml, int> keyedAdditions)
+        Byml[] additions, ref BymlTrackingInfo info, Dictionary<BymlKey, int> keyedAdditions)
     {
         if (additions.Length == 0) {
             return;
         }
 
         if (entry.ArrayName is string arrayName &&
-            BymlMergerKeyNameProvider.Instance.GetKeyName(arrayName, Type ?? info.Type, info.Depth) is string keyName) {
+            BymlMergerKeyNameProvider.Instance.GetKeyName(arrayName, Type ?? info.Type, info.Depth) is var keyName) {
             ProcessKeyedAdditions(ref newEntryOffset, @base, insertIndex, additions, keyName, ref info, keyedAdditions);
             return;
         }
@@ -80,18 +81,18 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
     }
 
     private void ProcessKeyedAdditions(ref int newEntryOffset, BymlArray @base, int insertIndex, Byml[] additions,
-        string keyName, ref BymlTrackingInfo info, Dictionary<Byml, int> keyedAdditions)
+        BymlKeyName keyName, ref BymlTrackingInfo info, Dictionary<BymlKey, int> keyedAdditions)
     {
-        IEnumerable<(Byml? Key, Byml[])> elements = additions
-            .GroupBy(x => (x.Value as BymlMap)?.GetValueOrDefault(keyName), Byml.ValueEqualityComparer.Default)
+        IEnumerable<(BymlKey Key, Byml[])> elements = additions
+            .GroupBy(keyName.GetKey, BymlKey.Comparer.Default)
             .Select(x => (x.Key, x.ToArray()));
 
-        foreach ((Byml? key, Byml[] entries) in elements) {
+        foreach ((BymlKey key, Byml[] entries) in elements) {
             if (entries.Length == 0) {
                 continue;
             }
 
-            if (key is null) {
+            if (key.IsEmpty) {
                 InsertAdditions(ref newEntryOffset, @base, insertIndex, entries);
                 continue;
             }

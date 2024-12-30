@@ -1,26 +1,29 @@
-using System.Collections;
+using System.Collections.Frozen;
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
 using Microsoft.Extensions.Logging;
 using TkSharp.Core;
 using TkSharp.Core.IO.Buffers;
+using TkSharp.Merging.Common.BinaryYaml;
+using TkSharp.Merging.Extensions;
 
 namespace TkSharp.Merging.ChangelogBuilders.BinaryYaml;
 
-public class BymlKeyedArrayChangelogBuilder<T>(string key) : IBymlArrayChangelogBuilder where T : IEquatable<T>
+public class BymlKeyedArrayChangelogBuilder<T>(string key, string? secondaryKey = null) : IBymlArrayChangelogBuilder where T : IEquatable<T>
 {
-    private readonly string _key = key;
+    private readonly BymlKeyName _key = new(key, secondaryKey);
 
     public bool LogChanges(ref BymlTrackingInfo info, ref Byml root, BymlArray src, BymlArray vanilla)
     {
         BymlArrayChangelog changelog = [];
         int detectedAdditions = 0;
 
+        FrozenDictionary<BymlKey, int> vanillaIndexMap = vanilla.CreateIndexCache(_key);
         using var vanillaRecordsFound = RentedBitArray.Create(vanilla.Count);
 
         for (int i = 0; i < src.Count; i++) {
             Byml element = src[i];
-            if (!element.GetMap().TryGetValue(_key, out Byml? keyEntry)) {
+            if (!_key.TryGetKey(element, out BymlKey key)) {
                 TkLog.Instance.LogWarning(
                     "Entry '{Index}' in '{Type}' was missing a {Key} field.",
                     i, info.Type.ToString(), _key);
@@ -29,7 +32,7 @@ public class BymlKeyedArrayChangelogBuilder<T>(string key) : IBymlArrayChangelog
                 continue;
             }
             
-            if (!TryGetIndex(vanilla, keyEntry.Get<T>(), _key, out int vanillaIndex)) {
+            if (!vanillaIndexMap.TryGetValue(key, out int vanillaIndex)) {
                 int relativeIndex = i - detectedAdditions;
                 changelog.Add(((vanilla.Count > relativeIndex) switch {
                     true => relativeIndex, false => i

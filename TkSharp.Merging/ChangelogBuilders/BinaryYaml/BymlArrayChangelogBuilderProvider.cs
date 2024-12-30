@@ -118,8 +118,8 @@ public class BymlArrayChangelogBuilderProvider : Singleton<BymlArrayChangelogBui
                 or "TriggerParams" or "Triggers" => new BymlKeyedArrayChangelogBuilder<string>("Key"),
             "OverrideReactionVerbSettings" => new BymlKeyedArrayChangelogBuilder<string>("KeyActionVerb"),
             "ShootableActorSettings" => new BymlKeyedArrayChangelogBuilder<uint>("KeyHash"),
-            "AttachmentGroupList" or "EnemyGroupList" or "ShopWeaponGroupList"
-                or "WeaponGroupList" => new BymlKeyedArrayChangelogBuilder<string>("Label"),
+            "AttachmentGroupList" or "EnemyGroupList" => new BymlKeyedArrayChangelogBuilder<string>("Label"),
+            "ShopWeaponGroupList" or "WeaponGroupList" => new BymlKeyedArrayChangelogBuilder<string>("Label", "EquipmentType"),
             "ActionSeqs" => new BymlKeyedArrayChangelogBuilder<uint>("LabelHash"),
             "CaveEntranceNormal" or "CaveEntranceSpecial" or "CaveEntranceWell" or "CheckPoint" or "City"
                 or "District" or "DragonTears" or "Dungeon" or "Ground" or "ShopArmor" or "ShopDye" or "ShopGeneral"
