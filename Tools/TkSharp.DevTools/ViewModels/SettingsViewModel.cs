@@ -33,7 +33,7 @@ public partial class SettingsPageViewModel : ObservableObject
     private string? _gameDumpFolderPath;
 
     [ObservableProperty]
-    private string? _sdCardContentsPath;
+    private string? _sdCardRootPath;
 
     public static SettingsPageViewModel Load()
     {
@@ -83,28 +83,6 @@ public partial class SettingsPageViewModel : ObservableObject
 
         BaseGameFilePath = foundTotkFiles[0].FilePath;
         GameUpdateFilePath = foundTotkFiles[^1].FilePath;
-    }
-
-    [RelayCommand]
-    [property: JsonIgnore]
-    private void LoadFromSdCard()
-    {
-        if (App.Storage.OpenFolderPickerAsync(new FolderPickerOpenOptions {
-            Title = "Select SD Card root folder",
-            AllowMultiple = false
-        }).Result is { Count: > 0 } result)
-        {
-            string sdRoot = result[0].Path.LocalPath;
-            string contentsPath = Path.Combine(sdRoot, "Nintendo", "Contents");
-            string keysPath = Path.Combine(sdRoot, "switch");
-
-            if (!Directory.Exists(contentsPath)) {
-                return;
-            }
-
-            SdCardContentsPath = contentsPath;
-            KeysFolderPath = keysPath;
-        }
     }
 
     [RelayCommand]
