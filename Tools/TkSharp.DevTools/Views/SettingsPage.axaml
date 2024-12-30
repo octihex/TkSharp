@@ -27,6 +27,9 @@
             <TextBox Watermark="Game Dump Folder Path (romfs)"
                      UseFloatingWatermark="True"
                      Text="{Binding GameDumpFolderPath}" />
+            <TextBox Watermark="SD Card Root Path"
+                     UseFloatingWatermark="True"
+                     Text="{Binding SdCardRootPath}" />
         </StackPanel>
     </Grid>
 </UserControl>

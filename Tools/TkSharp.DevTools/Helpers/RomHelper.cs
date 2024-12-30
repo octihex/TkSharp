@@ -22,16 +22,16 @@ public class RomHelper : ITkRomProvider
         }
 
         if (Config.Shared.KeysFolderPath is string keysFolderPath
-            && GetKeys(keysFolderPath) is KeySet keys 
-            && Config.Shared.BaseGameFilePath is string baseGameFilePath
-            && Config.Shared.GameUpdateFilePath is string gameUpdateFilePath) {
-            return new PackedTkRom(_checksums, keys, baseGameFilePath, gameUpdateFilePath);
-        }
+        && GetKeys(keysFolderPath) is KeySet keys) {
+            if (Config.Shared.BaseGameFilePath is string baseGameFilePath
+                && Config.Shared.GameUpdateFilePath is string gameUpdateFilePath) {
+                return new PackedTkRom(_checksums, keys, baseGameFilePath, gameUpdateFilePath);
+            }
 
-        if (Config.Shared.KeysFolderPath is string sdKeysFolderPath
-            && Config.Shared.SdCardContentsPath is string contentsPath
-            && Directory.Exists(contentsPath)) {
-            return new SdCardTkRom(_checksums, sdKeysFolderPath, contentsPath);
+            if (Config.Shared.SdCardRootPath is string sdCardRootPath
+                && Directory.Exists(sdCardRootPath)) {
+                return new SdCardTkRom(_checksums, keysFolderPath, sdCardRootPath);
+            }
         }
 
         throw new InvalidOperationException("Invalid configuration.");
