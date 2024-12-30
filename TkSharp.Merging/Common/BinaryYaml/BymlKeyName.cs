@@ -3,27 +3,28 @@ using BymlLibrary.Nodes.Containers;
 
 namespace TkSharp.Merging.Common.BinaryYaml;
 
-public readonly struct BymlKeyName(string? primary)
+public readonly struct BymlKeyName
 {
-    public bool IsEmpty => Primary is null;
+    public bool IsEmpty => Primary is null && GetKeyNode is null;
     
-    public bool IsPair => Secondary is not null;
+    public bool IsFunc => GetKeyNode is not null;
     
-    public readonly string? Primary = primary;
+    public readonly string? Primary;
 
-    public readonly string? Secondary;
+    public readonly Func<BymlMap, Byml?>? GetKeyNode;
 
     public static implicit operator BymlKeyName(string? primary) => new(primary);
     
-    public static implicit operator BymlKeyName((string Primary, string Secondary) pair) => new(pair.Primary, pair.Secondary);
+    public static implicit operator BymlKeyName(Func<BymlMap, Byml?> getKeyNode) => new(getKeyNode);
 
-    public static implicit operator string?(BymlKeyName bymlKey) => bymlKey.Primary;
-
-    public static implicit operator (string, string)?(BymlKeyName bymlKey) => bymlKey.IsEmpty ? null : (bymlKey.Primary!, bymlKey.Secondary!);
-
-    public BymlKeyName(string primary, string? secondary) : this(primary)
+    public BymlKeyName(string? primary)
     {
-        Secondary = secondary;
+        Primary = primary;
+    }
+    
+    public BymlKeyName(Func<BymlMap, Byml?>? getKeyNode)
+    {
+        GetKeyNode = getKeyNode;
     }
 
     public bool TryGetKey(Byml node, out BymlKey key)
@@ -46,14 +47,19 @@ public readonly struct BymlKeyName(string? primary)
         return default;
     }
 
-    public BymlKey GetKeyFromMap(IReadOnlyDictionary<string, Byml> map)
+    public BymlKey GetKeyFromMap(BymlMap map)
     {
         if (IsEmpty) {
             return default;
         }
         
-        return IsPair 
-            ? new BymlKey(map!.GetValueOrDefault(Primary), map!.GetValueOrDefault(Secondary))
+        return GetKeyNode is not null
+            ? new BymlKey(GetKeyNode.Invoke(map))
             : new BymlKey(map!.GetValueOrDefault(Primary));
+    }
+
+    public override string ToString()
+    {
+        return $"{(IsFunc ? "(delegate)" : Primary)}";
     }
 }

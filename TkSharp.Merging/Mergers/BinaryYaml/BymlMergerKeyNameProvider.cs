@@ -121,7 +121,7 @@ public sealed class BymlMergerKeyNameProvider : Singleton<BymlMergerKeyNameProvi
             "OverrideReactionVerbSettings" => "KeyActionVerb",
             "ShootableActorSettings" => "KeyHash",
             "AttachmentGroupList" or "EnemyGroupList" => "Label",
-            "ShopWeaponGroupList" or "WeaponGroupList" => ("Label", "EquipmentType"),
+            "ShopWeaponGroupList" or "WeaponGroupList" => BymlKeyNames.LevelSensorInfo,
             "ActionSeqs" => "LabelHash",
             "CaveEntranceNormal" or "CaveEntranceSpecial" or "CaveEntranceWell" or "CheckPoint" or "City"
                 or "District" or "DragonTears" or "Dungeon" or "Ground" or "ShopArmor" or "ShopDye" or "ShopGeneral"
@@ -177,7 +177,7 @@ public sealed class BymlMergerKeyNameProvider : Singleton<BymlMergerKeyNameProvi
                 "Struct" => "Hash",
                 _ => null
             },
-            _ => null
+            _ => default
         };
     }
 }
