@@ -1,3 +1,4 @@
+using LibHac.Common.Keys;
 using TkSharp.Core;
 using TkSharp.Core.Common;
 using TkSharp.Data.Embedded;
@@ -19,10 +20,15 @@ public sealed class DebugRomProvider : Singleton<DebugRomProvider>, ITkRomProvid
         //     @"D:\Games\Emulation\Packaged\Tears-of-the-Kingdom\TotK-1.0.0.xci",
         //     @"D:\Games\Emulation\Packaged\Tears-of-the-Kingdom\TotK-1.2.1.nsp");
 
+        var keys = new KeySet();
+        ExternalKeyReader.ReadKeyFile(keys,
+            prodKeysFilename: @"F:\switch\prod.keys",
+            titleKeysFilename: @"F:\switch\title.keys"
+        );
+
         return new SdCardTkRom(
             TkChecksums.FromStream(TkEmbeddedDataSource.GetChecksumsBin()),
-            @"F:\switch",
+            keys,
             @"F:\");
-
     }
 }
