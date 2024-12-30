@@ -1,6 +1,8 @@
+using TkSharp.Merging.Common.BinaryYaml;
+
 namespace TkSharp.Merging.Mergers.BinaryYaml;
 
 public interface IBymlMergerKeyNameProvider
 {
-    string? GetKeyName(ReadOnlySpan<char> key, ReadOnlySpan<char> type, int depth);
+    BymlKeyName GetKeyName(ReadOnlySpan<char> key, ReadOnlySpan<char> type, int depth);
 }
