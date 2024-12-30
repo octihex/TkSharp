@@ -18,7 +18,7 @@ public sealed class SdCardTkRom : ITkRom, IDisposable
 {
     public const ulong EX_KING_APP_ID = 0x0100F2C0115B6000;
     
-    private readonly SwitchFs _baseSwitchFs, _updateSwitchFs;
+    private readonly SwitchFs _switchFs;
     
     private readonly TkChecksums _checksums;
     private readonly IFileSystem _fileSystem;
@@ -35,15 +35,9 @@ public sealed class SdCardTkRom : ITkRom, IDisposable
 
     public Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> EffectVersions { get; }
 
-    public SdCardTkRom(TkChecksums checksums, string keysFolderPath, string sdCardPath)
+    public SdCardTkRom(TkChecksums checksums, KeySet keys, string sdCardPath)
     {
         _checksums = checksums;
-        
-        KeySet keys = new();
-        ExternalKeyReader.ReadKeyFile(keys,
-            prodKeysFilename: Path.Combine(keysFolderPath, "prod.keys"),
-            titleKeysFilename: Path.Combine(keysFolderPath, "title.keys")
-        );
 
         LocalFileSystem.Create(out var localFs, sdCardPath).ThrowIfFailure();
         var localFsRef = new UniqueRef<IAttributeFileSystem>(localFs);
@@ -57,11 +51,10 @@ public sealed class SdCardTkRom : ITkRom, IDisposable
         contentDirFs.Initialize(in contentDirPath).ThrowIfFailure();
 
         var encFs = new AesXtsFileSystem(contentDirFs, keys.SdCardEncryptionKeys[1].DataRo.ToArray(), 0x4000);
-        _baseSwitchFs = new SwitchFs(keys, encFs, null);
-        _updateSwitchFs = _baseSwitchFs;
+        _switchFs = new SwitchFs(keys, encFs, null);
 
-        _fileSystem = _baseSwitchFs.Applications[EX_KING_APP_ID].Main.MainNca.Nca
-            .OpenFileSystemWithPatch(_updateSwitchFs.Applications[EX_KING_APP_ID].Patch.MainNca.Nca, NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
+        _fileSystem = _switchFs.Applications[EX_KING_APP_ID].Main.MainNca.Nca
+            .OpenFileSystemWithPatch(_switchFs.Applications[EX_KING_APP_ID].Patch.MainNca.Nca, NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
         
         {
             using Stream regionLangMaskFs = _fileSystem.OpenFileStream("/System/RegionLangMask.txt");
@@ -132,8 +125,7 @@ public sealed class SdCardTkRom : ITkRom, IDisposable
 
     public void Dispose()
     {
-        _baseSwitchFs.Dispose();
-        _updateSwitchFs.Dispose();
+        _switchFs.Dispose();
         _fileSystem.Dispose();
     }
 }

@@ -30,7 +30,7 @@ public class RomHelper : ITkRomProvider
 
             if (Config.Shared.SdCardRootPath is string sdCardRootPath
                 && Directory.Exists(sdCardRootPath)) {
-                return new SdCardTkRom(_checksums, keysFolderPath, sdCardRootPath);
+                return new SdCardTkRom(_checksums, keys, sdCardRootPath);
             }
         }
 
