@@ -30,7 +30,7 @@ public sealed class HybridTkRom : ITkRom, IDisposable
     public Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> EventFlowVersions { get; }
     public Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> EffectVersions { get; }
 
-    public HybridTkRom(TkChecksums checksums, KeySet keys, string romFilePath, string sdCardPath, bool baseFromSdCard)
+    public HybridTkRom(TkChecksums checksums, KeySet keys, IStorage romStorage, string sdCardPath, bool baseFromSdCard)
     {
         _checksums = checksums;
 
@@ -40,14 +40,14 @@ public sealed class HybridTkRom : ITkRom, IDisposable
             InitializeFromSdCard(sdCardPath, keys, out _baseSwitchFs);
             
             // Initialize update from file
-            _baseStorage = new LocalStorage(romFilePath, FileAccess.Read);
-            _updateSwitchFs = _baseStorage.GetSwitchFs(romFilePath, keys);
+            _baseStorage = romStorage;
+            _updateSwitchFs = _baseStorage.GetSwitchFs("rom", keys);
         }
         else
         {
             // Initialize base game from file
-            _baseStorage = new LocalStorage(romFilePath, FileAccess.Read);
-            _baseSwitchFs = _baseStorage.GetSwitchFs(romFilePath, keys);
+            _baseStorage = romStorage;
+            _baseSwitchFs = _baseStorage.GetSwitchFs("rom", keys);
             
             // Initialize update from SD card
             InitializeFromSdCard(sdCardPath, keys, out _updateSwitchFs);
