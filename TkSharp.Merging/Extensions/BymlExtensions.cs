@@ -20,7 +20,7 @@ public static class BymlExtensions
         for (int i = 0; i < array.Count; i++) {
             Byml entry = array[i];
             if (!keyName.TryGetKey(entry, out BymlKey key)) {
-                continue;
+                throw new InvalidOperationException($"Invalid BYML key name, vanilla entry at '{i}' does not match the key type {keyName}");
             }
             
             indexCache[key] = i;
