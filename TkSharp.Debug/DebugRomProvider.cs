@@ -26,9 +26,12 @@ public sealed class DebugRomProvider : Singleton<DebugRomProvider>, ITkRomProvid
             titleKeysFilename: @"F:\switch\title.keys"
         );
 
-        return new SdCardTkRom(
+        return new HybridTkRom(
             TkChecksums.FromStream(TkEmbeddedDataSource.GetChecksumsBin()),
             keys,
-            @"F:\");
+            @"C:\Games\Switch games\TOTK\1.1.0.nsp",
+            @"F:\",
+            true
+        );
     }
 }
