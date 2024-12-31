@@ -9,9 +9,9 @@ using TkSharp.Merging.Extensions;
 
 namespace TkSharp.Merging.ChangelogBuilders.BinaryYaml;
 
-public class BymlKeyedArrayChangelogBuilder<T>(BymlKeyName keyName) : IBymlArrayChangelogBuilder where T : IEquatable<T>
+public class BymlKeyedArrayChangelogBuilder<T>(string key, string? secondaryKey = null) : IBymlArrayChangelogBuilder where T : IEquatable<T>
 {
-    private readonly BymlKeyName _key = keyName;
+    private readonly BymlKeyName _key = new(key, secondaryKey);
 
     public bool LogChanges(ref BymlTrackingInfo info, ref Byml root, BymlArray src, BymlArray vanilla)
     {
@@ -25,7 +25,7 @@ public class BymlKeyedArrayChangelogBuilder<T>(BymlKeyName keyName) : IBymlArray
             Byml element = src[i];
             if (!_key.TryGetKey(element, out BymlKey key)) {
                 TkLog.Instance.LogWarning(
-                    "Entry '{Index}' in '{Type}' was missing the key field '{Key}'.",
+                    "Entry '{Index}' in '{Type}' was missing a {Key} field.",
                     i, info.Type.ToString(), _key);
                 changelog.Add((i - detectedAdditions, BymlChangeType.Add, element));
                 detectedAdditions++;

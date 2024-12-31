@@ -3,28 +3,27 @@ using BymlLibrary.Nodes.Containers;
 
 namespace TkSharp.Merging.Common.BinaryYaml;
 
-public readonly struct BymlKeyName
+public readonly struct BymlKeyName(string? primary)
 {
-    public bool IsEmpty => Primary is null && GetKeyNode is null;
+    public bool IsEmpty => Primary is null;
     
-    public bool IsFunc => GetKeyNode is not null;
+    public bool IsPair => Secondary is not null;
     
-    public readonly string? Primary;
+    public readonly string? Primary = primary;
 
-    public readonly Func<BymlMap, Byml?>? GetKeyNode;
+    public readonly string? Secondary;
 
     public static implicit operator BymlKeyName(string? primary) => new(primary);
     
-    public static implicit operator BymlKeyName(Func<BymlMap, Byml?> getKeyNode) => new(getKeyNode);
+    public static implicit operator BymlKeyName((string Primary, string Secondary) pair) => new(pair.Primary, pair.Secondary);
 
-    public BymlKeyName(string? primary)
+    public static implicit operator string?(BymlKeyName bymlKey) => bymlKey.Primary;
+
+    public static implicit operator (string, string)?(BymlKeyName bymlKey) => bymlKey.IsEmpty ? null : (bymlKey.Primary!, bymlKey.Secondary!);
+
+    public BymlKeyName(string primary, string? secondary) : this(primary)
     {
-        Primary = primary;
-    }
-    
-    public BymlKeyName(Func<BymlMap, Byml?>? getKeyNode)
-    {
-        GetKeyNode = getKeyNode;
+        Secondary = secondary;
     }
 
     public bool TryGetKey(Byml node, out BymlKey key)
@@ -47,19 +46,14 @@ public readonly struct BymlKeyName
         return default;
     }
 
-    public BymlKey GetKeyFromMap(BymlMap map)
+    public BymlKey GetKeyFromMap(IReadOnlyDictionary<string, Byml> map)
     {
         if (IsEmpty) {
             return default;
         }
         
-        return GetKeyNode is not null
-            ? new BymlKey(GetKeyNode.Invoke(map))
+        return IsPair 
+            ? new BymlKey(map!.GetValueOrDefault(Primary), map!.GetValueOrDefault(Secondary))
             : new BymlKey(map!.GetValueOrDefault(Primary));
-    }
-
-    public override string ToString()
-    {
-        return $"{(IsFunc ? "(delegate)" : Primary)}";
     }
 }

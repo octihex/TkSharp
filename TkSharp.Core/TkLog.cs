@@ -17,7 +17,7 @@ public class TkLog : Singleton<TkLog>, ILogger
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
         foreach (ILogger logger in _loggers) {
-            logger.Log(logLevel, eventId, state, exception, formatter);
+            logger.Log(logLevel, eventId, state, exception, FormatMessage);
         }
     }
 
@@ -28,6 +28,13 @@ public class TkLog : Singleton<TkLog>, ILogger
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull
     {
-        return default;
+        return null;
+    }
+
+    private static string FormatMessage<TState>(TState state, Exception? error)
+    {
+        return error is null
+            ? state?.ToString() ?? string.Empty
+            : $"{state}\n{error}";
     }
 }
