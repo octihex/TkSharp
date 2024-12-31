@@ -1,4 +1,6 @@
 using LibHac.Common.Keys;
+using LibHac.FsSystem;
+using LibHac.Tools.FsSystem;
 using TkSharp.Core;
 using TkSharp.Core.Common;
 using TkSharp.Data.Embedded;
@@ -26,12 +28,20 @@ public sealed class DebugRomProvider : Singleton<DebugRomProvider>, ITkRomProvid
             titleKeysFilename: @"F:\switch\title.keys"
         );
 
+        string splitDirectory = @"C:\Games\Switch games\TOTKSPLIT";
+        var splitFiles = Directory.GetFiles(splitDirectory)
+            .OrderBy(f => f) 
+            .Select(f => new LocalStorage(f, FileAccess.Read))
+            .ToArray();
+
+        var concatStorage = new ConcatenationStorage(splitFiles, true);
+
         return new HybridTkRom(
             TkChecksums.FromStream(TkEmbeddedDataSource.GetChecksumsBin()),
             keys,
-            @"C:\Games\Switch games\TOTK\1.1.0.nsp",
+            concatStorage,
             @"F:\",
-            true
+            false
         );
     }
 }
