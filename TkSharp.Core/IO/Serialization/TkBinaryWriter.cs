@@ -86,7 +86,7 @@ public static class TkBinaryWriter
         }
         
         output.Write(
-            profile.Selected is not null ? lookup.Mods[profile.Selected.Mod] : -1
+            profile.Selected is not null ? profile.Mods.IndexOf(profile.Selected) : -1
         );
     }
 
