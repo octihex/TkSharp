@@ -28,20 +28,10 @@ public sealed class DebugRomProvider : Singleton<DebugRomProvider>, ITkRomProvid
             titleKeysFilename: @"F:\switch\title.keys"
         );
 
-        string splitDirectory = @"C:\Games\Switch games\TOTKSPLIT";
-        var splitFiles = Directory.GetFiles(splitDirectory)
-            .OrderBy(f => f) 
-            .Select(f => new LocalStorage(f, FileAccess.Read))
-            .ToArray();
-
-        var concatStorage = new ConcatenationStorage(splitFiles, true);
-
-        return new HybridTkRom(
+        return TkRomHelper.CreateRom(
             TkChecksums.FromStream(TkEmbeddedDataSource.GetChecksumsBin()),
             keys,
-            concatStorage,
-            @"F:\",
-            false
-        );
+            TkRomHelper.RomSource.SplitFiles, @"C:\Games\Switch games\TOTKSPLIT",
+            TkRomHelper.RomSource.SdCard, @"F:\");
     }
 }
