@@ -8,6 +8,7 @@ using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using TkSharp.Core;
 using TkSharp.Extensions.LibHac.Extensions;
+using Path = System.IO.Path;
 
 namespace TkSharp.Extensions.LibHac;
 
@@ -59,31 +60,32 @@ public static class TkRomHelper
 
     public static TkRom CreateRom(
         TkChecksums checksums,
-        KeySet keys,
+        string keysPath,
         RomSource baseSource,
         string basePath,
         RomSource updateSource,
         string updatePath)
     {
-        // Initialize base game
-        var baseFs = baseSource switch {
-            RomSource.File => InitializeFromFile(new LocalStorage(basePath, FileAccess.Read), basePath, keys),
-            RomSource.SdCard => InitializeFromSdCard(basePath, keys),
-            RomSource.SplitFiles => InitializeFromSplitFiles(basePath, keys).SwitchFs,
-            _ => throw new ArgumentException("Invalid base source")
-        };
+        var keys = new KeySet();
+        ExternalKeyReader.ReadKeyFile(keys,
+            prodKeysFilename: Path.Combine(keysPath, "prod.keys"),
+            titleKeysFilename: Path.Combine(keysPath, "title.keys")
+        );
 
-        // Initialize update
-        var updateFs = updateSource switch {
-            RomSource.File => InitializeFromFile(new LocalStorage(updatePath, FileAccess.Read), updatePath, keys),
-            RomSource.SdCard => InitializeFromSdCard(updatePath, keys),
-            RomSource.SplitFiles => InitializeFromSplitFiles(updatePath, keys).SwitchFs,
-            _ => throw new ArgumentException("Invalid update source")
-        };
+        SwitchFs InitializeFs(RomSource source, string path)
+        {
+            return source switch {
+                RomSource.File => InitializeFromFile(new LocalStorage(path, FileAccess.Read), path, keys),
+                RomSource.SdCard => InitializeFromSdCard(path, keys),
+                RomSource.SplitFiles => InitializeFromSplitFiles(path, keys).SwitchFs,
+                _ => throw new ArgumentException($"Invalid source: {source}")
+            };
+        }
 
-        // Create patched filesystem
+        var baseFs = InitializeFs(baseSource, basePath);
+        var updateFs = InitializeFs(updateSource, updatePath);
+
         var fileSystem = InitializeFileSystem(baseFs, updateFs);
-
         return new TkRom(checksums, fileSystem);
     }
 

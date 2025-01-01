@@ -36,9 +36,6 @@ public class TkRom : ITkRom, IDisposable
         {
             GameVersion = RegionLangMaskParser.ParseVersion(regionLangMask.Span, out string nsoBinaryId);
             NsoBinaryId = nsoBinaryId;
-            
-            Console.WriteLine($"Game Version: {GameVersion}");
-            Console.WriteLine($"NSO Binary ID: {NsoBinaryId}");
         }
 
         using (Stream zsDicFs = _fileSystem.OpenFileStream("/Pack/ZsDic.pack.zs"))
