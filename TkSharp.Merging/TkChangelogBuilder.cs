@@ -69,6 +69,9 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             case { Root: "exefs", Canonical.Length: 7 } when path.Canonical[..6] is "subsdk":
                 _changelog.SubSdkFiles.Add(canonical);
                 goto Copy;
+            case { Root: "exefs" }:
+                _changelog.ExeFiles.Add(canonical);
+                goto Copy;
             case { Root: "cheats" }:
                 _changelog.CheatFiles.Add(canonical);
                 goto Copy;

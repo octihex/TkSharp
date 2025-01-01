@@ -37,6 +37,7 @@ public sealed class TkMerger
             Task.Run(() => MergeIps(tkChangelogs), ct),
             Task.Run(() => MergeSubSdk(tkChangelogs), ct),
             Task.Run(() => CopyCheats(tkChangelogs), ct),
+            Task.Run(() => CopyExe(tkChangelogs), ct),
             Task.Run(() => MergeMals(tkChangelogs), ct),
             .. GetTargets(tkChangelogs)
                 .Select(entry => Task.Run(() => MergeTarget(entry.Changelog, entry.Target), ct))
@@ -57,6 +58,8 @@ public sealed class TkMerger
         MergeSubSdk(tkChangelogs);
 
         CopyCheats(tkChangelogs);
+
+        CopyExe(tkChangelogs);
 
         MergeMals(tkChangelogs);
 
@@ -220,6 +223,24 @@ public sealed class TkMerger
             TkLog.Instance.LogWarning(
                 "{Count} SubSdk files were skipped when merging from the lowest priority mods.",
                 index - 9);
+        }
+    }
+
+    private void CopyExe(TkChangelog[] changelogs)
+    {
+        foreach (TkChangelog changelog in changelogs) {
+            if (changelog.Source is null) {
+                TkLog.Instance.LogError(
+                    "Changelog '{Changelog}' has not been initialized. Try restarting to resolve the issue.",
+                    changelog);
+                continue;
+            }
+
+            foreach (string inputOutput in changelog.ExeFiles.Select(exeFile => $"exefs/{exeFile}")) {
+                using Stream input = changelog.Source.OpenRead(inputOutput);
+                using Stream output = _output.OpenWrite(inputOutput);
+                input.CopyTo(output);
+            }
         }
     }
 
