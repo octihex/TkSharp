@@ -75,14 +75,14 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
                 continue;
             }
 
-            if (_masterMerger.GetMerger(name) is not ITkMerger merger) {
-                merged[name] = last;
-                CalculateRstb(parentCanonical, name, last);
+            if (IsRemovedEntry(last)) {
+                merged.Remove(name);
                 continue;
             }
 
-            if (IsRemovedEntry(last)) {
-                merged.Remove(name);
+            if (_masterMerger.GetMerger(name) is not ITkMerger merger) {
+                merged[name] = last;
+                CalculateRstb(parentCanonical, name, last);
                 continue;
             }
             
@@ -124,15 +124,15 @@ public sealed class SarcMerger(TkMerger masterMerger, TkResourceSizeCollector re
                 CalculateRstb(parentCanonical, name, data);
                 continue;
             }
+            
+            if (IsRemovedEntry(data)) {
+                merged.Remove(name);
+                continue;
+            }
 
             if (_masterMerger.GetMerger(name) is not ITkMerger merger) {
                 merged[name] = data;
                 CalculateRstb(parentCanonical, name, data);
-                continue;
-            }
-            
-            if (data.Count == 8 && data.AsSpan().Read<ulong>() == DELETED_MARK) {
-                merged.Remove(name);
                 continue;
             }
 
