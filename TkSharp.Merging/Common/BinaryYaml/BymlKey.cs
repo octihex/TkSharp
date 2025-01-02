@@ -28,7 +28,10 @@ public readonly struct BymlKey(Byml? primary)
 
         public int GetHashCode(BymlKey obj)
         {
-            return HashCode.Combine(obj.Primary, obj.Secondary);
+            return HashCode.Combine(
+                obj.Primary is null ? 0 : Byml.ValueEqualityComparer.Default.GetHashCode(obj.Primary),
+                obj.Secondary is null ? 0 : Byml.ValueEqualityComparer.Default.GetHashCode(obj.Secondary)
+            );
         }
     }
 }
