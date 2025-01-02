@@ -82,11 +82,19 @@ public static class TkRomHelper
             };
         }
 
-        var baseFs = InitializeFs(baseSource, basePath);
-        var updateFs = InitializeFs(updateSource, updatePath);
-
-        var fileSystem = InitializeFileSystem(baseFs, updateFs);
-        return new TkRom(checksums, fileSystem);
+        if (baseSource == RomSource.SdCard && updateSource == RomSource.SdCard && basePath == updatePath)
+        {
+            var sdFs = InitializeFromSdCard(basePath, keys);
+            var fileSystem = InitializeFileSystem(sdFs, sdFs);
+            return new TkRom(checksums, fileSystem);
+        }
+        else
+        {
+            var baseFs = InitializeFs(baseSource, basePath);
+            var updateFs = InitializeFs(updateSource, updatePath);
+            var fileSystem = InitializeFileSystem(baseFs, updateFs);
+            return new TkRom(checksums, fileSystem);
+        }
     }
 
     public enum RomSource
