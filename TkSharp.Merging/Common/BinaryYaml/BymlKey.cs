@@ -3,7 +3,7 @@ using BymlLibrary;
 
 namespace TkSharp.Merging.Common.BinaryYaml;
 
-[DebuggerDisplay("KeyType = {Primary?.Type}, {Secondary?.Type}")]
+[DebuggerDisplay("KeyType = {Primary?.Value}, {Secondary?.Value}")]
 public readonly struct BymlKey(Byml? primary)
 {
     public bool IsEmpty => Primary is null;
@@ -33,5 +33,10 @@ public readonly struct BymlKey(Byml? primary)
                 obj.Secondary is null ? 0 : Byml.ValueEqualityComparer.Default.GetHashCode(obj.Secondary)
             );
         }
+    }
+
+    public override string ToString()
+    {
+        return $"{Primary?.Value} ({Secondary?.Value})";
     }
 }

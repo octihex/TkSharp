@@ -56,4 +56,9 @@ public readonly struct BymlKeyName(string? primary)
             ? new BymlKey(map!.GetValueOrDefault(Primary), map!.GetValueOrDefault(Secondary))
             : new BymlKey(map!.GetValueOrDefault(Primary));
     }
+
+    public override string ToString()
+    {
+        return $"{Primary} ({Secondary})";
+    }
 }
