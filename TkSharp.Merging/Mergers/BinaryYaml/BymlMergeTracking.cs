@@ -105,14 +105,16 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
                 return;
             }
 
-            keyedAdditions.Add(key, insertIndex);
-
+            int insertResult;
             if (entries.Length == 1) {
-                InsertAddition(ref newEntryOffset, @base, insertIndex, entries[0]);
-                continue;
+                insertResult = InsertAddition(ref newEntryOffset, @base, insertIndex, entries[0]);
+                goto UpdateKeys;
             }
 
-            MergeKeyedAdditions(entries[0], entries.AsSpan(1..), ref newEntryOffset, @base, insertIndex, ref info);
+            insertResult = MergeKeyedAdditions(entries[0], entries.AsSpan(1..), ref newEntryOffset, @base, insertIndex, ref info);
+            
+        UpdateKeys:
+            keyedAdditions.Add(key, insertResult);
         }
     }
 
