@@ -21,14 +21,28 @@ public class RomHelper : ITkRomProvider
         }
 
         if (Config.Shared.KeysFolderPath is not string keysFolderPath) {
-            throw new InvalidOperationException("Invalid configuration.");
+            TkLog.Instance.LogError("Invalid configuration");
+            return null;
+        }
+
+        string prodKeysPath = Path.Combine(keysFolderPath, "prod.keys");
+        if (!File.Exists(prodKeysPath)) {
+            TkLog.Instance.LogError("A 'prod.keys' file could not be found in '{KeysFolderPath}'", keysFolderPath);
+            return null;
+        }
+
+        string titleKeysPath = Path.Combine(keysFolderPath, "title.keys");
+        if (!File.Exists(titleKeysPath)) {
+            TkLog.Instance.LogError("A 'title.keys' file could not be found in '{KeysFolderPath}'", keysFolderPath);
+            return null;
         }
 
         var (baseSource, basePath) = GetRomSource();
         var (updateSource, updatePath) = GetUpdateSource();
 
         if (baseSource is null || basePath is null || updateSource is null || updatePath is null) {
-            throw new InvalidOperationException("Invalid configuration.");
+            TkLog.Instance.LogError("Invalid configuration");
+            return null;
         }
 
         Console.WriteLine($"Reading base game from {baseSource} and update from {updateSource}");
