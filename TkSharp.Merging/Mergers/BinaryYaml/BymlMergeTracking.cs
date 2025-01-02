@@ -43,7 +43,7 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
             .OrderBy(x => x.Key)
             .Select(x => (x.Key, x.ToArray()));
 
-        Dictionary<BymlKey, int> keyedAdditions = new(BymlKey.Comparer.Default);
+        Dictionary<BymlKey, int> keyedAdditions = new();
 
         foreach ((int insertIndex, Byml[] entries) in additions) {
             ProcessAdditions(ref newEntryOffset, @base, entry, insertIndex, entries, ref info, keyedAdditions);
@@ -84,7 +84,7 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
         BymlKeyName keyName, ref BymlTrackingInfo info, Dictionary<BymlKey, int> keyedAdditions)
     {
         IEnumerable<(BymlKey Key, Byml[])> elements = additions
-            .GroupBy(keyName.GetKey, BymlKey.Comparer.Default)
+            .GroupBy(keyName.GetKey)
             .Select(x => (x.Key, x.ToArray()));
 
         foreach ((BymlKey key, Byml[] entries) in elements) {

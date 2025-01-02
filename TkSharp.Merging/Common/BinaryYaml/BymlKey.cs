@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using BymlLibrary;
 
 namespace TkSharp.Merging.Common.BinaryYaml;
@@ -17,22 +18,21 @@ public readonly struct BymlKey(Byml? primary)
         Secondary = secondary;
     }
 
-    public class Comparer : IEqualityComparer<BymlKey>
+    public override bool Equals([NotNullWhen(true)] object? obj)
     {
-        public static readonly Comparer Default = new();
+        if (obj is not BymlKey key) {
+            return false;
+        }
         
-        public bool Equals(BymlKey x, BymlKey y)
-        {
-            return Byml.ValueEqualityComparer.Default.Equals(x.Primary, y.Primary) && Byml.ValueEqualityComparer.Default.Equals(x.Secondary, y.Secondary);
-        }
+        return Byml.ValueEqualityComparer.Default.Equals(Primary, key.Primary) && Byml.ValueEqualityComparer.Default.Equals(Secondary, key.Secondary);
+    }
 
-        public int GetHashCode(BymlKey obj)
-        {
-            return HashCode.Combine(
-                obj.Primary is null ? 0 : Byml.ValueEqualityComparer.Default.GetHashCode(obj.Primary),
-                obj.Secondary is null ? 0 : Byml.ValueEqualityComparer.Default.GetHashCode(obj.Secondary)
-            );
-        }
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(
+            Primary is null ? 0 : Byml.ValueEqualityComparer.Default.GetHashCode(Primary),
+            Secondary is null ? 0 : Byml.ValueEqualityComparer.Default.GetHashCode(Secondary)
+        );
     }
 
     public override string ToString()

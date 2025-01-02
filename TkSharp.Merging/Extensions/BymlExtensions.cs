@@ -15,7 +15,7 @@ public static class BymlExtensions
                 return FrozenDictionary<BymlKey, int>.Empty;
         }
 
-        Dictionary<BymlKey, int> indexCache = new(BymlKey.Comparer.Default);
+        Dictionary<BymlKey, int> indexCache = new();
 
         for (int i = 0; i < array.Count; i++) {
             Byml entry = array[i];
@@ -26,6 +26,6 @@ public static class BymlExtensions
             indexCache[key] = i;
         }
         
-        return indexCache.ToFrozenDictionary(BymlKey.Comparer.Default);
+        return indexCache.ToFrozenDictionary();
     }
 }
