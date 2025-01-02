@@ -14,6 +14,8 @@ public class TkChangelog
 
     public List<string> SubSdkFiles { get; } = [];
 
+    public List<string> ExeFiles { get; } = [];
+
     public List<string> CheatFiles { get; } = [];
 
     public ITkSystemSource? Source { get; init; }
