@@ -30,6 +30,9 @@
             <TextBox Watermark="SD Card Root Path"
                      UseFloatingWatermark="True"
                      Text="{Binding SdCardRootPath}" />
+            <TextBox Watermark="Split Files Path"
+                     UseFloatingWatermark="True"
+                     Text="{Binding SplitFilesPath}" />
         </StackPanel>
     </Grid>
 </UserControl>
