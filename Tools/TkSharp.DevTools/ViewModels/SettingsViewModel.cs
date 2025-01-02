@@ -35,6 +35,9 @@ public partial class SettingsPageViewModel : ObservableObject
     [ObservableProperty]
     private string? _sdCardRootPath;
 
+    [ObservableProperty]
+    private string? _splitFilesPath;
+
     public static SettingsPageViewModel Load()
     {
         SettingsPageViewModel? result;
