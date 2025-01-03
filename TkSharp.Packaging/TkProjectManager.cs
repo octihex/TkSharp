@@ -10,6 +10,8 @@ public static class TkProjectManager
 
     public static ObservableCollection<TkProject> RecentProjects { get; } = [];
 
+    public static readonly OptionGroupType[] OptionGroupTypes = Enum.GetValues<OptionGroupType>();
+
     public static int MaxRecentProjects { get; set; } = 15;
 
     public static TkProject NewProject(string sourceFolderPath)
@@ -75,7 +77,7 @@ public static class TkProjectManager
         LoadProjectOptionsFromFolder(project);
     }
 
-    private static void LoadProjectOptionsFromFolder(TkProject project)
+    public static void LoadProjectOptionsFromFolder(TkProject project)
     {
         string optionsFolderPath = Path.Combine(project.FolderPath, "options");
         if (!Directory.Exists(optionsFolderPath)) {
@@ -87,7 +89,7 @@ public static class TkProjectManager
         }
     }
 
-    private static void LoadOptionGroupFolder(TkProject project, string optionGroupFolderPath)
+    public static void LoadOptionGroupFolder(TkProject project, string optionGroupFolderPath)
     {
         TkModOptionGroup group;
 
@@ -114,7 +116,7 @@ public static class TkProjectManager
         project.Mod.OptionGroups.Add(group);
     }
 
-    private static void LoadOptionFolder(TkProject project, TkModOptionGroup group, string optionFolderPath)
+    public static void LoadOptionFolder(TkProject project, TkModOptionGroup group, string optionFolderPath)
     {
         TkModOption option;
 
