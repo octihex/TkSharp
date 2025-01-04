@@ -12,7 +12,7 @@ namespace TkSharp.Extensions.LibHac.Helpers
     {
         private UniqueRef<IAttributeFileSystem> _localFsRef;
 
-        public SwitchFs InitializeFromSdCard(string sdCardPath, KeySet keys)
+        public SwitchFs Initialize(string sdCardPath, KeySet keys)
         {
             LocalFileSystem.Create(out var localFs, sdCardPath).ThrowIfFailure();
             _localFsRef = new UniqueRef<IAttributeFileSystem>(localFs);

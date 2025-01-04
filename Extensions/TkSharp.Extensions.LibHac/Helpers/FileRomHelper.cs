@@ -10,7 +10,7 @@ namespace TkSharp.Extensions.LibHac.Helpers
     {
         private IStorage _storage;
 
-        public SwitchFs InitializeFromFile(string filePath, KeySet keys)
+        public SwitchFs Initialize(string filePath, KeySet keys)
         {
             _storage = new LocalStorage(filePath, FileAccess.Read);
             return _storage.GetSwitchFs(filePath, keys);

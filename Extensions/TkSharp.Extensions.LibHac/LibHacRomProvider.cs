@@ -30,7 +30,7 @@ public class LibHacRomProvider : IDisposable
         if (baseSource == RomSource.SdCard && updateSource == RomSource.SdCard && basePath == updatePath)
         {
             using var sdHelper = new SdRomHelper();
-            var sdFs = sdHelper.InitializeFromSdCard(basePath, keys);
+            var sdFs = sdHelper.Initialize(basePath, keys);
             var fileSystem = InitializeFileSystem(sdFs, sdFs);
             return new TkRom(checksums, fileSystem);
         }
@@ -49,13 +49,13 @@ public class LibHacRomProvider : IDisposable
         {
             case RomSource.File:
                 var fileHelper = new FileRomHelper();
-                return fileHelper.InitializeFromFile(path, keys);
+                return fileHelper.Initialize(path, keys);
             case RomSource.SdCard:
                 var sdHelper = new SdRomHelper();
-                return sdHelper.InitializeFromSdCard(path, keys);
+                return sdHelper.Initialize(path, keys);
             case RomSource.SplitFiles:
                 var splitHelper = new SplitRomHelper();
-                return splitHelper.InitializeFromSplitFiles(path, keys);
+                return splitHelper.Initialize(path, keys);
             default:
                 throw new ArgumentException($"Invalid source: {source}");
         }
