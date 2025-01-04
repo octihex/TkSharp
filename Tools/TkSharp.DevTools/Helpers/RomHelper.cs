@@ -22,7 +22,6 @@ public class RomHelper : ITkRomProvider
 
         if (Config.Shared.KeysFolderPath is not string keysFolderPath) {
             TkLog.Instance.LogError("Invalid configuration");
-            return null;
         }
 
         string prodKeysPath = Path.Combine(keysFolderPath, "prod.keys");
