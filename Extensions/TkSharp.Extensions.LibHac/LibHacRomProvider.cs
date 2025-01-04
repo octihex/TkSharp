@@ -12,7 +12,7 @@ using Path = System.IO.Path;
 
 namespace TkSharp.Extensions.LibHac;
 
-public static class TkRomHelper
+public static class LibHacRomProvider
 {
     public const ulong EX_KING_APP_ID = 0x0100F2C0115B6000;
 
@@ -60,18 +60,12 @@ public static class TkRomHelper
 
     public static TkRom CreateRom(
         TkChecksums checksums,
-        string keysPath,
+        KeySet keys,
         RomSource baseSource,
         string basePath,
         RomSource updateSource,
         string updatePath)
     {
-        var keys = new KeySet();
-        ExternalKeyReader.ReadKeyFile(keys,
-            prodKeysFilename: Path.Combine(keysPath, "prod.keys"),
-            titleKeysFilename: Path.Combine(keysPath, "title.keys")
-        );
-
         SwitchFs InitializeFs(RomSource source, string path)
         {
             return source switch {

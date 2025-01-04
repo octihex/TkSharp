@@ -37,6 +37,9 @@ public class RomHelper : ITkRomProvider
             return null;
         }
 
+        var keys = new KeySet();
+        ExternalKeyReader.ReadKeyFile(prodKeysPath, titleKeysPath);
+
         var (baseSource, basePath) = GetRomSource();
         var (updateSource, updatePath) = GetUpdateSource();
 
@@ -48,7 +51,7 @@ public class RomHelper : ITkRomProvider
         Console.WriteLine($"Reading base game from {baseSource} and update from {updateSource}");
         return LibHacRomProvider.CreateRom(
             _checksums,
-            keysFolderPath,
+            keys,
             baseSource.Value, basePath,
             updateSource.Value, updatePath);
     }
