@@ -10,7 +10,7 @@ namespace TkSharp.Extensions.LibHac.Helpers
     {
         private ConcatenationStorage _storage;
 
-        public SwitchFs InitializeFromSplitFiles(string splitDirectory, KeySet keys)
+        public SwitchFs Initialize(string splitDirectory, KeySet keys)
         {
             var splitFiles = Directory.GetFiles(splitDirectory)
                 .OrderBy(f => f)
