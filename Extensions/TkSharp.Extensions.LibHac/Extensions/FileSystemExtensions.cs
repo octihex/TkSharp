@@ -36,7 +36,7 @@ public static class FileSystemExtensions
     {
         Span<byte> buffer = stackalloc byte[4];
         storage.Read(0x100, buffer).ThrowIfFailure();
-        return buffer.SequenceEqual(stackalloc byte[] { (byte)'H', (byte)'E', (byte)'A', (byte)'D' });
+        return buffer.SequenceEqual("HEAD"u8);
     }
     
     private static SwitchFs OpenNsp(KeySet keys, IStorage storage)
