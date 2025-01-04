@@ -8,58 +8,16 @@ using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using TkSharp.Core;
 using TkSharp.Extensions.LibHac.Extensions;
+using TkSharp.Extensions.LibHac.Helpers;
 using Path = System.IO.Path;
 
 namespace TkSharp.Extensions.LibHac;
 
 public class LibHacRomProvider : IDisposable
 {
-    private UniqueRef<IAttributeFileSystem> _localFsRef;
-    private bool _disposed = false;
-
     public const ulong EX_KING_APP_ID = 0x0100F2C0115B6000;
-
-    public static SwitchFs InitializeFromFile(IStorage storage, string filePath, KeySet keys)
-    {
-        return storage.GetSwitchFs(filePath, keys);
-    }
-
-    public SwitchFs InitializeFromSdCard(string sdCardPath, KeySet keys)
-    {
-        LocalFileSystem.Create(out var localFs, sdCardPath).ThrowIfFailure();
-        _localFsRef = new UniqueRef<IAttributeFileSystem>(localFs);
-
-        var concatFs = new ConcatenationFileSystem(ref _localFsRef);
-
-        using var contentDirPath = new global::LibHac.Fs.Path();
-        PathFunctions.SetUpFixedPath(ref contentDirPath.Ref(), "/Nintendo/Contents"u8).ThrowIfFailure();
-
-        var contentDirFs = new SubdirectoryFileSystem(concatFs);
-        contentDirFs.Initialize(in contentDirPath).ThrowIfFailure();
-
-        var encFs = new AesXtsFileSystem(contentDirFs, keys.SdCardEncryptionKeys[1].DataRo.ToArray(), 0x4000);
-        return new SwitchFs(keys, encFs, null);
-    }
-
-    public static (IStorage Storage, SwitchFs SwitchFs) InitializeFromSplitFiles(string splitDirectory, KeySet keys)
-    {
-        var splitFiles = Directory.GetFiles(splitDirectory)
-            .OrderBy(f => f)
-            .Select(f => new LocalStorage(f, FileAccess.Read))
-            .ToArray();
-
-        var storage = new ConcatenationStorage(splitFiles, true);
-        var switchFs = storage.GetSwitchFs("rom", keys);
-
-        return (storage, switchFs);
-    }
-
-    public static IFileSystem InitializeFileSystem(SwitchFs baseFs, SwitchFs updateFs)
-    {
-        return baseFs.Applications[EX_KING_APP_ID].Main.MainNca.Nca
-            .OpenFileSystemWithPatch(updateFs.Applications[EX_KING_APP_ID].Patch.MainNca.Nca, 
-                NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
-    }
+    private SwitchFs _baseFs;
+    private SwitchFs _updateFs;
 
     public TkRom CreateRom(
         TkChecksums checksums,
@@ -69,33 +27,48 @@ public class LibHacRomProvider : IDisposable
         RomSource updateSource,
         string updatePath)
     {
-        SwitchFs InitializeFs(RomSource source, string path)
-        {
-            return source switch {
-                RomSource.File => InitializeFromFile(new LocalStorage(path, FileAccess.Read), path, keys),
-                RomSource.SdCard => InitializeFromSdCard(path, keys),
-                RomSource.SplitFiles => InitializeFromSplitFiles(path, keys).SwitchFs,
-                _ => throw new ArgumentException($"Invalid source: {source}")
-            };
-        }
-
         if (baseSource == RomSource.SdCard && updateSource == RomSource.SdCard && basePath == updatePath)
         {
-            var sdFs = InitializeFromSdCard(basePath, keys);
+            using var sdHelper = new SdRomHelper();
+            var sdFs = sdHelper.InitializeFromSdCard(basePath, keys);
             var fileSystem = InitializeFileSystem(sdFs, sdFs);
             return new TkRom(checksums, fileSystem);
         }
         else
         {
-            var baseFs = InitializeFs(baseSource, basePath);
-            var updateFs = InitializeFs(updateSource, updatePath);
-            var fileSystem = InitializeFileSystem(baseFs, updateFs);
+            _baseFs = InitializeFs(baseSource, basePath, keys);
+            _updateFs = InitializeFs(updateSource, updatePath, keys);
+            var fileSystem = InitializeFileSystem(_baseFs, _updateFs);
             return new TkRom(checksums, fileSystem);
         }
     }
 
-    public enum RomSource
+    private SwitchFs InitializeFs(RomSource source, string path, KeySet keys)
     {
+        switch (source)
+        {
+            case RomSource.File:
+                var fileHelper = new FileRomHelper();
+                return fileHelper.InitializeFromFile(path, keys);
+            case RomSource.SdCard:
+                var sdHelper = new SdRomHelper();
+                return sdHelper.InitializeFromSdCard(path, keys);
+            case RomSource.SplitFiles:
+                var splitHelper = new SplitRomHelper();
+                return splitHelper.InitializeFromSplitFiles(path, keys);
+            default:
+                throw new ArgumentException($"Invalid source: {source}");
+        }
+    }
+
+    public static IFileSystem InitializeFileSystem(SwitchFs baseFs, SwitchFs updateFs)
+    {
+        return baseFs.Applications[EX_KING_APP_ID].Main.MainNca.Nca
+            .OpenFileSystemWithPatch(updateFs.Applications[EX_KING_APP_ID].Patch.MainNca.Nca,
+                NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
+    }
+
+    public enum RomSource {
         File,      // XCI or NSP file
         SdCard,    // From SD card
         SplitFiles // Split files in a directory
@@ -103,25 +76,7 @@ public class LibHacRomProvider : IDisposable
 
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_disposed)
-        {
-            if (disposing)
-            {
-                _localFsRef.Destroy();
-            }
-
-            _disposed = true;
-        }
-    }
-
-    ~LibHacRomProvider()
-    {
-        Dispose(false);
+        _baseFs?.Dispose();
+        _updateFs?.Dispose();
     }
 } 
