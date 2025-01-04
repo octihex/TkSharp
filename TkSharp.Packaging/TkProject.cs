@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using CommunityToolkit.HighPerformance.Buffers;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Logging;
 using TkSharp.Core;
@@ -31,8 +32,10 @@ public partial class TkProject(string folderPath) : ObservableObject
     public async ValueTask Package(Stream output, ITkRom rom, CancellationToken ct = default)
     {
         TkLog.Instance.LogInformation("Packaging '{ModName}'", Mod.Name);
-        
+
         ArchiveModWriter writer = new();
+        PackThumbnails(writer);
+        
         await Build(writer, rom, ct: ct);
         
         using MemoryStream contentArchiveOutput = new();
@@ -130,5 +133,41 @@ public partial class TkProject(string folderPath) : ObservableObject
 
         path = null;
         return false;
+    }
+
+    private void PackThumbnails(ITkModWriter writer)
+    {
+        PackThumbnail(Mod, writer);
+
+        foreach (TkModOptionGroup group in Mod.OptionGroups) {
+            PackThumbnail(group, writer);
+
+            foreach (TkModOption option in group.Options) {
+                PackThumbnail(option, writer);
+            }
+        }
+    }
+
+    private static void PackThumbnail(TkItem item, ITkModWriter writer)
+    {
+        if (item.Thumbnail is null) {
+            return;
+        }
+
+        if (!File.Exists(item.Thumbnail.ThumbnailPath)) {
+            item.Thumbnail = null;
+            return;
+        }
+
+        string thumbnailFilePath = Path.Combine("img", Ulid.NewUlid().ToString());
+        item.Thumbnail.RelativeThumbnailPath = thumbnailFilePath;
+        
+        using FileStream fs = File.OpenRead(item.Thumbnail.ThumbnailPath);
+        int size = (int)fs.Length;
+        using SpanOwner<byte> buffer = SpanOwner<byte>.Allocate(size);
+        fs.ReadExactly(buffer.Span);
+        
+        using Stream output = writer.OpenWrite(thumbnailFilePath);
+        output.Write(buffer.Span);
     }
 }
