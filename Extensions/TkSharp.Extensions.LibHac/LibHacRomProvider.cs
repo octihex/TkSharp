@@ -12,8 +12,11 @@ using Path = System.IO.Path;
 
 namespace TkSharp.Extensions.LibHac;
 
-public static class LibHacRomProvider
+public class LibHacRomProvider : IDisposable
 {
+    private UniqueRef<IAttributeFileSystem> _localFsRef;
+    private bool _disposed = false;
+
     public const ulong EX_KING_APP_ID = 0x0100F2C0115B6000;
 
     public static SwitchFs InitializeFromFile(IStorage storage, string filePath, KeySet keys)
@@ -21,12 +24,12 @@ public static class LibHacRomProvider
         return storage.GetSwitchFs(filePath, keys);
     }
 
-    public static SwitchFs InitializeFromSdCard(string sdCardPath, KeySet keys)
+    public SwitchFs InitializeFromSdCard(string sdCardPath, KeySet keys)
     {
         LocalFileSystem.Create(out var localFs, sdCardPath).ThrowIfFailure();
-        var localFsRef = new UniqueRef<IAttributeFileSystem>(localFs);
+        _localFsRef = new UniqueRef<IAttributeFileSystem>(localFs);
 
-        var concatFs = new ConcatenationFileSystem(ref localFsRef);
+        var concatFs = new ConcatenationFileSystem(ref _localFsRef);
 
         using var contentDirPath = new global::LibHac.Fs.Path();
         PathFunctions.SetUpFixedPath(ref contentDirPath.Ref(), "/Nintendo/Contents"u8).ThrowIfFailure();
@@ -58,7 +61,7 @@ public static class LibHacRomProvider
                 NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
     }
 
-    public static TkRom CreateRom(
+    public TkRom CreateRom(
         TkChecksums checksums,
         KeySet keys,
         RomSource baseSource,
@@ -96,5 +99,29 @@ public static class LibHacRomProvider
         File,      // XCI or NSP file
         SdCard,    // From SD card
         SplitFiles // Split files in a directory
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                _localFsRef.Destroy();
+            }
+
+            _disposed = true;
+        }
+    }
+
+    ~LibHacRomProvider()
+    {
+        Dispose(false);
     }
 } 
