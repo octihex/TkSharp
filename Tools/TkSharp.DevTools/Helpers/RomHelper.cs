@@ -46,30 +46,30 @@ public class RomHelper : ITkRomProvider
         }
 
         Console.WriteLine($"Reading base game from {baseSource} and update from {updateSource}");
-        return TkRomHelper.CreateRom(
+        return LibHacRomProvider.CreateRom(
             _checksums,
             keysFolderPath,
             baseSource.Value, basePath,
             updateSource.Value, updatePath);
     }
 
-    private static (TkRomHelper.RomSource? Source, string? Path) GetRomSource()
+    private static (LibHacRomProvider.RomSource? Source, string? Path) GetRomSource()
     {
         if (Config.Shared.BaseGameFilePath is string path && File.Exists(path))
-            return (TkRomHelper.RomSource.File, path);
+            return (LibHacRomProvider.RomSource.File, path);
         if (Config.Shared.SplitFilesPath is string splitPath && Directory.Exists(splitPath))
-            return (TkRomHelper.RomSource.SplitFiles, splitPath);
+            return (LibHacRomProvider.RomSource.SplitFiles, splitPath);
         if (Config.Shared.SdCardRootPath is string sdPath && Directory.Exists(sdPath))
-            return (TkRomHelper.RomSource.SdCard, sdPath);
+            return (LibHacRomProvider.RomSource.SdCard, sdPath);
         return (null, null);
     }
 
-    private static (TkRomHelper.RomSource? Source, string? Path) GetUpdateSource()
+    private static (LibHacRomProvider.RomSource? Source, string? Path) GetUpdateSource()
     {
         if (Config.Shared.GameUpdateFilePath is string path && File.Exists(path))
-            return (TkRomHelper.RomSource.File, path);
+            return (LibHacRomProvider.RomSource.File, path);
         if (Config.Shared.SdCardRootPath is string sdPath && Directory.Exists(sdPath))
-            return (TkRomHelper.RomSource.SdCard, sdPath);
+            return (LibHacRomProvider.RomSource.SdCard, sdPath);
         return (null, null);
     }
 }
