@@ -21,19 +21,17 @@ public class RomHelper : ITkRomProvider
         }
 
         if (Config.Shared.KeysFolderPath is not string keysFolderPath) {
-            TkLog.Instance.LogError("Invalid configuration");
+            throw new InvalidOperationException("Keys folder path is required but not configured.");
         }
 
         string prodKeysPath = Path.Combine(keysFolderPath, "prod.keys");
         if (!File.Exists(prodKeysPath)) {
-            TkLog.Instance.LogError("A 'prod.keys' file could not be found in '{KeysFolderPath}'", keysFolderPath);
-            return null;
+            throw new FileNotFoundException($"A 'prod.keys' file could not be found in '{keysFolderPath}'");
         }
 
         string titleKeysPath = Path.Combine(keysFolderPath, "title.keys");
         if (!File.Exists(titleKeysPath)) {
-            TkLog.Instance.LogError("A 'title.keys' file could not be found in '{KeysFolderPath}'", keysFolderPath);
-            return null;
+            throw new FileNotFoundException($"A 'title.keys' file could not be found in '{keysFolderPath}'");
         }
 
         var keys = new KeySet();
@@ -43,8 +41,7 @@ public class RomHelper : ITkRomProvider
         var (updateSource, updatePath) = GetUpdateSource();
 
         if (baseSource is null || basePath is null || updateSource is null || updatePath is null) {
-            TkLog.Instance.LogError("Invalid configuration");
-            return null;
+            throw new InvalidOperationException("Invalid configuration: ROM source or path is not set.");
         }
 
         Console.WriteLine($"Reading base game from {baseSource} and update from {updateSource}");
