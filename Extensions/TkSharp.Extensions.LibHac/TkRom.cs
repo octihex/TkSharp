@@ -15,49 +15,45 @@ public class TkRom : ITkRom, IDisposable
     protected readonly TkChecksums _checksums;
     protected readonly IFileSystem _fileSystem;
     
-    public int GameVersion { get; private set; }
-    public string NsoBinaryId { get; private set; } = string.Empty;
-    public TkZstd Zstd { get; private set; } = null!;
-    public IDictionary<string, string> AddressTable { get; private set; } = new Dictionary<string, string>();
-    public Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> EventFlowVersions { get; private set; } = new();
-    public Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> EffectVersions { get; private set; } = new();
+    public int GameVersion { get; }
+
+    public string NsoBinaryId { get; }
+
+    public TkZstd Zstd { get; }
+
+    public IDictionary<string, string> AddressTable { get; }
+
+    public Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> EventFlowVersions { get; }
+
+    public Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> EffectVersions { get; }
 
     public TkRom(TkChecksums checksums, IFileSystem fileSystem)
     {
         _checksums = checksums;
         _fileSystem = fileSystem;
-        Initialize();
-    }
 
-    private void Initialize()
-    {
         using (Stream regionLangMaskFs = _fileSystem.OpenFileStream("/System/RegionLangMask.txt"))
-        using (RentedBuffer<byte> regionLangMask = RentedBuffer<byte>.Allocate(regionLangMaskFs))
-        {
+        using (RentedBuffer<byte> regionLangMask = RentedBuffer<byte>.Allocate(regionLangMaskFs)) {
             GameVersion = RegionLangMaskParser.ParseVersion(regionLangMask.Span, out string nsoBinaryId);
             NsoBinaryId = nsoBinaryId;
         }
 
-        using (Stream zsDicFs = _fileSystem.OpenFileStream("/Pack/ZsDic.pack.zs"))
-        {
+        using (Stream zsDicFs = _fileSystem.OpenFileStream("/Pack/ZsDic.pack.zs")) {
             Zstd = new TkZstd(zsDicFs);
         }
 
         using (Stream addressTableFs = _fileSystem.OpenFileStream($"/System/AddressTable/Product.{GameVersion}.Nin_NX_NVN.atbl.byml.zs"))
-        using (RentedBuffer<byte> addressTableBuffer = RentedBuffer<byte>.Allocate(addressTableFs))
-        {
+        using (RentedBuffer<byte> addressTableBuffer = RentedBuffer<byte>.Allocate(addressTableFs)) {
             AddressTable = AddressTableParser.ParseAddressTable(addressTableBuffer.Span, Zstd);
         }
 
         using (Stream eventFlowFileEntryFs = _fileSystem.OpenFileStream($"/{AddressTable["Event/EventFlow/EventFlowFileEntry.Product.byml"]}.zs"))
-        using (RentedBuffer<byte> eventFlowFileEntryBuffer = RentedBuffer<byte>.Allocate(eventFlowFileEntryFs))
-        {
+        using (RentedBuffer<byte> eventFlowFileEntryBuffer = RentedBuffer<byte>.Allocate(eventFlowFileEntryFs)) {
             EventFlowVersions = EventFlowFileEntryParser.ParseFileEntry(eventFlowFileEntryBuffer.Span, Zstd);
         }
 
         using (Stream effectInfoFs = _fileSystem.OpenFileStream($"/{AddressTable["Effect/EffectFileInfo.Product.Nin_NX_NVN.byml"]}.zs"))
-        using (RentedBuffer<byte> effectInfoBuffer = RentedBuffer<byte>.Allocate(effectInfoFs))
-        {
+        using (RentedBuffer<byte> effectInfoBuffer = RentedBuffer<byte>.Allocate(effectInfoFs)) {
             EffectVersions = EffectInfoParser.ParseFileEntry(effectInfoBuffer.Span, Zstd);
         }
     }
