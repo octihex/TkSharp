@@ -53,7 +53,7 @@ public static class RyujinxHelper
             using LocalStorage storage = new(target, FileAccess.Read);
             using SwitchFs fs = storage.GetSwitchFs(target, keys);
 
-            if (fs.Applications.TryGetValue(PackedTkRom.EX_KING_APP_ID, out Application? app)) {
+            if (fs.Applications.TryGetValue(LibHacRomProvider.EX_KING_APP_ID, out Application? app)) {
                 yield return (FilePath: target, app.DisplayVersion);
             }
         }

@@ -1,5 +1,4 @@
 using LibHac.Common.Keys;
-using Microsoft.Extensions.Logging;
 using TkSharp.Core;
 using TkSharp.Core.IO;
 using TkSharp.Data.Embedded;
