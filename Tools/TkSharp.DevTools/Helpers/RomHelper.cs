@@ -45,11 +45,15 @@ public class RomHelper : ITkRomProvider
         }
 
         Console.WriteLine($"Reading base game from {baseSource} and update from {updateSource}");
-        return LibHacRomProvider.CreateRom(
-            _checksums,
-            keys,
-            baseSource.Value, basePath,
-            updateSource.Value, updatePath);
+
+        using (var romProvider = new LibHacRomProvider())
+        {
+            return romProvider.CreateRom(
+                _checksums,
+                keys,
+                baseSource.Value, basePath,
+                updateSource.Value, updatePath);
+        }
     }
 
     private static (LibHacRomProvider.RomSource? Source, string? Path) GetRomSource()
