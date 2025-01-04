@@ -35,7 +35,7 @@ public class RomHelper : ITkRomProvider
         }
 
         var keys = new KeySet();
-        ExternalKeyReader.ReadKeyFile(prodKeysPath, titleKeysPath);
+        ExternalKeyReader.ReadKeyFile(keys, prodKeysFilename: prodKeysPath, titleKeysFilename: titleKeysPath);
 
         var (baseSource, basePath) = GetRomSource();
         var (updateSource, updatePath) = GetUpdateSource();
