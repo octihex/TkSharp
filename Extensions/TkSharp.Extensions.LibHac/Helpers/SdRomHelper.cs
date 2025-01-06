@@ -8,7 +8,7 @@ using LibHac.Tools.FsSystem;
 
 namespace TkSharp.Extensions.LibHac.Helpers
 {
-    public class SdRomHelper : IDisposable
+    public class SdRomHelper : ILibHacRomHelper
     {
         private UniqueRef<IAttributeFileSystem> _localFsRef;
 

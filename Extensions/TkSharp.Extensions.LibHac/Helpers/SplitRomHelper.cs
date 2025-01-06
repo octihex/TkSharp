@@ -6,7 +6,7 @@ using TkSharp.Extensions.LibHac.Extensions;
 
 namespace TkSharp.Extensions.LibHac.Helpers
 {
-    public class SplitRomHelper : IDisposable
+    public class SplitRomHelper : ILibHacRomHelper
     {
         private ConcatenationStorage _storage;
 
