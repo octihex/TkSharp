@@ -22,13 +22,11 @@ public sealed class DebugRomProvider : Singleton<DebugRomProvider>, ITkRomProvid
         //     @"D:\Games\Emulation\Packaged\Tears-of-the-Kingdom\TotK-1.0.0.xci",
         //     @"D:\Games\Emulation\Packaged\Tears-of-the-Kingdom\TotK-1.2.1.nsp");
 
-        using (var romProvider = new LibHacRomProvider())
-        {
-            return romProvider.CreateRom(
-                TkChecksums.FromStream(TkEmbeddedDataSource.GetChecksumsBin()),
-                ExternalKeyReader.ReadKeyFile(@"F:\switch\prod.keys", @"F:\switch\title.keys"),
-                LibHacRomProvider.RomSource.SplitFiles, @"C:\Games\Switch games\TOTKSPLIT",
-                LibHacRomProvider.RomSource.SdCard, @"F:\");
-        }
+        var romProvider = new LibHacRomProvider();
+        return romProvider.CreateRom(
+            TkChecksums.FromStream(TkEmbeddedDataSource.GetChecksumsBin()),
+            ExternalKeyReader.ReadKeyFile(@"F:\switch\prod.keys", @"F:\switch\title.keys"),
+            LibHacRomProvider.RomSource.SplitFiles, @"C:\Games\Switch games\TOTKSPLIT",
+            LibHacRomProvider.RomSource.SdCard, @"F:\");
     }
 }
