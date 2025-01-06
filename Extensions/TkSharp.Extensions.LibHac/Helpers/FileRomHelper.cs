@@ -6,7 +6,7 @@ using TkSharp.Extensions.LibHac.Extensions;
 
 namespace TkSharp.Extensions.LibHac.Helpers
 {
-    public class FileRomHelper : IDisposable
+    public class FileRomHelper : ILibHacRomHelper
     {
         private IStorage _storage;
 

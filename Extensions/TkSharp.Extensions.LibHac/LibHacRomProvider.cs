@@ -20,7 +20,7 @@ public class LibHacRomProvider : IDisposable
     private SwitchFs? _baseFs;
     private SwitchFs? _updateFs;
     private IFileSystem? _fileSystem;
-    private IDisposable? _helper;
+    private ILibHacRomHelper? _helper;
 
     public TkRom CreateRom(
         TkChecksums checksums,
@@ -32,7 +32,7 @@ public class LibHacRomProvider : IDisposable
     {
         if (baseSource == RomSource.SdCard && updateSource == RomSource.SdCard && basePath == updatePath) {
             _helper = new SdRomHelper();
-            _baseFs = ((SdRomHelper)_helper).Initialize(basePath, keys);
+            _baseFs = _helper.Initialize(basePath, keys);
             _fileSystem = InitializeLayeredFs(_baseFs, _baseFs);
             return new TkRom(checksums, _fileSystem);
         }
@@ -54,7 +54,7 @@ public class LibHacRomProvider : IDisposable
             _ => throw new ArgumentException($"Invalid source: {source}")
         };
 
-        return ((dynamic)_helper).Initialize(path, keys);
+        return _helper.Initialize(path, keys);
     }
 
     public static IFileSystem InitializeLayeredFs(SwitchFs baseFs, SwitchFs updateFs)
@@ -78,4 +78,4 @@ public class LibHacRomProvider : IDisposable
         SdCard,    // From SD card
         SplitFiles // Split files in a directory
     }
-} 
+}
