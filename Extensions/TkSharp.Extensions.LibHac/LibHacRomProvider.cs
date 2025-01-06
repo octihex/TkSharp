@@ -13,9 +13,14 @@ using Path = System.IO.Path;
 
 namespace TkSharp.Extensions.LibHac;
 
-public class LibHacRomProvider
+public class LibHacRomProvider : IDisposable
 {
     public const ulong EX_KING_APP_ID = 0x0100F2C0115B6000;
+
+    private SwitchFs? _baseFs;
+    private SwitchFs? _updateFs;
+    private IFileSystem? _fileSystem;
+    private IDisposable? _helper;
 
     public TkRom CreateRom(
         TkChecksums checksums,
@@ -25,31 +30,31 @@ public class LibHacRomProvider
         RomSource updateSource,
         string updatePath)
     {
-        if (baseSource == RomSource.SdCard && updateSource == RomSource.SdCard && basePath == updatePath)
-        {
-            using SdRomHelper sdHelper = new SdRomHelper();
-            using SwitchFs sdFs = sdHelper.Initialize(basePath, keys);
-            using IFileSystem fileSystem = InitializeLayeredFs(sdFs, sdFs);
-            return new TkRom(checksums, fileSystem);
+        if (baseSource == RomSource.SdCard && updateSource == RomSource.SdCard && basePath == updatePath) {
+            _helper = new SdRomHelper();
+            _baseFs = ((SdRomHelper)_helper).Initialize(basePath, keys);
+            _fileSystem = InitializeLayeredFs(_baseFs, _baseFs);
+            return new TkRom(checksums, _fileSystem);
         }
-        else
-        {
-            using SwitchFs baseFs = CreateSwitchFs(baseSource, basePath, keys);
-            using SwitchFs updateFs = CreateSwitchFs(updateSource, updatePath, keys);
-            using IFileSystem fileSystem = InitializeLayeredFs(baseFs, updateFs);
-            return new TkRom(checksums, fileSystem);
+        else {
+            _baseFs = CreateSwitchFs(baseSource, basePath, keys);
+            _updateFs = CreateSwitchFs(updateSource, updatePath, keys);
+            _fileSystem = InitializeLayeredFs(_baseFs, _updateFs);
+            return new TkRom(checksums, _fileSystem);
         }
     }
 
     private SwitchFs CreateSwitchFs(RomSource source, string path, KeySet keys)
     {
-        return source switch
+        _helper = source switch
         {
-            RomSource.File => new FileRomHelper().Initialize(path, keys),
-            RomSource.SdCard => new SdRomHelper().Initialize(path, keys),
-            RomSource.SplitFiles => new SplitRomHelper().Initialize(path, keys),
+            RomSource.File => new FileRomHelper(),
+            RomSource.SdCard => new SdRomHelper(),
+            RomSource.SplitFiles => new SplitRomHelper(),
             _ => throw new ArgumentException($"Invalid source: {source}")
         };
+
+        return ((dynamic)_helper).Initialize(path, keys);
     }
 
     public static IFileSystem InitializeLayeredFs(SwitchFs baseFs, SwitchFs updateFs)
@@ -57,6 +62,14 @@ public class LibHacRomProvider
         return baseFs.Applications[EX_KING_APP_ID].Main.MainNca.Nca
             .OpenFileSystemWithPatch(updateFs.Applications[EX_KING_APP_ID].Patch.MainNca.Nca,
                 NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
+    }
+
+    public void Dispose()
+    {
+        _fileSystem?.Dispose();
+        _baseFs?.Dispose();
+        _updateFs?.Dispose();
+        _helper?.Dispose();
     }
 
     public enum RomSource
