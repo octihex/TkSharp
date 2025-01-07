@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace TkSharp.Core.Models;
 
@@ -33,6 +34,18 @@ public sealed partial class TkMod : TkStoredItem
     /// The dependencies of this mod.
     /// </summary>
     public ObservableCollection<TkModDependency> Dependencies { get; init; } = [];
+
+    [RelayCommand]
+    private void NewContributor()
+    {
+        Contributors.Add(new TkModContributor(string.Empty, string.Empty));
+    }
+
+    [RelayCommand]
+    private void RemoveContributor(TkModContributor target)
+    {
+        Contributors.Remove(target);
+    }
 
     public TkProfileMod GetProfileMod()
     {

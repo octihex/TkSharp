@@ -1,6 +1,8 @@
 using System.Collections.Frozen;
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
+using Microsoft.Extensions.Logging;
+using TkSharp.Core;
 using TkSharp.Merging.Common.BinaryYaml;
 
 namespace TkSharp.Merging.Extensions;
@@ -15,17 +17,19 @@ public static class BymlExtensions
                 return FrozenDictionary<BymlKey, int>.Empty;
         }
 
-        Dictionary<BymlKey, int> indexCache = new(BymlKey.Comparer.Default);
+        Dictionary<BymlKey, int> indexCache = new();
 
         for (int i = 0; i < array.Count; i++) {
             Byml entry = array[i];
             if (!keyName.TryGetKey(entry, out BymlKey key)) {
-                throw new InvalidOperationException($"Invalid BYML key name, vanilla entry at '{i}' does not match the key type {keyName}");
+                TkLog.Instance.LogWarning(
+                    "Invalid BYML key name, vanilla entry at '{Index}' does not match the key type {KeyName}", i, keyName);
+                continue;
             }
             
             indexCache[key] = i;
         }
         
-        return indexCache.ToFrozenDictionary(BymlKey.Comparer.Default);
+        return indexCache.ToFrozenDictionary();
     }
 }

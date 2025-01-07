@@ -57,7 +57,7 @@ public class TkPatch(string nsoBinaryId)
             output.Write(value, Endianness.Big);
         }
 
-        output.Write(EOF_MARK);
+        output.Write(EOF_MARK, Endianness.Big);
     }
 
     public static TkPatch? FromIps(Stream stream, string nsoBinaryId)
@@ -69,7 +69,7 @@ public class TkPatch(string nsoBinaryId)
         TkPatch patch = new(nsoBinaryId);
 
         uint address = stream.Read<uint>(Endianness.Big);
-        while (address is not EOF_MARK) {
+        while (address is not EOF_MARK && stream.Position < stream.Length) {
             int valueSize = stream.Read<short>(Endianness.Big);
             if (valueSize is not 4) {
                 goto NextAddress;

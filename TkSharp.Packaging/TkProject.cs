@@ -22,6 +22,12 @@ public partial class TkProject(string folderPath) : ObservableObject
     
     private readonly Dictionary<TkItem, string> _itemPathLookup = [];
 
+    public void Refresh()
+    {
+        Mod.OptionGroups.Clear();
+        TkProjectManager.LoadProjectOptionsFromFolder(this);
+    }
+
     public async ValueTask Package(Stream output, ITkRom rom, CancellationToken ct = default)
     {
         TkLog.Instance.LogInformation("Packaging '{ModName}'", Mod.Name);
@@ -110,7 +116,7 @@ public partial class TkProject(string folderPath) : ObservableObject
         _itemPathLookup[option] = sourceFolderPath;
     }
 
-    private bool TryGetPath(TkItem item, [MaybeNullWhen(false)] out string path)
+    public bool TryGetPath(TkItem item, [MaybeNullWhen(false)] out string path)
     {
         if (_itemPathLookup.TryGetValue(item, out string? folderPath) && Directory.Exists(folderPath)) {
             path = folderPath;
