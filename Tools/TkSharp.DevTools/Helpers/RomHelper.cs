@@ -1,5 +1,4 @@
 using LibHac.Common.Keys;
-using Microsoft.Extensions.Logging;
 using TkSharp.Core;
 using TkSharp.Core.IO;
 using TkSharp.Data.Embedded;
@@ -10,46 +9,65 @@ namespace TkSharp.DevTools.Helpers;
 
 public class RomHelper : ITkRomProvider
 {
-    private static readonly TkChecksums _checksums = TkChecksums.FromStream(
-        TkEmbeddedDataSource.GetChecksumsBin());
+    private static readonly TkChecksums _checksums = TkChecksums.FromStream(TkEmbeddedDataSource.GetChecksumsBin());
     
     public static readonly RomHelper Instance = new();
-    
+
     public ITkRom GetRom()
     {
         if (Config.Shared.GameDumpFolderPath is string gamePath && Directory.Exists(gamePath)) {
             return new ExtractedTkRom(gamePath, _checksums);
         }
 
-        if (Config.Shared.KeysFolderPath is string keysFolderPath
-            && GetKeys(keysFolderPath) is KeySet keys 
-            && Config.Shared.BaseGameFilePath is string baseGameFilePath
-            && Config.Shared.GameUpdateFilePath is string gameUpdateFilePath) {
-            return new PackedTkRom(_checksums, keys, baseGameFilePath, gameUpdateFilePath);
+        if (Config.Shared.KeysFolderPath is not string keysFolderPath) {
+            throw new InvalidOperationException("Keys folder path is required but not configured.");
         }
 
-        throw new InvalidOperationException("Invalid configuration.");
+        string prodKeysPath = Path.Combine(keysFolderPath, "prod.keys");
+        if (!File.Exists(prodKeysPath)) {
+            throw new FileNotFoundException($"A 'prod.keys' file could not be found in '{keysFolderPath}'");
+        }
+
+        string titleKeysPath = Path.Combine(keysFolderPath, "title.keys");
+        if (!File.Exists(titleKeysPath)) {
+            throw new FileNotFoundException($"A 'title.keys' file could not be found in '{keysFolderPath}'");
+        }
+
+        var keys = new KeySet();
+        ExternalKeyReader.ReadKeyFile(keys, prodKeysFilename: prodKeysPath, titleKeysFilename: titleKeysPath);
+
+        var (baseSource, basePath) = GetRomSource();
+        var (updateSource, updatePath) = GetUpdateSource();
+
+        if (baseSource is null || basePath is null || updateSource is null || updatePath is null) {
+            throw new InvalidOperationException("Invalid configuration: ROM source or path is not set.");
+        }
+
+        var romProvider = new LibHacRomProvider();
+        return romProvider.CreateRom(
+            _checksums,
+            keys,
+            baseSource.Value, basePath,
+            updateSource.Value, updatePath);
     }
-    
-    public static KeySet? GetKeys(string keysFolder)
+
+    private static (LibHacRomSourceType? Source, string? Path) GetRomSource()
     {
-        string prodKeysFilePath = Path.Combine(keysFolder, "prod.keys");
-        if (!File.Exists(prodKeysFilePath)) {
-            TkLog.Instance.LogError("A 'prod.keys' file could not be found in '{KeysFolder}'", keysFolder);
-            return null;
-        }
-        
-        string titleKeysFilePath = Path.Combine(keysFolder, "title.keys");
-        if (!File.Exists(titleKeysFilePath)) {
-            TkLog.Instance.LogError("A 'title.keys' file could not be found in '{KeysFolder}'", keysFolder);
-            return null;
-        }
+        if (Config.Shared.BaseGameFilePath is string path && File.Exists(path))
+            return (LibHacRomSourceType.File, path);
+        if (Config.Shared.SplitFilesPath is string splitPath && Directory.Exists(splitPath))
+            return (LibHacRomSourceType.SplitFiles, splitPath);
+        if (Config.Shared.SdCardRootPath is string sdPath && Directory.Exists(sdPath))
+            return (LibHacRomSourceType.SdCard, sdPath);
+        return (null, null);
+    }
 
-        KeySet keys = new();
-        ExternalKeyReader.ReadKeyFile(keys,
-            prodKeysFilename: prodKeysFilePath,
-            titleKeysFilename: titleKeysFilePath);
-
-        return keys;
+    private static (LibHacRomSourceType? Source, string? Path) GetUpdateSource()
+    {
+        if (Config.Shared.GameUpdateFilePath is string path && File.Exists(path))
+            return (LibHacRomSourceType.File, path);
+        if (Config.Shared.SdCardRootPath is string sdPath && Directory.Exists(sdPath))
+            return (LibHacRomSourceType.SdCard, sdPath);
+        return (null, null);
     }
 }
