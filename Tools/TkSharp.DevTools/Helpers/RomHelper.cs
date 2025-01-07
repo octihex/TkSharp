@@ -51,23 +51,23 @@ public class RomHelper : ITkRomProvider
             updateSource.Value, updatePath);
     }
 
-    private static (LibHacRomProvider.RomSource? Source, string? Path) GetRomSource()
+    private static (LibHacRomSourceType? Source, string? Path) GetRomSource()
     {
         if (Config.Shared.BaseGameFilePath is string path && File.Exists(path))
-            return (LibHacRomProvider.RomSource.File, path);
+            return (LibHacRomSourceType.File, path);
         if (Config.Shared.SplitFilesPath is string splitPath && Directory.Exists(splitPath))
-            return (LibHacRomProvider.RomSource.SplitFiles, splitPath);
+            return (LibHacRomSourceType.SplitFiles, splitPath);
         if (Config.Shared.SdCardRootPath is string sdPath && Directory.Exists(sdPath))
-            return (LibHacRomProvider.RomSource.SdCard, sdPath);
+            return (LibHacRomSourceType.SdCard, sdPath);
         return (null, null);
     }
 
-    private static (LibHacRomProvider.RomSource? Source, string? Path) GetUpdateSource()
+    private static (LibHacRomSourceType? Source, string? Path) GetUpdateSource()
     {
         if (Config.Shared.GameUpdateFilePath is string path && File.Exists(path))
-            return (LibHacRomProvider.RomSource.File, path);
+            return (LibHacRomSourceType.File, path);
         if (Config.Shared.SdCardRootPath is string sdPath && Directory.Exists(sdPath))
-            return (LibHacRomProvider.RomSource.SdCard, sdPath);
+            return (LibHacRomSourceType.SdCard, sdPath);
         return (null, null);
     }
 }
