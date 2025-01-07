@@ -2,7 +2,6 @@ using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Fs.Fsa;
 using TkSharp.Core;
-using TkSharp.Core.IO;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.IO.Parsers;
 using TkSharp.Extensions.LibHac.Extensions;
@@ -11,9 +10,8 @@ namespace TkSharp.Extensions.LibHac;
 
 public class TkRom : ITkRom, IDisposable
 {
-    
-    protected readonly TkChecksums _checksums;
-    protected readonly IFileSystem _fileSystem;
+    private readonly TkChecksums _checksums;
+    private readonly IFileSystem _fileSystem;
     
     public int GameVersion { get; }
 
@@ -101,5 +99,6 @@ public class TkRom : ITkRom, IDisposable
     public void Dispose()
     {
         _fileSystem.Dispose();
+        GC.SuppressFinalize(this);
     }
 } 
