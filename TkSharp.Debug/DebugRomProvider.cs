@@ -28,8 +28,8 @@ public sealed class DebugRomProvider : Singleton<DebugRomProvider>, ITkRomProvid
         return _romProvider.CreateRom(
             TkChecksums.FromStream(TkEmbeddedDataSource.GetChecksumsBin()),
             ExternalKeyReader.ReadKeyFile(@"F:\TOTK\SDCardTest\switch\prod.keys", @"F:\TOTK\SDCardTest\switch\title.keys"),
-            LibHacRomProvider.RomSource.SplitFiles, @"F:\TOTK\SDCardTest\TOTKSPLIT",
-            LibHacRomProvider.RomSource.SdCard, @"F:\TOTK\SDCardTest");
+            LibHacRomSourceType.SplitFiles, @"F:\TOTK\SDCardTest\TOTKSPLIT",
+            LibHacRomSourceType.SdCard, @"F:\TOTK\SDCardTest");
     }
 
     public void Dispose()
