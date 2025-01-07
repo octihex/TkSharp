@@ -19,4 +19,7 @@ public partial class TkThumbnail : ObservableObject
 
     [JsonIgnore]
     public bool IsDefault { get; set; }
+    
+    [JsonIgnore]
+    public string? RelativeThumbnailPath { get; set; }
 }

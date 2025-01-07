@@ -132,7 +132,7 @@ public static class TkBinaryWriter
         
         output.Write(writeThumbnail);
         if (writeThumbnail) {
-            output.WriteString(thumbnail!.ThumbnailPath);
+            output.WriteString(thumbnail!.RelativeThumbnailPath ?? thumbnail!.ThumbnailPath);
         }
     }
 }
