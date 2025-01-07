@@ -43,8 +43,6 @@ public class RomHelper : ITkRomProvider
             throw new InvalidOperationException("Invalid configuration: ROM source or path is not set.");
         }
 
-        Console.WriteLine($"Reading base game from {baseSource} and update from {updateSource}");
-
         var romProvider = new LibHacRomProvider();
         return romProvider.CreateRom(
             _checksums,

@@ -8,8 +8,10 @@ using TkSharp.Extensions.LibHac;
 
 namespace TkSharp.Debug;
 
-public sealed class DebugRomProvider : Singleton<DebugRomProvider>, ITkRomProvider
+public sealed class DebugRomProvider : Singleton<DebugRomProvider>, ITkRomProvider, IDisposable
 {
+    private LibHacRomProvider? _romProvider;
+
     public ITkRom GetRom()
     {
         // return new ExtractedTkRom(@"F:\Games\RomFS\Totk\1.2.1",
@@ -22,11 +24,17 @@ public sealed class DebugRomProvider : Singleton<DebugRomProvider>, ITkRomProvid
         //     @"D:\Games\Emulation\Packaged\Tears-of-the-Kingdom\TotK-1.0.0.xci",
         //     @"D:\Games\Emulation\Packaged\Tears-of-the-Kingdom\TotK-1.2.1.nsp");
 
-        var romProvider = new LibHacRomProvider();
-        return romProvider.CreateRom(
+        _romProvider = new LibHacRomProvider();
+        return _romProvider.CreateRom(
             TkChecksums.FromStream(TkEmbeddedDataSource.GetChecksumsBin()),
-            ExternalKeyReader.ReadKeyFile(@"F:\switch\prod.keys", @"F:\switch\title.keys"),
-            LibHacRomProvider.RomSource.SplitFiles, @"C:\Games\Switch games\TOTKSPLIT",
-            LibHacRomProvider.RomSource.SdCard, @"F:\");
+            ExternalKeyReader.ReadKeyFile(@"F:\TOTK\SDCardTest\switch\prod.keys", @"F:\TOTK\SDCardTest\switch\title.keys"),
+            LibHacRomProvider.RomSource.SplitFiles, @"F:\TOTK\SDCardTest\TOTKSPLIT",
+            LibHacRomProvider.RomSource.SdCard, @"F:\TOTK\SDCardTest");
+    }
+
+    public void Dispose()
+    {
+        _romProvider?.Dispose();
+        _romProvider = null;
     }
 }
