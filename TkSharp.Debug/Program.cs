@@ -32,7 +32,5 @@ merger.Merge(
         .Select(x => x.Mod.Changelog)
 );
 
-DebugRomProvider.Instance.Dispose();
-
 TimeSpan delta = Stopwatch.GetElapsedTime(startTime);
 Console.WriteLine($"Elapsed time: {delta.TotalMilliseconds} ms");
