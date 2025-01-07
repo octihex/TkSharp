@@ -8,7 +8,7 @@ namespace TkSharp.Extensions.LibHac.Helpers
 {
     public class FileRomHelper : ILibHacRomHelper
     {
-        private IStorage _storage;
+        private IStorage? _storage;
 
         public SwitchFs Initialize(string filePath, KeySet keys)
         {
@@ -18,7 +18,8 @@ namespace TkSharp.Extensions.LibHac.Helpers
 
         public void Dispose()
         {
-            _storage.Dispose();
+            _storage?.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 } 

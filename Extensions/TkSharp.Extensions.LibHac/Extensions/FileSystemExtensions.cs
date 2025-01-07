@@ -18,10 +18,7 @@ public static class FileSystemExtensions
     public static SwitchFs GetSwitchFs(this IStorage storage, string filePath, KeySet keys)
     {
         if (storage is ConcatenationStorage) {
-            if (IsXci(storage)) {
-                return OpenXci(keys, storage);
-            }
-            return OpenNsp(keys, storage);
+            return IsXci(storage) ? OpenXci(keys, storage) : OpenNsp(keys, storage);
         }
 
         ReadOnlySpan<char> extension = Path.GetExtension(filePath.AsSpan());
@@ -32,6 +29,7 @@ public static class FileSystemExtensions
             _ => throw new ArgumentException($"Unsupported file extension: '{extension}'", nameof(filePath)),
         };
     }
+    
     private static bool IsXci(IStorage storage)
     {
         Span<byte> buffer = stackalloc byte[4];
