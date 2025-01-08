@@ -15,10 +15,12 @@ public class FatArchiveDirectory(IDirectory baseDirectory) : IDirectory
         for (int i = 0; i < entriesRead; i++) {
             ref DirectoryEntry entry = ref entryBuffer[i];
             ReadOnlySpan<byte> fileName = entry.Name.ItemsRo;
-            if (fileName.LastIndexOf((byte)'.') is var extSeparatorIndex and > -1) {
-                if (fileName[extSeparatorIndex..(extSeparatorIndex + 4)].SequenceEqual(".nca"u8)) {
-                    entry.Attributes |= NxFileAttributes.Archive;
-                }
+            if (entry.Type is DirectoryEntryType.File || fileName.LastIndexOf((byte)'.') is not (var extSeparatorIndex and > -1)) {
+                continue;
+            }
+            
+            if (fileName[extSeparatorIndex..(extSeparatorIndex + 4)].SequenceEqual(".nca"u8)) {
+                entry.Attributes |= NxFileAttributes.Archive;
             }
         }
 
