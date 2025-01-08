@@ -15,9 +15,8 @@ public class SdRomHelper : ILibHacRomHelper
 
     public SwitchFs Initialize(string sdCardPath, KeySet keys)
     {
-        LocalFileSystem.Create(out LocalFileSystem? localFs, sdCardPath).ThrowIfFailure();
-        var archiveFs = new ArchiveFileSystem(localFs);
-        _localFsRef = new UniqueRef<IAttributeFileSystem>(archiveFs);
+        FatFileSystem.Create(out FatFileSystem? localFs, sdCardPath).ThrowIfFailure();
+        _localFsRef = new UniqueRef<IAttributeFileSystem>(localFs);
 
         var concatFs = new ConcatenationFileSystem(ref _localFsRef);
 
