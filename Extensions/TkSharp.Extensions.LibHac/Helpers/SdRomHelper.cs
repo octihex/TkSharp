@@ -5,6 +5,7 @@ using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
 using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
+using TkSharp.Extensions.LibHac.Common;
 
 namespace TkSharp.Extensions.LibHac.Helpers;
 
@@ -15,7 +16,8 @@ public class SdRomHelper : ILibHacRomHelper
     public SwitchFs Initialize(string sdCardPath, KeySet keys)
     {
         LocalFileSystem.Create(out LocalFileSystem? localFs, sdCardPath).ThrowIfFailure();
-        _localFsRef = new UniqueRef<IAttributeFileSystem>(localFs);
+        var archiveFs = new ArchiveFileSystem(localFs);
+        _localFsRef = new UniqueRef<IAttributeFileSystem>(archiveFs);
 
         var concatFs = new ConcatenationFileSystem(ref _localFsRef);
 
