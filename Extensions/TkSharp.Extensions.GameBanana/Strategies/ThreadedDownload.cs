@@ -6,7 +6,7 @@ using System.IO;
 
 namespace TkSharp.Extensions.GameBanana.Strategies;
 
-public class ParallelDownloadStrategy : IDownloadStrategy
+public class ThreadedDownload : IDownload
 {
     private const int SEGMENTS = 7;
     private const int BUFFER_SIZE = 65536; // 64KB buffer
