@@ -10,6 +10,5 @@ public interface IDownload
         Func<IProgress<double>?> onStarted,
         Action onCompleted,
         Action<double> onProgress,
-        Action<double> onSpeedUpdate,
         CancellationToken ct = default);
 } 
