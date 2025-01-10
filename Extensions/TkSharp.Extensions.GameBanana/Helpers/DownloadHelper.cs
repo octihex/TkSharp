@@ -7,7 +7,7 @@ namespace TkSharp.Extensions.GameBanana.Helpers;
 public static class DownloadHelper
 {
     public static event Func<IProgress<double>?> OnDownloadStarted = () => null;
-    public static event Action OnDownloadCompleted = delegate { };
+    public static event Action OnDownloadCompleted = () => { };
 
     private static readonly HttpClient _client = new() {
         Timeout = TimeSpan.FromMinutes(2)
