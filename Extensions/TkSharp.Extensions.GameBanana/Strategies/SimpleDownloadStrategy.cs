@@ -10,7 +10,6 @@ public class SimpleDownloadStrategy : IDownloadStrategy
         Action<double> onProgress,
         CancellationToken ct = default)
     {
-        Console.WriteLine("Using SimpleDownloadStrategy");
         using HttpResponseMessage response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         response.EnsureSuccessStatusCode();
 
