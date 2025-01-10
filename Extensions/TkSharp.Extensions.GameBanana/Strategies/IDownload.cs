@@ -2,7 +2,7 @@ using System.Net;
 
 namespace TkSharp.Extensions.GameBanana.Strategies;
 
-public interface IDownloadStrategy
+public interface IDownload
 {
     Task<byte[]> GetBytesAndReportProgress(
         string url, 

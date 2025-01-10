@@ -27,9 +27,9 @@ public static class DownloadHelper
         int maxRetry = 5, 
         CancellationToken ct = default)
     {
-        IDownloadStrategy strategy = UseThreadedDownloads
-            ? new ParallelDownloadStrategy()
-            : new SimpleDownloadStrategy();
+        IDownload strategy = UseThreadedDownloads
+            ? new ThreadedDownload()
+            : new SimpleDownload();
 
         int retry = 0;
         byte[] data;

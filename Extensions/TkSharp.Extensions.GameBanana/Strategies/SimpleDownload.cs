@@ -1,6 +1,6 @@
 namespace TkSharp.Extensions.GameBanana.Strategies;
 
-public class SimpleDownloadStrategy : IDownloadStrategy
+public class SimpleDownload : IDownload
 {
     public async Task<byte[]> GetBytesAndReportProgress(
         string url,
