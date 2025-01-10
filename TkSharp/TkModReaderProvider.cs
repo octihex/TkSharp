@@ -15,6 +15,11 @@ public class TkModReaderProvider(ITkSystemProvider tkWriterProvider, ITkRomProvi
 
     public void Register(ITkModReader reader)
     {
+        var existing = _readers.FirstOrDefault(r => r.GetType() == reader.GetType());
+        if (existing != null)
+        {
+            _readers.Remove(existing);
+        }
         _readers.Add(reader);
     }
 
