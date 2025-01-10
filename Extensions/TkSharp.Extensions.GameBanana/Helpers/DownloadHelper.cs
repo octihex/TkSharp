@@ -1,12 +1,13 @@
 using System.Net;
 using System.Security.Cryptography;
 using TkSharp.Extensions.GameBanana.Strategies;
+
 namespace TkSharp.Extensions.GameBanana.Helpers;
 
 public static class DownloadHelper
 {
     public static event Func<IProgress<double>?> OnDownloadStarted = () => null;
-    public static event Action OnDownloadCompleted = delegate { };
+    public static event Action OnDownloadCompleted;
 
     private static readonly HttpClient _client = new() {
         Timeout = TimeSpan.FromMinutes(2)
@@ -16,14 +17,20 @@ public static class DownloadHelper
 
     public static double Progress { get; private set; }
 
+    public static Func<bool>? ThreadedDownloadsEnabled { private get; set; }
+
+    private static bool UseThreadedDownloads => ThreadedDownloadsEnabled?.Invoke() ?? false;
+
     public static async Task<byte[]> DownloadAndVerify(
         string fileUrl, 
         byte[] md5Checksum, 
-        IDownloadStrategy? strategy = null,
         int maxRetry = 5, 
         CancellationToken ct = default)
     {
-        strategy ??= new SimpleDownloadStrategy();
+        IDownloadStrategy strategy = UseThreadedDownloads
+            ? new ParallelDownloadStrategy()
+            : new SimpleDownloadStrategy();
+
         int retry = 0;
         byte[] data;
         byte[] hash;
