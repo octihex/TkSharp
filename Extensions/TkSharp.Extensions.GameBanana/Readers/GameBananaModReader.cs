@@ -3,26 +3,12 @@ using ReverseMarkdown;
 using TkSharp.Core;
 using TkSharp.Core.Models;
 using TkSharp.Extensions.GameBanana.Helpers;
-using TkSharp.Extensions.GameBanana.Strategies;
 
 namespace TkSharp.Extensions.GameBanana.Readers;
 
-public sealed class GameBananaModReader : ITkModReader
+public sealed class GameBananaModReader(ITkModReaderProvider readerProvider) : ITkModReader
 {
-    private readonly ITkModReaderProvider _readerProvider;
-    private readonly string _downloadMode;
-
-    public GameBananaModReader(ITkModReaderProvider readerProvider, string downloadMode = "simple")
-    {
-        _readerProvider = readerProvider;
-        _downloadMode = downloadMode;
-    }
-
-    private IDownloadStrategy GetStrategy() => _downloadMode.ToLower() switch
-    {
-        "threaded" => new ParallelDownloadStrategy(),
-        _ => new SimpleDownloadStrategy()
-    };
+    private readonly ITkModReaderProvider _readerProvider = readerProvider;
 
     public async ValueTask<TkMod?> ReadMod(object? input, Stream? stream = null, TkModContext context = default, CancellationToken ct = default)
     {
@@ -106,12 +92,9 @@ public sealed class GameBananaModReader : ITkModReader
 
         ITkModReader? reader = _readerProvider.GetReader(target.Name);
         Ulid id = Unsafe.As<long, Ulid>(ref fileId);
-
+        
         byte[] data = await DownloadHelper.DownloadAndVerify(
-            fileUrl, 
-            Convert.FromHexString(target.Checksum), 
-            strategy: GetStrategy(),
-            ct: ct);
+            fileUrl, Convert.FromHexString(target.Checksum), ct: ct);
 
         await using MemoryStream ms = new(data);
         return reader?.ReadMod(target.Name, ms, new TkModContext(id), ct) switch {

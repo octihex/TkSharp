@@ -20,7 +20,6 @@ public class ParallelDownloadStrategy : IDownloadStrategy
         Action<double> onProgress,
         CancellationToken ct = default)
     {
-        Console.WriteLine("Using ParallelDownloadStrategy");
         using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         response.EnsureSuccessStatusCode();
 
