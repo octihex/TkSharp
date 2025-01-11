@@ -10,7 +10,7 @@ public class ThreadedDownload : IDownload
 {
     private const int SEGMENTS = 7;
     private const int BUFFER_SIZE = 0x10000; // 64KB buffer
-    private const int TIMEOUT_MS = 5000;
+    private const int TIMEOUT_MS = 7000;
 
     public async Task<byte[]> GetBytesAndReportProgress(
         string url,
@@ -85,8 +85,10 @@ public class ThreadedDownload : IDownload
                     {
                         try
                         {
+                            long segmentBytesRead = 0;
                             using var request = new HttpRequestMessage(HttpMethod.Get, url);
-                            request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(start, end);
+                            long resumePosition = start + segmentBytesRead;
+                            request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(resumePosition, end);
 
                             using var segmentResponse = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
                             if (!segmentResponse.IsSuccessStatusCode)
@@ -100,8 +102,7 @@ public class ThreadedDownload : IDownload
                             }
 
                             await using var responseStream = await segmentResponse.Content.ReadAsStreamAsync(ct);
-                            byte[] buffer = new byte[Math.Min(BUFFER_SIZE, expectedBytes)];
-                            long segmentBytesRead = 0;
+                            byte[] buffer = new byte[Math.Min(BUFFER_SIZE, expectedBytes - segmentBytesRead)];
 
                             while (segmentBytesRead < expectedBytes)
                             {
@@ -136,7 +137,7 @@ public class ThreadedDownload : IDownload
                                 }
                             }
                         }
-                        catch (Exception) when (!ct.IsCancellationRequested)
+                        catch
                         {
                             attempt++;
                             if (attempt < maxRetry)
