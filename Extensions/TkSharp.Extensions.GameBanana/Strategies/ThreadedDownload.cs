@@ -9,7 +9,7 @@ namespace TkSharp.Extensions.GameBanana.Strategies;
 public class ThreadedDownload : IDownload
 {
     private const int SEGMENTS = 7;
-    private const int BUFFER_SIZE = 65536; // 64KB buffer
+    private const int BUFFER_SIZE = 0x10000; // 64KB buffer
     private const int TIMEOUT_MS = 5000;
 
     public async Task<byte[]> GetBytesAndReportProgress(
@@ -18,6 +18,7 @@ public class ThreadedDownload : IDownload
         Func<IProgress<double>?> onStarted,
         Action onCompleted,
         Action<double> onProgress,
+        Action<double> onSpeedUpdate,
         CancellationToken ct = default)
     {
         using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
@@ -49,6 +50,18 @@ public class ThreadedDownload : IDownload
         object lockObject = new object();
         var speedTimer = Stopwatch.StartNew();
         long bytesDownloadedInInterval = 0;
+
+        using var speedReportTimer = new Timer(_ =>
+        {
+            var elapsedSeconds = speedTimer.Elapsed.TotalSeconds;
+            if (elapsedSeconds > 0)
+            {
+                var bytesPerSecond = Interlocked.Exchange(ref bytesDownloadedInInterval, 0);
+                var megabytesPerSecond = bytesPerSecond / (1024.0 * 1024.0);
+                onSpeedUpdate(megabytesPerSecond);
+                speedTimer.Restart();
+            }
+        }, null, 0, 1000);
 
         IProgress<double>? progress = onStarted();
 
@@ -105,7 +118,7 @@ public class ThreadedDownload : IDownload
                                 {
                                     Array.Copy(buffer, 0, result, start + segmentBytesRead, bytesRead);
                                     totalBytesDownloaded += bytesRead;
-                                    bytesDownloadedInInterval += bytesRead;
+                                    Interlocked.Add(ref bytesDownloadedInInterval, bytesRead);
                                     segmentBytesRead += bytesRead;
 
                                     onProgress((double)totalBytesDownloaded / contentLength);
