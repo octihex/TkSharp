@@ -10,7 +10,7 @@ public class ThreadedDownload : IDownload
 {
     private const int SEGMENTS = 7;
     private const int BUFFER_SIZE = 0x10000; // 64KB buffer
-    private const int TIMEOUT_MS = 7000;
+    private const int TIMEOUT_MS = 4000;
 
     public async Task<byte[]> GetBytesAndReportProgress(
         string url,
