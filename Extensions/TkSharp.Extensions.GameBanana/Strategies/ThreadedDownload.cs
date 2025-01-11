@@ -47,6 +47,7 @@ public class ThreadedDownload : IDownload
         }
 
         long totalBytesDownloaded = 0;
+        long verifiedBytesDownloaded = 0;
         object lockObject = new object();
         var speedTimer = Stopwatch.StartNew();
         long bytesDownloadedInInterval = 0;
@@ -63,12 +64,12 @@ public class ThreadedDownload : IDownload
             }
         }, null, 0, 1000);
 
-        IProgress<double>? progress = onStarted();
+        IProgress<double>? progressReporter = onStarted();
 
         var downloadTasks = new Task[SEGMENTS];
         for (int i = 0; i < SEGMENTS; i++)
         {
-            downloadTasks[i] = Task.Run(async () =>
+            downloadTasks[i] = Task.Run<Task>(async () =>
             {
                 while (downloadQueue.TryDequeue(out var segment))
                 {
@@ -122,8 +123,9 @@ public class ThreadedDownload : IDownload
                                     Interlocked.Add(ref bytesDownloadedInInterval, bytesRead);
                                     segmentBytesRead += bytesRead;
 
-                                    onProgress((double)totalBytesDownloaded / contentLength);
-                                    progress?.Report((double)totalBytesDownloaded / contentLength);
+                                    double currentProgress = (double)totalBytesDownloaded / contentLength;
+                                    onProgress(currentProgress);
+                                    progressReporter?.Report(currentProgress);
                                 }
                             }
 
@@ -147,18 +149,13 @@ public class ThreadedDownload : IDownload
                         }
                     }
                 }
-            }, ct);
+                return Task.CompletedTask;
+            }, ct).Unwrap();
         }
 
-        try
-        {
-            await Task.WhenAll(downloadTasks);
-        }
-        finally
-        {
-            onCompleted();
-        }
+        await Task.WhenAll(downloadTasks);
 
+        onCompleted();
         return result;
     }
 }
