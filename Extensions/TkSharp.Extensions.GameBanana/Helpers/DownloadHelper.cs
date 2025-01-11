@@ -8,6 +8,7 @@ public static class DownloadHelper
 {
     public static event Func<IProgress<double>?> OnDownloadStarted = () => null;
     public static event Action OnDownloadCompleted = () => { };
+    public static event Action<double> OnSpeedUpdate = _ => { };
 
     private static readonly HttpClient _client = new() {
         Timeout = TimeSpan.FromMinutes(2)
@@ -16,6 +17,7 @@ public static class DownloadHelper
     public static HttpClient Client => _client;
 
     public static double Progress { get; private set; }
+    public static double Speed { get; private set; }
 
     public static Func<bool>? ThreadedDownloadsEnabled { private get; set; }
 
@@ -36,7 +38,7 @@ public static class DownloadHelper
         byte[] hash;
 
         do {
-        Retry:
+            Retry:
             if (maxRetry < retry) {
                 throw new HttpRequestException($"Failed to download resource. The max retry of {maxRetry} was exceeded.",
                     inner: null,
@@ -51,6 +53,10 @@ public static class DownloadHelper
                     OnDownloadStarted,
                     OnDownloadCompleted,
                     progress => Progress = progress,
+                    speed => {
+                        Speed = speed;
+                        OnSpeedUpdate(speed);
+                    },
                     ct);
                     
                 hash = MD5.HashData(data);
