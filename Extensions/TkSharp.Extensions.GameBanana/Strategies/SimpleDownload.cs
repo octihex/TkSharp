@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace TkSharp.Extensions.GameBanana.Strategies;
 
 public class SimpleDownload : IDownload
@@ -8,6 +10,7 @@ public class SimpleDownload : IDownload
         Func<IProgress<double>?> onStarted,
         Action onCompleted,
         Action<double> onProgress,
+        Action<double> onSpeedUpdate,
         CancellationToken ct = default)
     {
         using HttpResponseMessage response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
@@ -30,13 +33,29 @@ public class SimpleDownload : IDownload
         Memory<byte> buffer = result;
         int bytesRead = 0;
 
+        var speedTimer = Stopwatch.StartNew();
+        long bytesDownloadedInInterval = 0;
+
+        using var speedReportTimer = new Timer(_ =>
+        {
+            var elapsedSeconds = speedTimer.Elapsed.TotalSeconds;
+            if (elapsedSeconds > 0)
+            {
+                var bytesPerSecond = Interlocked.Exchange(ref bytesDownloadedInInterval, 0);
+                var megabytesPerSecond = bytesPerSecond / (1024.0 * 1024.0);
+                onSpeedUpdate(megabytesPerSecond);
+                speedTimer.Restart();
+            }
+        }, null, 0, 1000);
+
         await using Stream stream = await response.Content.ReadAsStreamAsync(ct);
         while (bytesRead < contentLength) {
-            int nextOffset = (bytesRead + frameBufferSize) >= result.Length
-                ? result.Length
-                : bytesRead + frameBufferSize;
+            int nextOffset = Math.Min(bytesRead + frameBufferSize, result.Length);
             int read = await stream.ReadAsync(buffer[bytesRead..nextOffset], ct);
+            if (read == 0) break;
+
             bytesRead += read;
+            Interlocked.Add(ref bytesDownloadedInInterval, read);
             
             var currentProgress = (double)bytesRead / contentLength;
             onProgress(currentProgress);
