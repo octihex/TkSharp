@@ -12,10 +12,8 @@ public class ThreadedDownload : IDownload
     private const int TIMEOUT_MS = 4000;
     private const long MB = 1024 * 1024;
 
-    private static int GetSegmentCount(long fileSize)
-    {
-        return fileSize switch
-        {
+    private static int GetSegmentCount(long fileSize) {
+        return fileSize switch {
             < 5 * MB => 1,
             < 10 * MB => 2,
             < 20 * MB => 4,
@@ -37,8 +35,7 @@ public class ThreadedDownload : IDownload
         using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         response.EnsureSuccessStatusCode();
 
-        if (response.Content.Headers.ContentLength is not { } contentLength)
-        {
+        if (response.Content.Headers.ContentLength is not { } contentLength) {
             onStarted();
             byte[] staticResult = await response.Content.ReadAsByteArrayAsync(ct);
             onCompleted();
@@ -52,8 +49,7 @@ public class ThreadedDownload : IDownload
         long segmentSize = (long)Math.Ceiling((double)contentLength / segments);
         long currentPosition = 0;
 
-        for (int i = 0; i < segments && currentPosition < contentLength; i++)
-        {
+        for (int i = 0; i < segments && currentPosition < contentLength; i++) {
             long end = Math.Min(currentPosition + segmentSize - 1, contentLength - 1);
             downloadQueue.Enqueue((i, currentPosition, end));
             currentPosition += segmentSize;
@@ -64,11 +60,9 @@ public class ThreadedDownload : IDownload
         var speedTimer = Stopwatch.StartNew();
         long bytesDownloadedInInterval = 0;
 
-        using var speedReportTimer = new Timer(_ =>
-        {
+        using var speedReportTimer = new Timer(_ => {
             double elapsedSeconds = speedTimer.Elapsed.TotalSeconds;
-            if (elapsedSeconds > 0)
-            {
+            if (elapsedSeconds > 0) {
                 var bytesInInterval = Interlocked.Exchange(ref bytesDownloadedInInterval, 0);
                 var bytesPerSecond = (bytesInInterval / elapsedSeconds);
                 var megabytesPerSecond = bytesPerSecond / MB;
@@ -82,10 +76,8 @@ public class ThreadedDownload : IDownload
         var downloadTasks = new Task[segments];
         for (int i = 0; i < segments; i++)
         {
-            downloadTasks[i] = Task.Run<Task>(async () =>
-            {
-                while (downloadQueue.TryDequeue(out var segment))
-                {
+            downloadTasks[i] = Task.Run<Task>(async () => {
+                while (downloadQueue.TryDequeue(out var segment)) {
                     int segmentIndex = segment.segmentIndex;
                     long start = segment.start;
                     long end = segment.end;
@@ -96,12 +88,9 @@ public class ThreadedDownload : IDownload
                     bool success = false;
                     int consecutiveTimeouts = 0;
 
-                    while (attempt < maxRetry && !success)
-                    {
-                        try
-                        {
+                    while (attempt < maxRetry && !success) {
+                        try {
                             long segmentBytesRead = 0;
-
                             using var request = new HttpRequestMessage(HttpMethod.Get, url);
                             long resumePosition = start + segmentBytesRead;
                             request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(resumePosition, end);
@@ -129,20 +118,16 @@ public class ThreadedDownload : IDownload
                                     buffer.AsMemory(0, (int)Math.Min(buffer.Length, expectedBytes - segmentBytesRead)),
                                     timeoutCts.Token);
 
-                                if (bytesRead == 0)
-                                {
+                                if (bytesRead == 0) {
                                     consecutiveTimeouts++;
-                                    if (consecutiveTimeouts >= 5) // 20 seconds total
-                                    {
+                                    if (consecutiveTimeouts >= maxRetry) {
                                         throw new TimeoutException($"No data received for {consecutiveTimeouts * 4} seconds");
                                     }
                                     continue;
                                 }
+                                consecutiveTimeouts = 0;
 
-                                consecutiveTimeouts = 0; // Reset on successful read
-
-                                lock (lockObject)
-                                {
+                                lock (lockObject) {
                                     Array.Copy(buffer, 0, result, start + segmentBytesRead, bytesRead);
                                     totalBytesDownloaded += bytesRead;
                                     Interlocked.Add(ref bytesDownloadedInInterval, bytesRead);
@@ -156,18 +141,15 @@ public class ThreadedDownload : IDownload
 
                             success = segmentBytesRead == expectedBytes;
                         }
-                        catch (Exception)
-                        {
+                        catch (Exception) {
                             attempt++;
-                            if (attempt < maxRetry)
-                            {
+                            if (attempt < maxRetry) {
                                 await Task.Delay(100 * attempt, ct);
                             }
                         }
                     }
 
-                    if (!success)
-                    {
+                    if (!success) {
                         throw new TimeoutException($"Failed to download segment after {maxRetry} attempts");
                     }
                 }
