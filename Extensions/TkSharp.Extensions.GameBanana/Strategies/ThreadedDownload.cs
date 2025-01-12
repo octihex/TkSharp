@@ -8,9 +8,22 @@ namespace TkSharp.Extensions.GameBanana.Strategies;
 
 public class ThreadedDownload : IDownload
 {
-    private const int SEGMENTS = 7;
     private const int BUFFER_SIZE = 0x10000; // 64KB buffer
     private const int TIMEOUT_MS = 4000;
+    private const long MB = 1024 * 1024;
+
+    private static int GetSegmentCount(long fileSize)
+    {
+        return fileSize switch
+        {
+            < 5 * MB => 1,
+            < 10 * MB => 2,
+            < 20 * MB => 4,
+            < 30 * MB => 6,
+            < 40 * MB => 8,
+            _ => 10
+        };
+    }
 
     public async Task<byte[]> GetBytesAndReportProgress(
         string url,
@@ -35,11 +48,11 @@ public class ThreadedDownload : IDownload
         byte[] result = new byte[contentLength];
         var downloadQueue = new ConcurrentQueue<(int segmentIndex, long start, long end)>();
 
-        // Calculate segment sizes ensuring no bytes are missed
-        long segmentSize = (long)Math.Ceiling((double)contentLength / SEGMENTS);
+        int segments = GetSegmentCount(contentLength);
+        long segmentSize = (long)Math.Ceiling((double)contentLength / segments);
         long currentPosition = 0;
 
-        for (int i = 0; i < SEGMENTS && currentPosition < contentLength; i++)
+        for (int i = 0; i < segments && currentPosition < contentLength; i++)
         {
             long end = Math.Min(currentPosition + segmentSize - 1, contentLength - 1);
             downloadQueue.Enqueue((i, currentPosition, end));
@@ -58,7 +71,7 @@ public class ThreadedDownload : IDownload
             if (elapsedSeconds > 0)
             {
                 var bytesPerSecond = Interlocked.Exchange(ref bytesDownloadedInInterval, 0);
-                var megabytesPerSecond = bytesPerSecond / (1024.0 * 1024.0);
+                var megabytesPerSecond = bytesPerSecond / MB;
                 onSpeedUpdate(megabytesPerSecond);
                 speedTimer.Restart();
             }
@@ -66,8 +79,8 @@ public class ThreadedDownload : IDownload
 
         IProgress<double>? progressReporter = onStarted();
 
-        var downloadTasks = new Task[SEGMENTS];
-        for (int i = 0; i < SEGMENTS; i++)
+        var downloadTasks = new Task[segments];
+        for (int i = 0; i < segments; i++)
         {
             downloadTasks[i] = Task.Run<Task>(async () =>
             {
