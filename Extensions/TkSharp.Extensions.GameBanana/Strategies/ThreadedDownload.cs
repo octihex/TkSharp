@@ -94,12 +94,14 @@ public class ThreadedDownload : IDownload
                     int attempt = 0;
                     const int maxRetry = 5;
                     bool success = false;
+                    int consecutiveTimeouts = 0;
 
                     while (attempt < maxRetry && !success)
                     {
                         try
                         {
                             long segmentBytesRead = 0;
+
                             using var request = new HttpRequestMessage(HttpMethod.Get, url);
                             long resumePosition = start + segmentBytesRead;
                             request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(resumePosition, end);
@@ -127,7 +129,17 @@ public class ThreadedDownload : IDownload
                                     buffer.AsMemory(0, (int)Math.Min(buffer.Length, expectedBytes - segmentBytesRead)),
                                     timeoutCts.Token);
 
-                                if (bytesRead == 0) break;
+                                if (bytesRead == 0)
+                                {
+                                    consecutiveTimeouts++;
+                                    if (consecutiveTimeouts >= 5) // 20 seconds total
+                                    {
+                                        throw new TimeoutException($"No data received for {consecutiveTimeouts * 4} seconds");
+                                    }
+                                    continue;
+                                }
+
+                                consecutiveTimeouts = 0; // Reset on successful read
 
                                 lock (lockObject)
                                 {
@@ -143,16 +155,8 @@ public class ThreadedDownload : IDownload
                             }
 
                             success = segmentBytesRead == expectedBytes;
-                            if (!success)
-                            {
-                                attempt++;
-                                if (attempt < maxRetry)
-                                {
-                                    await Task.Delay(100 * attempt, ct);
-                                }
-                            }
                         }
-                        catch
+                        catch (Exception)
                         {
                             attempt++;
                             if (attempt < maxRetry)
@@ -160,6 +164,11 @@ public class ThreadedDownload : IDownload
                                 await Task.Delay(100 * attempt, ct);
                             }
                         }
+                    }
+
+                    if (!success)
+                    {
+                        throw new TimeoutException($"Failed to download segment after {maxRetry} attempts");
                     }
                 }
                 return Task.CompletedTask;
