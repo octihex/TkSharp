@@ -60,17 +60,17 @@ public class ThreadedDownload : IDownload
         }
 
         long totalBytesDownloaded = 0;
-        long verifiedBytesDownloaded = 0;
         object lockObject = new object();
         var speedTimer = Stopwatch.StartNew();
         long bytesDownloadedInInterval = 0;
 
         using var speedReportTimer = new Timer(_ =>
         {
-            var elapsedSeconds = speedTimer.Elapsed.TotalSeconds;
+            double elapsedSeconds = speedTimer.Elapsed.TotalSeconds;
             if (elapsedSeconds > 0)
             {
-                var bytesPerSecond = Interlocked.Exchange(ref bytesDownloadedInInterval, 0);
+                var bytesInInterval = Interlocked.Exchange(ref bytesDownloadedInInterval, 0);
+                var bytesPerSecond = (bytesInInterval / elapsedSeconds);
                 var megabytesPerSecond = bytesPerSecond / MB;
                 onSpeedUpdate(megabytesPerSecond);
                 speedTimer.Restart();
