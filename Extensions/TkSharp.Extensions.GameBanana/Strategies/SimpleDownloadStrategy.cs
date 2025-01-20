@@ -37,6 +37,7 @@ public class SimpleDownloadStrategy(HttpClient client) : IDownloadStrategy
                 double bytesPerSecond = bytesRead - bytesReadAtLastFrame; 
                 reporter.ReportSpeed(bytesPerSecond / (1024.0 * 1024.0));
                 bytesReadAtLastFrame = bytesRead;
+                startTime = Stopwatch.GetTimestamp();
             }
             
             reporter?.ReportProgress((double)bytesRead / contentLength);
