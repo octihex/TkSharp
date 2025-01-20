@@ -4,7 +4,7 @@ using BymlLibrary;
 
 namespace TkSharp.Merging.Common.BinaryYaml;
 
-[DebuggerDisplay("KeyType = {Primary?.Value}, {Secondary?.Value}")]
+[DebuggerDisplay("Key = {Primary?.Value}, {Secondary?.Value}")]
 public readonly struct BymlKey(Byml? primary) : IEquatable<BymlKey>
 {
     public bool IsEmpty => Primary is null;
@@ -34,12 +34,17 @@ public readonly struct BymlKey(Byml? primary) : IEquatable<BymlKey>
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Primary, Secondary);
+        return HashCode.Combine(
+            Primary is not null
+                ? Byml.ValueEqualityComparer.Default.GetHashCode(Primary) : 0,
+            Secondary is not null
+                ? Byml.ValueEqualityComparer.Default.GetHashCode(Secondary) : 0
+        );
     }
 
     public override string ToString()
     {
-        return $"{Primary?.Value} ({Secondary?.Value})";
+        return $"{Primary?.Value} {(Secondary is null ? "*" : $"({Secondary?.Value ?? "Null"})")}";
     }
 
     public static bool operator ==(BymlKey left, BymlKey right)
