@@ -54,8 +54,6 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
 
     public static IEnumerable<TkChangelog> GetMergeTargets(TkProfile profile)
     {
-        // Ensure required options are selected
-        
         foreach ((TkModOptionGroup group, ObservableCollection<TkModOption> options) in profile.Mods.SelectMany(x => x.SelectedOptions)) {
             if (group.Type is not (OptionGroupType.MultiRequired or OptionGroupType.SingleRequired)) {
                 continue;
