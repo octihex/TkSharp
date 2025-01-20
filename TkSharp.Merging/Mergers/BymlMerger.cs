@@ -1,8 +1,12 @@
+using System.Collections.Frozen;
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
+using CommunityToolkit.HighPerformance;
 using Revrs;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.Models;
+using TkSharp.Merging.Common.BinaryYaml;
+using TkSharp.Merging.Extensions;
 using TkSharp.Merging.Mergers.BinaryYaml;
 
 namespace TkSharp.Merging.Mergers;
@@ -62,7 +66,7 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
                 MergeMap(hashMap64, changelog.GetHashMap64(), tracking);
                 break;
             case BymlArray array when changelog.Value is BymlArrayChangelog arrayChangelog:
-                MergeArray(array, arrayChangelog, keyName: null, tracking);
+                MergeArray(array, arrayChangelog, arrayName: null, tracking);
                 break;
             case BymlArray existingCustomArray when changelog.Value is BymlArray customArray:
                 existingCustomArray.AddRange(customArray);
@@ -104,16 +108,23 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
         tracking.Depth--;
     }
 
-    public static void MergeArray(BymlArray @base, BymlArrayChangelog changelog, string? keyName, BymlMergeTracking tracking)
+    public static void MergeArray(BymlArray @base, BymlArrayChangelog changelog, string? arrayName, BymlMergeTracking tracking)
     {
         List<(int InsertIndex, Byml Entry)>? additions = null;
+
+        BymlKeyName keyName = default;
+        FrozenDictionary<BymlKey, int>? lookup = null;
         
-        foreach ((int i, BymlChangeType change, Byml entry) in changelog) {
+        if (arrayName is not null && BymlMergerKeyNameProvider.Instance.GetKeyName(arrayName, tracking.Type, tracking.Depth) is var bymlKeyName) {
+            keyName = bymlKeyName;
+        }
+        
+        foreach ((int i, BymlChangeType change, Byml entry, Byml? keyPrimary, Byml? keySecondary) in changelog) {
             switch (change) {
                 case BymlChangeType.Add: {
                     if (!tracking.TryGetValue(@base, out BymlMergeTrackingEntry? trackingEntry)) {
                         tracking[@base] = trackingEntry = new BymlMergeTrackingEntry {
-                            ArrayName = keyName,
+                            ArrayName = arrayName,
                             Depth = tracking.Depth
                         };
                     }
@@ -138,12 +149,15 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
                         trackingEntry.Removals.Remove(i);
                     }
                     
+                    BymlKey key = new(keyPrimary, keySecondary);
+                    ref Byml baseEntry = ref GetBestMatch(@base, i, key, keyName, ref lookup);
+                    
                     if (entry.Value is IBymlNode) {
-                        Merge(@base[i], entry, tracking);
+                        Merge(baseEntry, entry, tracking);
                         continue;
                     }
 
-                    @base[i] = entry;
+                    baseEntry = entry;
                     break;
                 }
                 default:
@@ -151,5 +165,21 @@ public sealed class BymlMerger : Singleton<BymlMerger>, ITkMerger
                         $"Invalid array changelog entry type: '{change}'");
             }
         }
+    }
+
+    private static ref Byml GetBestMatch(BymlArray @base, int index, BymlKey key, BymlKeyName keyName, ref FrozenDictionary<BymlKey, int>? lookup)
+    {
+        if (keyName.IsEmpty || key.IsEmpty || @base.Count > index && keyName.GetKey(@base[index]) == key) {
+            goto GetResult;
+        }
+        
+        lookup ??= @base.CreateIndexCache(keyName);
+        if (!lookup.TryGetValue(key, out index)) {
+            throw new InvalidOperationException(
+                $"Failed to locate an entry with the key '{key}'.");
+        }
+        
+    GetResult:
+        return ref @base.AsSpan()[index];
     }
 }

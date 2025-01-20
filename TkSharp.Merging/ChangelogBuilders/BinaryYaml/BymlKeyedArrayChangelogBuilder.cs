@@ -22,12 +22,12 @@ public class BymlKeyedArrayChangelogBuilder(string key, string? secondaryKey = n
         using var vanillaRecordsFound = RentedBitArray.Create(vanilla.Count);
 
         for (int i = 0; i < src.Count; i++) {
-            Byml element = src[i];
-            if (!_key.TryGetKey(element, out BymlKey key)) {
+            Byml node = src[i];
+            if (!_key.TryGetKey(node, out BymlKey key)) {
                 TkLog.Instance.LogWarning(
                     "Entry '{Index}' in '{Type}' was missing a {Key} field.",
                     i, info.Type.ToString(), _key);
-                changelog.Add((i - detectedAdditions, BymlChangeType.Add, element));
+                changelog.Add((index: i - detectedAdditions, BymlChangeType.Add, node));
                 detectedAdditions++;
                 continue;
             }
@@ -36,18 +36,18 @@ public class BymlKeyedArrayChangelogBuilder(string key, string? secondaryKey = n
                 int relativeIndex = i - detectedAdditions;
                 changelog.Add(((vanilla.Count > relativeIndex) switch {
                     true => relativeIndex, false => i
-                }, BymlChangeType.Add, element));
+                }, BymlChangeType.Add, node));
                 
                 detectedAdditions++;
                 continue;
             }
 
-            if (BymlChangelogBuilder.LogChangesInline(ref info, ref element, vanilla[vanillaIndex])) {
+            if (BymlChangelogBuilder.LogChangesInline(ref info, ref node, vanilla[vanillaIndex])) {
                 src[i] = BymlChangeType.Remove;
                 goto UpdateVanilla;
             }
 
-            changelog.Add((vanillaIndex, BymlChangeType.Edit, element));
+            changelog.Add((vanillaIndex, BymlChangeType.Edit, node, key.Primary, key.Secondary));
 
         UpdateVanilla:
             vanillaRecordsFound[vanillaIndex] = true;

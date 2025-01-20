@@ -14,35 +14,39 @@ public class BymlNameHashArrayChangelogBuilder : Singleton<BymlNameHashArrayChan
         using var vanillaRecordsFound = RentedBitArray.Create(vanilla.Count);
 
         for (int i = 0; i < src.Count; i++) {
-            Byml element = src[i];
+            Byml node = src[i];
 
             int vanillaIndex;
-            switch (element.GetMap()[KEY].Value) {
+            Byml? keyPrimary;
+            
+            switch (node.GetMap()[KEY].Value) {
                 case uint u32:
                     if (!TryGetIndex(vanilla, u32, out vanillaIndex)) {
-                        changelog.Add((i, BymlChangeType.Add, element));
+                        changelog.Add((i, BymlChangeType.Add, node));
                         continue;
                     }
-                    
+
+                    keyPrimary = u32;
                     break;
                 case int s32:
                     if (!TryGetIndex(vanilla, s32, out vanillaIndex)) {
-                        changelog.Add((i, BymlChangeType.Add, element));
+                        changelog.Add((i, BymlChangeType.Add, node));
                         continue;
                     }
                     
+                    keyPrimary = s32;
                     break;
                 default:
                     throw new InvalidOperationException("Invalid NameHash key type.");
             };
             
 
-            if (BymlChangelogBuilder.LogChangesInline(ref info, ref element, vanilla[vanillaIndex])) {
+            if (BymlChangelogBuilder.LogChangesInline(ref info, ref node, vanilla[vanillaIndex])) {
                 src[i] = BymlChangeType.Remove;
                 goto UpdateVanilla;
             }
 
-            changelog.Add((vanillaIndex, BymlChangeType.Edit, element));
+            changelog.Add((vanillaIndex, BymlChangeType.Edit, node, keyPrimary, keySecondary: null));
 
         UpdateVanilla:
             vanillaRecordsFound[i] = true;
