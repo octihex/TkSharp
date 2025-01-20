@@ -44,7 +44,7 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
             BymlNodeType.HashMap32 => LogMapChanges(ref info, src.GetHashMap32(), vanilla.GetHashMap32(), arrayChangelogBuilderProvider),
             BymlNodeType.HashMap64 => LogMapChanges(ref info, src.GetHashMap64(), vanilla.GetHashMap64(), arrayChangelogBuilderProvider),
             BymlNodeType.Array => info switch {
-                { Type: "ecocat", Depth: 0 } => new BymlKeyedArrayChangelogBuilder<int>("AreaNumber")
+                { Type: "ecocat", Depth: 0 } => new BymlKeyedArrayChangelogBuilder("AreaNumber")
                     .LogChanges(ref info, ref src, src.GetArray(), vanilla.GetArray()),
                 _ => BymlArrayChangelogBuilder.Instance.LogChanges(ref info, ref src, src.GetArray(), vanilla.GetArray())
             },

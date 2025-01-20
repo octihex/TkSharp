@@ -9,7 +9,7 @@ using TkSharp.Merging.Extensions;
 
 namespace TkSharp.Merging.ChangelogBuilders.BinaryYaml;
 
-public class BymlKeyedArrayChangelogBuilder<T>(string key, string? secondaryKey = null) : IBymlArrayChangelogBuilder where T : IEquatable<T>
+public class BymlKeyedArrayChangelogBuilder(string key, string? secondaryKey = null) : IBymlArrayChangelogBuilder
 {
     private readonly BymlKeyName _key = new(key, secondaryKey);
 
@@ -63,21 +63,5 @@ public class BymlKeyedArrayChangelogBuilder<T>(string key, string? secondaryKey 
 
         root = changelog;
         return changelog.Count == 0;
-    }
-
-    private static bool TryGetIndex(IList<Byml> list, T element, string key, out int index)
-    {
-        int len = list.Count;
-        for (int i = 0; i < len; i++) {
-            if (list[i].Value is not BymlMap map || !map[key].Get<T>().Equals(element)) {
-                continue;
-            }
-
-            index = i;
-            return true;
-        }
-
-        index = -1;
-        return false;
     }
 }

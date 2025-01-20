@@ -9,7 +9,7 @@ public class GameDataStructArrayChangelogBuilderProvider : Singleton<GameDataStr
     public IBymlArrayChangelogBuilder GetChangelogBuilder(ref BymlTrackingInfo info, ReadOnlySpan<char> key)
     {
         return key switch {
-            "DefaultValue" => new BymlKeyedArrayChangelogBuilder<uint>("Hash"),
+            "DefaultValue" => new BymlKeyedArrayChangelogBuilder("Hash"),
             _ => BymlArrayChangelogBuilder.Instance
         };
     }

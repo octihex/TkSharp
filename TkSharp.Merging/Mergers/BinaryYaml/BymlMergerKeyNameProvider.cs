@@ -32,7 +32,7 @@ public sealed class BymlMergerKeyNameProvider : Singleton<BymlMergerKeyNameProvi
             },
             "Elements" => type switch {
                 "game__enemy__DrakeSubModelInfo" => "BoneName",
-                "game__gamebalance__LevelSensorTargetDefine" => "ActorNameHash",
+                "game__gamebalance__LevelSensorTargetDefine" => ("ActorNameHash", "Plus"),
                 _ => null
             },
             "Items" => type switch {
