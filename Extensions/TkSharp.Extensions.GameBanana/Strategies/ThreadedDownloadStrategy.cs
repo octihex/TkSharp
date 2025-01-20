@@ -1,49 +1,29 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Net;
-using System.Net.Sockets;
-using System.IO;
+using System.Net.Http.Headers;
+using TkSharp.Extensions.GameBanana.Models;
 
 namespace TkSharp.Extensions.GameBanana.Strategies;
 
-public class ThreadedDownload : IDownload
+public class ThreadedDownloadStrategy(HttpClient client) : IDownloadStrategy
 {
     private const int BUFFER_SIZE = 0x10000; // 64KB buffer
     private const int TIMEOUT_MS = 4000;
-    private const long MB = 1024 * 1024;
+    private const long MB = 0x100000;
 
-    private static int GetSegmentCount(long fileSize) {
-        return fileSize switch {
-            < 5 * MB => 1,
-            < 10 * MB => 2,
-            < 20 * MB => 4,
-            < 30 * MB => 6,
-            < 40 * MB => 8,
-            _ => 10
-        };
-    }
-
-    public async Task<byte[]> GetBytesAndReportProgress(
-        string url,
-        HttpClient client,
-        Func<IProgress<double>?> onStarted,
-        Action onCompleted,
-        Action<double> onProgress,
-        Action<double> onSpeedUpdate,
-        CancellationToken ct = default)
+    public async ValueTask<byte[]> GetBytesAndReportProgress(Uri url, DownloadReporter? reporter, CancellationToken ct = default)
     {
-        using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+        using HttpResponseMessage response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         response.EnsureSuccessStatusCode();
 
         if (response.Content.Headers.ContentLength is not { } contentLength) {
-            onStarted();
-            byte[] staticResult = await response.Content.ReadAsByteArrayAsync(ct);
-            onCompleted();
-            return staticResult;
+            // If the length is not known ahead
+            // of time, return the whole buffer
+            return await response.Content.ReadAsByteArrayAsync(ct);
         }
 
         byte[] result = new byte[contentLength];
-        var downloadQueue = new ConcurrentQueue<(int segmentIndex, long start, long end)>();
+        var downloadQueue = new ConcurrentQueue<(long start, long end)>();
 
         int segments = GetSegmentCount(contentLength);
         long segmentSize = (long)Math.Ceiling((double)contentLength / segments);
@@ -51,34 +31,32 @@ public class ThreadedDownload : IDownload
 
         for (int i = 0; i < segments && currentPosition < contentLength; i++) {
             long end = Math.Min(currentPosition + segmentSize - 1, contentLength - 1);
-            downloadQueue.Enqueue((i, currentPosition, end));
+            downloadQueue.Enqueue((currentPosition, end));
             currentPosition += segmentSize;
         }
 
         long totalBytesDownloaded = 0;
-        object lockObject = new object();
+        object @lock = new();
         var speedTimer = Stopwatch.StartNew();
         long bytesDownloadedInInterval = 0;
 
-        using var speedReportTimer = new Timer(_ => {
-            double elapsedSeconds = speedTimer.Elapsed.TotalSeconds;
-            if (elapsedSeconds > 0) {
-                var bytesInInterval = Interlocked.Exchange(ref bytesDownloadedInInterval, 0);
-                var bytesPerSecond = (bytesInInterval / elapsedSeconds);
-                var megabytesPerSecond = bytesPerSecond / MB;
-                onSpeedUpdate(megabytesPerSecond);
-                speedTimer.Restart();
-            }
-        }, null, 0, 1000);
-
-        IProgress<double>? progressReporter = onStarted();
+        if (reporter is not null) {
+            await using var speedReportTimer = new Timer(_ => {
+                double elapsedSeconds = speedTimer.Elapsed.TotalSeconds;
+                if (elapsedSeconds > 0) {
+                    long bytesInInterval = Interlocked.Exchange(ref bytesDownloadedInInterval, 0);
+                    double bytesPerSecond = (bytesInInterval / elapsedSeconds);
+                    double megabytesPerSecond = bytesPerSecond / MB;
+                    reporter.ReportSpeed(megabytesPerSecond);
+                    speedTimer.Restart();
+                }
+            }, null, 0, 1000);
+        }
 
         var downloadTasks = new Task[segments];
-        for (int i = 0; i < segments; i++)
-        {
+        for (int i = 0; i < segments; i++) {
             downloadTasks[i] = Task.Run<Task>(async () => {
-                while (downloadQueue.TryDequeue(out var segment)) {
-                    int segmentIndex = segment.segmentIndex;
+                while (downloadQueue.TryDequeue(out (long start, long end) segment)) {
                     long start = segment.start;
                     long end = segment.end;
                     long expectedBytes = end - start + 1;
@@ -93,24 +71,22 @@ public class ThreadedDownload : IDownload
                             long segmentBytesRead = 0;
                             using var request = new HttpRequestMessage(HttpMethod.Get, url);
                             long resumePosition = start + segmentBytesRead;
-                            request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(resumePosition, end);
+                            request.Headers.Range = new RangeHeaderValue(resumePosition, end);
 
-                            using var segmentResponse = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
-                            if (!segmentResponse.IsSuccessStatusCode)
-                            {
+                            using HttpResponseMessage segmentResponse = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+                            if (!segmentResponse.IsSuccessStatusCode) {
                                 attempt++;
-                                if (attempt < maxRetry)
-                                {
+                                if (attempt < maxRetry) {
                                     await Task.Delay(100 * attempt, ct);
                                 }
+
                                 continue;
                             }
 
-                            await using var responseStream = await segmentResponse.Content.ReadAsStreamAsync(ct);
+                            await using Stream responseStream = await segmentResponse.Content.ReadAsStreamAsync(ct);
                             byte[] buffer = new byte[Math.Min(BUFFER_SIZE, expectedBytes - segmentBytesRead)];
 
-                            while (segmentBytesRead < expectedBytes)
-                            {
+                            while (segmentBytesRead < expectedBytes) {
                                 using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                                 timeoutCts.CancelAfter(TIMEOUT_MS);
 
@@ -123,19 +99,20 @@ public class ThreadedDownload : IDownload
                                     if (consecutiveTimeouts >= maxRetry) {
                                         throw new TimeoutException($"No data received for {consecutiveTimeouts * 4} seconds");
                                     }
+
                                     continue;
                                 }
+
                                 consecutiveTimeouts = 0;
 
-                                lock (lockObject) {
+                                lock (@lock) {
                                     Array.Copy(buffer, 0, result, start + segmentBytesRead, bytesRead);
                                     totalBytesDownloaded += bytesRead;
                                     Interlocked.Add(ref bytesDownloadedInInterval, bytesRead);
                                     segmentBytesRead += bytesRead;
 
                                     double currentProgress = (double)totalBytesDownloaded / contentLength;
-                                    onProgress(currentProgress);
-                                    progressReporter?.Report(currentProgress);
+                                    reporter?.ReportProgress(currentProgress);
                                 }
                             }
 
@@ -153,13 +130,25 @@ public class ThreadedDownload : IDownload
                         throw new TimeoutException($"Failed to download segment after {maxRetry} attempts");
                     }
                 }
+
                 return Task.CompletedTask;
             }, ct).Unwrap();
         }
 
         await Task.WhenAll(downloadTasks);
-
-        onCompleted();
+        
         return result;
+    }
+
+    private static int GetSegmentCount(long fileSize)
+    {
+        return fileSize switch {
+            < 5 * MB => 1,
+            < 10 * MB => 2,
+            < 20 * MB => 4,
+            < 30 * MB => 6,
+            < 40 * MB => 8,
+            _ => 10
+        };
     }
 }

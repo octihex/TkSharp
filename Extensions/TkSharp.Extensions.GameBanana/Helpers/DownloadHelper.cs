@@ -1,64 +1,51 @@
 using System.Net;
 using System.Security.Cryptography;
+using TkSharp.Extensions.GameBanana.Models;
 using TkSharp.Extensions.GameBanana.Strategies;
 
 namespace TkSharp.Extensions.GameBanana.Helpers;
 
 public static class DownloadHelper
 {
-    public static event Func<IProgress<double>?> OnDownloadStarted = () => null;
-    public static event Action OnDownloadCompleted = () => { };
-    public static event Action<double> OnSpeedUpdate = _ => { };
+    public static readonly DownloadConfig Config = DownloadConfig.Load();
 
-    private static readonly HttpClient _client = new() {
-        Timeout = TimeSpan.FromMinutes(2)
+    public static readonly HttpClient Client = new() {
+        Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds)
     };
+    
+    public static DownloadReporter? Reporter { get; set; }
+    
+    public static event Func<Task> OnDownloadStarted = () => Task.CompletedTask;
+    public static event Func<Task> OnDownloadCompleted = () => Task.CompletedTask;
 
-    public static HttpClient Client => _client;
-
-    public static double Progress { get; private set; }
-    public static double Speed { get; private set; }
-
-    public static Func<bool>? ThreadedDownloadsEnabled { private get; set; }
-
-    private static bool UseThreadedDownloads => ThreadedDownloadsEnabled?.Invoke() ?? false;
-
-    public static async Task<byte[]> DownloadAndVerify(
-        string fileUrl, 
-        byte[] md5Checksum, 
-        int maxRetry = 5, 
-        CancellationToken ct = default)
+    public static Task<byte[]> DownloadAndVerify(string fileUrl, byte[] md5Checksum, CancellationToken ct = default)
     {
-        IDownload strategy = UseThreadedDownloads
-            ? new ThreadedDownload()
-            : new SimpleDownload();
+        return DownloadAndVerify(new Uri(fileUrl), md5Checksum, ct);
+    }
+    
+    public static async Task<byte[]> DownloadAndVerify(Uri fileUrl, byte[] md5Checksum, CancellationToken ct = default)
+    {
+        IDownloadStrategy strategy = Config.UseThreadedDownloads
+            ? new ThreadedDownloadStrategy(Client)
+            : new SimpleDownloadStrategy(Client);
 
-        int retry = 0;
+        int maxRetry = Config.MaxRetries;
+        int attempt = 0;
+        
         byte[] data;
         byte[] hash;
 
         do {
-            Retry:
-            if (maxRetry < retry) {
+        Retry:
+            if (maxRetry < attempt) {
                 throw new HttpRequestException($"Failed to download resource. The max retry of {maxRetry} was exceeded.",
-                    inner: null,
-                    HttpStatusCode.BadRequest
+                    inner: null, HttpStatusCode.BadRequest
                 );
             }
 
             try {
-                data = await strategy.GetBytesAndReportProgress(
-                    fileUrl, 
-                    _client,
-                    OnDownloadStarted,
-                    OnDownloadCompleted,
-                    progress => Progress = progress,
-                    speed => {
-                        Speed = speed;
-                        OnSpeedUpdate(speed);
-                    },
-                    ct);
-                    
+                await OnDownloadStarted();
+                data = await strategy.GetBytesAndReportProgress(fileUrl, Reporter, ct);
                 hash = MD5.HashData(data);
             }
             catch (HttpRequestException ex) {
@@ -69,10 +56,11 @@ public static class DownloadHelper
                 throw;
             }
             finally {
-                retry++;
+                attempt++;
             }
-        } while (hash.SequenceEqual(md5Checksum) == false);
+        } while (hash.SequenceEqual(md5Checksum) is false);
 
+        await OnDownloadCompleted();
         return data;
     }
 }
