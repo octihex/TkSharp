@@ -146,12 +146,14 @@ public static class TkBinaryReader
             int groupKeyIndex = input.Read<int>();
             int indexCount = input.Read<int>();
             TkModOptionGroup group = mod.OptionGroups[groupKeyIndex];
-            ObservableCollection<TkModOption> selection = result.SelectedOptions[group] = [];
+            HashSet<TkModOption> selection = result.SelectedOptions[group] = [];
 
             for (int _ = 0; _ < indexCount; _++) {
                 selection.Add(group.Options[input.Read<int>()]);
             }
         }
+
+        result.EnsureOptionSelection();
         
         return result;
     }

@@ -54,7 +54,7 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
 
     public static IEnumerable<TkChangelog> GetMergeTargets(TkProfile profile)
     {
-        foreach ((TkModOptionGroup group, ObservableCollection<TkModOption> options) in profile.Mods.SelectMany(x => x.SelectedOptions)) {
+        foreach ((TkModOptionGroup group, HashSet<TkModOption> options) in profile.Mods.SelectMany(x => x.SelectedOptions)) {
             if (group.Type is not (OptionGroupType.MultiRequired or OptionGroupType.SingleRequired)) {
                 continue;
             }
@@ -96,7 +96,10 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
         profile ??= CurrentProfile ?? Profiles[0];
 
         Mods.Add(target);
-        profile.Mods.Add(new TkProfileMod(target));
+        
+        TkProfileMod profileMod = new(target);
+        profileMod.EnsureOptionSelection();
+        profile.Mods.Add(profileMod);
     }
 
     public void Uninstall(TkMod target)
@@ -156,5 +159,10 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
         Profiles.Add(new TkProfile {
             Name = "Default"
         });
+    }
+
+    partial void OnCurrentProfileChanged(TkProfile? value)
+    {
+        value?.RebaseOptions(value.Selected);
     }
 }

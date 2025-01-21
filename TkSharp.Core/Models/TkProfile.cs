@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 
 namespace TkSharp.Core.Models;
 
@@ -69,4 +70,24 @@ public sealed partial class TkProfile : TkItem
         
         return target;
     }
+
+    public void RebaseOptions(TkProfileMod? target = null)
+    {
+        target ??= Selected;
+        
+        if (target is not { } mod || !Mods.Contains(mod)) {
+            return;
+        }
+
+        TkLog.Instance.LogDebug(
+            "Rebasing to '{ModName}' in '{ProfileName}'", mod.Mod.Name, Name);
+        
+        foreach (TkModOptionGroup group in mod.Mod.OptionGroups) {
+            foreach (TkModOption option in group.Options) {
+                option.InitializeProfileState(group, mod);
+            }
+        }
+    }
+
+    partial void OnSelectedChanged(TkProfileMod? value) => RebaseOptions(value);
 }

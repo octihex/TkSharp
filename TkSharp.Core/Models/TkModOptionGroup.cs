@@ -22,6 +22,9 @@ public sealed partial class TkModOptionGroup : TkItem
     
     [ObservableProperty]
     private int _priority = -1;
+    
+    [ObservableProperty]
+    private bool _isEditing;
 
     [JsonIgnore]
     public ObservableCollection<TkModOption> Options { get; } = [];

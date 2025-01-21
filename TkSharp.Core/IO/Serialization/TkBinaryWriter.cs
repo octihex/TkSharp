@@ -98,7 +98,7 @@ public static class TkBinaryWriter
         
         output.Write(mod.SelectedOptions.Count(x => x.Value.Count != 0));
         
-        foreach ((TkModOptionGroup groupKey, ObservableCollection<TkModOption> selection) in mod.SelectedOptions) {
+        foreach ((TkModOptionGroup groupKey, HashSet<TkModOption> selection) in mod.SelectedOptions) {
             if (selection.Count == 0) {
                 continue;
             }

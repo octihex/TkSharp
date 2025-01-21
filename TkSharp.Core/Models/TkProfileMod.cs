@@ -5,7 +5,7 @@ namespace TkSharp.Core.Models;
 
 public sealed partial class TkProfileMod(TkMod mod) : ObservableObject
 {
-    public Dictionary<TkModOptionGroup, ObservableCollection<TkModOption>> SelectedOptions { get; set; } = [];
+    public Dictionary<TkModOptionGroup, HashSet<TkModOption>> SelectedOptions { get; set; } = [];
     
     [ObservableProperty]
     private TkMod _mod = mod;
@@ -28,5 +28,22 @@ public sealed partial class TkProfileMod(TkMod mod) : ObservableObject
     public override int GetHashCode()
     {
         return Mod.GetHashCode();
+    }
+
+    public void EnsureOptionSelection()
+    {
+        foreach (TkModOptionGroup group in Mod.OptionGroups) {
+            if (group.Type is not (OptionGroupType.MultiRequired or OptionGroupType.SingleRequired)) {
+                continue;
+            }
+
+            if (!SelectedOptions.TryGetValue(group, out HashSet<TkModOption>? selection)) {
+                SelectedOptions[group] = selection = [];
+            }
+
+            if (selection.Count == 0 && group.Options.FirstOrDefault() is TkModOption option) {
+                selection.Add(option);
+            }
+        }
     }
 }
