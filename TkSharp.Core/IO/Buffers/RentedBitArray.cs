@@ -11,6 +11,12 @@ public readonly struct RentedBitArray : IDisposable
     {
         int arrayLength = (int)Math.Ceiling(size / 32d);
         int[] rented = ArrayPool<int>.Shared.Rent(arrayLength);
+
+        // Clear buffer
+        for (int i = 0; i < rented.Length; i++) {
+            rented[i] = 0;
+        }
+        
         return new RentedBitArray(rented, size);
     }
 
