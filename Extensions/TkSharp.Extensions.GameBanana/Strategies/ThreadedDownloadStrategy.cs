@@ -40,18 +40,16 @@ public class ThreadedDownloadStrategy(HttpClient client) : IDownloadStrategy
         var speedTimer = Stopwatch.StartNew();
         long bytesDownloadedInInterval = 0;
 
-        if (reporter is not null) {
-            await using var speedReportTimer = new Timer(_ => {
-                double elapsedSeconds = speedTimer.Elapsed.TotalSeconds;
-                if (elapsedSeconds > 0) {
-                    long bytesInInterval = Interlocked.Exchange(ref bytesDownloadedInInterval, 0);
-                    double bytesPerSecond = (bytesInInterval / elapsedSeconds);
-                    double megabytesPerSecond = bytesPerSecond / MB;
-                    reporter.ReportSpeed(megabytesPerSecond);
-                    speedTimer.Restart();
-                }
-            }, null, 0, 1000);
-        }
+        await using var speedReportTimer = new Timer(_ => {
+            double elapsedSeconds = speedTimer.Elapsed.TotalSeconds;
+            if (elapsedSeconds > 0) {
+                long bytesInInterval = Interlocked.Exchange(ref bytesDownloadedInInterval, 0);
+                double bytesPerSecond = (bytesInInterval / elapsedSeconds);
+                double megabytesPerSecond = bytesPerSecond / MB;
+                reporter?.ReportSpeed(megabytesPerSecond);
+                speedTimer.Restart();
+            }
+        }, null, 0, 1000);
 
         var downloadTasks = new Task[segments];
         for (int i = 0; i < segments; i++) {
