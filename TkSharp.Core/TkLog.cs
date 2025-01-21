@@ -7,7 +7,12 @@ public class TkLog : Singleton<TkLog>, ILogger
 {
     private readonly List<ILogger> _loggers = [];
     
-    public LogLevel LogLevel { get; set; } = LogLevel.Warning;
+    public LogLevel LogLevel { get; set; } =
+#if DEBUG
+        LogLevel.Trace;
+#else
+        LogLevel.Warning;
+#endif
 
     public void Register(ILogger logger)
     {
