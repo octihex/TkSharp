@@ -91,15 +91,10 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
 
     public void Import(TkMod target, TkProfile? profile = null)
     {
-        EnsureProfiles();
+        AddOrUpdate(target);
 
-        profile ??= CurrentProfile ?? Profiles[0];
-
-        Mods.Add(target);
-        
-        TkProfileMod profileMod = new(target);
-        profileMod.EnsureOptionSelection();
-        profile.Mods.Add(profileMod);
+        profile ??= GetCurrentProfile();
+        profile.AddOrUpdate(target);
     }
 
     public void Uninstall(TkMod target)
@@ -147,6 +142,28 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
 #if DEBUG
             throw;
 #endif
+        }
+    }
+
+    /// <summary>
+    /// Ensure that the mod being imported is the only instance of it.
+    /// </summary>
+    /// <param name="target"></param>
+    private void AddOrUpdate(TkMod target)
+    {
+        for (int i = 0; i < Mods.Count; i++) {
+            if (Mods[i].Id == target.Id) {
+                Mods[i] = target;
+                goto UpdateProfiles;
+            }
+        }
+        
+        Mods.Add(target);
+        return;
+        
+    UpdateProfiles:
+        foreach (TkProfile profile in Profiles) {
+            profile.Update(target);
         }
     }
 

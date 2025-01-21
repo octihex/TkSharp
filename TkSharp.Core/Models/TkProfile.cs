@@ -90,4 +90,34 @@ public sealed partial class TkProfile : TkItem
     }
 
     partial void OnSelectedChanged(TkProfileMod? value) => RebaseOptions(value);
+
+    public void AddOrUpdate(TkMod target)
+    {
+        TkProfileMod profileMod;
+        
+        foreach (TkProfileMod existingProfileMod in Mods) {
+            if (existingProfileMod.Mod.Id == target.Id) {
+                profileMod = existingProfileMod;
+                existingProfileMod.Mod = target;
+                goto EnsureOptions;
+            }
+        }
+        
+        profileMod = new TkProfileMod(target);
+        Mods.Add(profileMod);
+        
+    EnsureOptions:
+        profileMod.EnsureOptionSelection();
+    }
+
+    public void Update(TkMod target)
+    {
+        foreach (TkProfileMod existingProfileMod in Mods) {
+            if (existingProfileMod.Mod.Id == target.Id) {
+                existingProfileMod.Mod = target;
+                existingProfileMod.EnsureOptionSelection();
+                return;
+            }
+        }
+    }
 }
