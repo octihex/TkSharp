@@ -71,7 +71,7 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
             .Where(x => x.IsEnabled)
             .SelectMany(x => x.SelectedOptions.Values
                 .SelectMany(group => group)
-                .OrderBy(option => option.Priority)
+                .OrderByDescending(option => option.Priority)
                 .Select(option => option.Changelog)
                 .Append(x.Mod.Changelog)
             )
