@@ -73,7 +73,7 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
                 .SelectMany(group => group)
                 .OrderBy(option => option.Priority)
                 .Select(option => option.Changelog)
-                .Prepend(x.Mod.Changelog)
+                .Append(x.Mod.Changelog)
             )
             .Reverse();
     }
