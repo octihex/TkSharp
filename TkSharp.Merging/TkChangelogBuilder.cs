@@ -75,7 +75,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             case { Root: "cheats" }:
                 _changelog.CheatFiles.Add(canonical);
                 goto Copy;
-            case { Extension: ".ini" or ".rsizetable" }:
+            case { Extension: ".rsizetable" } or { Canonical: "desktop.ini" }:
                 return;
         }
 
