@@ -13,19 +13,22 @@ namespace TkSharp.Merging;
 
 public sealed class TkMerger
 {
+    
     private readonly ITkModWriter _output;
     private readonly ITkRom _rom;
     private readonly string _locale;
     private readonly TkResourceSizeCollector _resourceSizeCollector;
     private readonly SarcMerger _sarcMerger;
+    private readonly string? _ipsOutputFolderPath;
 
-    public TkMerger(ITkModWriter output, ITkRom rom, string locale = "USen")
+    public TkMerger(ITkModWriter output, ITkRom rom, string locale = "USen", string? ipsOutputFolderPath = null)
     {
         _output = output;
         _rom = rom;
         _locale = locale;
         _resourceSizeCollector = new TkResourceSizeCollector(output, rom);
         _sarcMerger = new SarcMerger(this, _resourceSizeCollector);
+        _ipsOutputFolderPath = ipsOutputFolderPath;
     }
 
     public async ValueTask MergeAsync(IEnumerable<TkChangelog> changelogs, CancellationToken ct = default)
@@ -191,7 +194,12 @@ public sealed class TkMerger
             }
         }
 
-        using Stream output = _output.OpenWrite($"exefs/{_rom.NsoBinaryId.ToUpper()}.ips");
+        string ipsFileName = $"{_rom.NsoBinaryId.ToUpper()}.ips";
+        string outputFile = _ipsOutputFolderPath is not null
+            ? Path.Combine(_ipsOutputFolderPath, ipsFileName)
+            : Path.Combine("exefs", ipsFileName);
+
+        using Stream output = _output.OpenWrite(outputFile);
         merged.WriteIps(output);
     }
 
