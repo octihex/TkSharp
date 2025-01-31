@@ -51,22 +51,49 @@ public sealed class ArchiveModReader(ITkSystemProvider systemProvider, ITkRomPro
     
     internal static bool LocateRoot(IArchive archive, out IArchiveEntry? root)
     {
-        IArchiveEntry? previous = null;
+        ReadOnlySpan<char> romfs = [];
+        
         foreach (IArchiveEntry entry in archive.Entries) {
             if (!entry.IsDirectory) {
                 continue;
             }
 
             ReadOnlySpan<char> key = entry.Key.AsSpan();
-            if (key.Length > 5 && Path.GetFileName(key[^1] is '/' or '\\' ? key[..^1] : key) is "romfs" or "exefs" or "cheats") {
-                root = previous;
+            if (key.Length < 5) {
+                continue;
+            }
+            
+            ReadOnlySpan<char> normalizedKey = key[^1] is '/' or '\\' ? key[..^1] : key;
+            if (normalizedKey is "romfs" or "exefs" or "cheats") {
+                root = null;
                 return true;
             }
-
-            previous = entry;
+            
+            if (Path.GetFileName(normalizedKey) is "romfs" or "exefs" or "cheats") {
+                romfs = key;
+                break;
+            }
         }
 
-        root = default;
+        if (romfs.IsEmpty) {
+            root = null;
+            return false;
+        }
+        
+        foreach (IArchiveEntry entry in archive.Entries) {
+            if (!entry.IsDirectory) {
+                continue;
+            }
+
+            ReadOnlySpan<char> key = entry.Key.AsSpan();
+
+            if (romfs.Length > key.Length && romfs[..key.Length].SequenceEqual(key)) {
+                root = entry;
+                return true;
+            }
+        }
+
+        root = null;
         return false;
     }
 }
