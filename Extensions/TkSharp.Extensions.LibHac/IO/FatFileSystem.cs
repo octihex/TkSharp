@@ -5,7 +5,7 @@ using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
 using Path = LibHac.Fs.Path;
 
-namespace TkSharp.Extensions.LibHac.Common;
+namespace TkSharp.Extensions.LibHac.IO;
 
 public sealed class FatFileSystem : LocalFileSystem
 {

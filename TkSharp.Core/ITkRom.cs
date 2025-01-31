@@ -3,7 +3,7 @@ using TkSharp.Core.IO.Buffers;
 
 namespace TkSharp.Core;
 
-public interface ITkRom
+public interface ITkRom : IDisposable
 {
     private const string EVENT_FLOW_FOLDER = "Event/EventFlow";
     private const string EFFECT_FOLDER = "Effect";

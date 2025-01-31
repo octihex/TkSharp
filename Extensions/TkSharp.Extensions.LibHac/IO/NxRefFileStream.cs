@@ -3,7 +3,7 @@ using LibHac.Fs;
 using LibHac.Fs.Fsa;
 using LibHac.Tools.FsSystem;
 
-namespace TkSharp.Extensions.LibHac.Common;
+namespace TkSharp.Extensions.LibHac.IO;
 
 public class NxRefFileStream(UniqueRef<IFile> file) : NxFileStream(file.Get, OpenMode.Read, leaveOpen: false)
 {

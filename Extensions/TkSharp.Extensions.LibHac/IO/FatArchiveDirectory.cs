@@ -2,7 +2,7 @@ using LibHac;
 using LibHac.Fs;
 using LibHac.Fs.Fsa;
 
-namespace TkSharp.Extensions.LibHac.Common;
+namespace TkSharp.Extensions.LibHac.IO;
 
 public class FatArchiveDirectory(IDirectory baseDirectory) : IDirectory
 {

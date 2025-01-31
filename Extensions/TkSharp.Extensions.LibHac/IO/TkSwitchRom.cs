@@ -1,18 +1,20 @@
 using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Fs.Fsa;
+using LibHac.Tools.Fs;
 using TkSharp.Core;
 using TkSharp.Core.IO.Buffers;
 using TkSharp.Core.IO.Parsers;
 using TkSharp.Extensions.LibHac.Extensions;
 
-namespace TkSharp.Extensions.LibHac;
+namespace TkSharp.Extensions.LibHac.IO;
 
-public class TkRom : ITkRom, IDisposable
+internal sealed class TkSwitchRom : ITkRom
 {
-    private readonly TkChecksums _checksums;
     private readonly IFileSystem _fileSystem;
-    
+    private readonly TkChecksums _checksums;
+    private readonly IEnumerable<SwitchFs> _disposables;
+
     public int GameVersion { get; }
 
     public string NsoBinaryId { get; }
@@ -25,10 +27,11 @@ public class TkRom : ITkRom, IDisposable
 
     public Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> EffectVersions { get; }
 
-    public TkRom(TkChecksums checksums, IFileSystem fileSystem)
+    public TkSwitchRom(IFileSystem fs, IEnumerable<SwitchFs> disposables, TkChecksums checksums)
     {
+        _fileSystem = fs;
+        _disposables = disposables;
         _checksums = checksums;
-        _fileSystem = fileSystem;
 
         using (Stream regionLangMaskFs = _fileSystem.OpenFileStream("/System/RegionLangMask.txt"))
         using (RentedBuffer<byte> regionLangMask = RentedBuffer<byte>.Allocate(regionLangMaskFs)) {
@@ -59,34 +62,30 @@ public class TkRom : ITkRom, IDisposable
     public RentedBuffer<byte> GetVanilla(string relativeFilePath)
     {
         relativeFilePath = $"/{relativeFilePath}";
-        
+
         UniqueRef<IFile> file = new();
         _fileSystem.OpenFile(ref file, relativeFilePath.ToU8Span(), OpenMode.Read);
 
-        if (!file.HasValue)
-        {
+        if (!file.HasValue) {
             return default;
         }
-        
+
         file.Get.GetSize(out long size);
         RentedBuffer<byte> rawBuffer = RentedBuffer<byte>.Allocate((int)size);
         Span<byte> raw = rawBuffer.Span;
         file.Get.Read(out _, offset: 0, raw);
         file.Destroy();
-        
-        if (!TkZstd.IsCompressed(raw))
-        {
+
+        if (!TkZstd.IsCompressed(raw)) {
             return rawBuffer;
         }
 
-        try
-        {
-            RentedBuffer<byte> decompressed = RentedBuffer<byte>.Allocate(TkZstd.GetDecompressedSize(raw)); 
+        try {
+            RentedBuffer<byte> decompressed = RentedBuffer<byte>.Allocate(TkZstd.GetDecompressedSize(raw));
             Zstd.Decompress(raw, decompressed.Span);
             return decompressed;
         }
-        finally
-        {
+        finally {
             rawBuffer.Dispose();
         }
     }
@@ -98,7 +97,10 @@ public class TkRom : ITkRom, IDisposable
 
     public void Dispose()
     {
+        foreach (SwitchFs fs in _disposables) {
+            fs.Dispose();
+        }
+        
         _fileSystem.Dispose();
-        GC.SuppressFinalize(this);
     }
-} 
+}

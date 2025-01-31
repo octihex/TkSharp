@@ -111,4 +111,8 @@ public sealed class ExtractedTkRom : ITkRom
     {
         return _checksums.IsFileVanilla(canonical, src, fileVersion);
     }
+
+    public void Dispose()
+    {
+    }
 }

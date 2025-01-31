@@ -8,7 +8,7 @@ using LibHac.Spl;
 using LibHac.Tools.Es;
 using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
-using TkSharp.Extensions.LibHac.Common;
+using TkSharp.Extensions.LibHac.IO;
 using Path = System.IO.Path;
 
 namespace TkSharp.Extensions.LibHac.Extensions;
