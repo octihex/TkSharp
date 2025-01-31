@@ -1,4 +1,3 @@
-using System.Net;
 using TkSharp.Extensions.GameBanana.Models;
 
 namespace TkSharp.Extensions.GameBanana.Strategies;
