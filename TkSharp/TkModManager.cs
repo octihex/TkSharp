@@ -10,7 +10,7 @@ using TkSharp.IO.Writers;
 
 namespace TkSharp;
 
-public sealed partial class TkModManager(string dataFolderPath) : ObservableObject, ITkSystemProvider
+public sealed partial class TkModManager : ObservableObject, ITkSystemProvider
 {
     public static TkModManager CreatePortable()
     {
@@ -29,15 +29,24 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
         return TkModManagerSerializer.Read(fs, dataFolderPath);
     }
 
-    public string DataFolderPath { get; } = dataFolderPath;
+    public string DataFolderPath { get; }
 
-    public string ModsFolderPath { get; } = Path.Combine(dataFolderPath, "contents");
+    public string ModsFolderPath { get; }
 
     [ObservableProperty]
     private TkMod? _selected;
 
     [ObservableProperty]
     private TkProfile? _currentProfile;
+
+    public TkModManager(string dataFolderPath)
+    {
+        DataFolderPath = dataFolderPath;
+        ModsFolderPath = Path.Combine(dataFolderPath, "contents");
+        
+        TkProfile.ModsUpdated += (_, _) => Save();
+        TkProfile.SelectionChanged += _ => Save();
+    }
 
     public ObservableCollection<TkMod> Mods { get; } = [];
 
@@ -95,6 +104,8 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
 
         profile ??= GetCurrentProfile();
         profile.AddOrUpdate(target);
+        
+        Save();
     }
 
     public void Uninstall(TkMod target)
@@ -124,6 +135,8 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
                 profile.Mods.Remove(profileMod);
             }
         }
+        
+        Save();
     }
 
     public void Save()
@@ -139,9 +152,6 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
         }
         catch (Exception ex) {
             TkLog.Instance.LogError(ex, "Failed to save mod manager state.");
-#if DEBUG
-            throw;
-#endif
         }
     }
 
@@ -181,5 +191,11 @@ public sealed partial class TkModManager(string dataFolderPath) : ObservableObje
     partial void OnCurrentProfileChanged(TkProfile? value)
     {
         value?.RebaseOptions(value.Selected);
+        Save();
+    }
+
+    partial void OnSelectedChanged(TkMod? value)
+    {
+        Save();
     }
 }
