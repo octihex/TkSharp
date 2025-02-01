@@ -54,7 +54,7 @@ public static class TkGameRomUtils
             return result;
         }
 
-        switchFsContainer.Add(nx);
+        switchFsContainer.Add((target, nx));
         return result;
     }
 
@@ -86,7 +86,7 @@ public static class TkGameRomUtils
             return result;
         }
 
-        switchFsContainer.Add(nx);
+        switchFsContainer.Add(($"{target} (Split File)", nx));
         return result;
     }
 

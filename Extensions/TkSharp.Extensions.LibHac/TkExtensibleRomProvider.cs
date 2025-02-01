@@ -43,10 +43,12 @@ public class TkExtensibleRomProvider : ITkRomProvider
     
     public ITkRom GetRom()
     {
+        TkLog.Instance.LogDebug("[ROM *] Checking Extracted Game Dump");
         if (_config.ExtractedGameDumpFolderPath.Get(out string? extractedGameDumpPath)) {
             return new ExtractedTkRom(extractedGameDumpPath, _checksums);
         }
 
+        TkLog.Instance.LogDebug("[ROM *] Looking for Keys");
         if (TryGetKeys() is not KeySet keys) {
             throw new ArgumentException("The TotK configuration could not be read because no prod.keys file is configured.");
         }
@@ -54,17 +56,28 @@ public class TkExtensibleRomProvider : ITkRomProvider
         // Track a list of SwitchFs instances in use
         // and dispose with the ITkRom 
         SwitchFsContainer collected = [];
+        Title? main = null, update = null;
 
-        if (TryBuild(_config.PackagedBaseGame, keys, collected) is { } buildAfterBaseGame) {
+        TkLog.Instance.LogDebug("[ROM *] Checking Packaged Base Game");
+        if (TryBuild(_config.PackagedBaseGame, keys, collected, ref main, ref update) is { } buildAfterBaseGame) {
             return buildAfterBaseGame;
         }
 
-        if (TryBuild(_config.PackagedUpdate, keys, collected) is { } buildAfterUpdate) {
+        TkLog.Instance.LogDebug("[ROM *] Checking Packaged Update");
+        if (TryBuild(_config.PackagedUpdate, keys, collected, ref main, ref update) is { } buildAfterUpdate) {
             return buildAfterUpdate;
         }
 
-        if (TryBuild(_config.SdCard, keys, collected) is { } buildSdCard) {
+        TkLog.Instance.LogDebug("[ROM *] Checking SD Card");
+        if (TryBuild(_config.SdCard, keys, collected, ref main, ref update) is { } buildSdCard) {
             return buildSdCard;
+        }
+
+        TkLog.Instance.LogDebug("[ROM *] Configuration Valid (Mixed)");
+        if (main is not null && update is not null) {
+            IFileSystem fs = main.MainNca.Nca
+                .OpenFileSystemWithPatch(update.MainNca.Nca, NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
+            return new TkSwitchRom(fs, collected.AsFsList(), _checksums);
         }
         
         throw new ArgumentException("Invalid or incomplete TotK configuration.");
@@ -80,25 +93,25 @@ public class TkExtensibleRomProvider : ITkRomProvider
         return keys;
     }
 
-    private TkSwitchRom? TryBuild<T>(in TkExtensibleConfig<T> config, KeySet keys, SwitchFsContainer collected)
+    private TkSwitchRom? TryBuild<T>(in TkExtensibleConfig<T> config, KeySet keys, SwitchFsContainer collected, ref Title? main, ref Title? update)
     {
         if (!config.Get(out _, keys, collected)) {
             return null;
         }
 
-        Title? main = null;
-        Title? update = null;
-
-        foreach (SwitchFs switchFs in collected) {
+        foreach ((string label, SwitchFs switchFs) in collected) {
             if (!switchFs.Applications.TryGetValue(TkGameRomUtils.EX_KING_APP_ID, out Application? totk)) {
+                TkLog.Instance.LogDebug("[ROM *] TotK missing in {Label}", label);
                 continue;
             }
 
             if (totk.Main is not null) {
+                TkLog.Instance.LogDebug("[ROM *] Base Game found in {Label}", label);
                 main = totk.Main;
             }
 
             if (totk.Patch is not null) {
+                TkLog.Instance.LogDebug("[ROM *] Update {Version} found in {Label}", totk.DisplayVersion, label);
                 update = totk.Patch;
             }
 
@@ -110,8 +123,9 @@ public class TkExtensibleRomProvider : ITkRomProvider
         return null;
     
     IsValid:
+        TkLog.Instance.LogDebug("[ROM *] Configuration Valid");
         IFileSystem fs = main.MainNca.Nca
             .OpenFileSystemWithPatch(update.MainNca.Nca, NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
-        return new TkSwitchRom(fs, collected, _checksums);
+        return new TkSwitchRom(fs, collected.AsFsList(), _checksums);
     }
 }
