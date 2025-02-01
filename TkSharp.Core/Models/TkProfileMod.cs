@@ -45,4 +45,9 @@ public sealed partial class TkProfileMod(TkMod mod) : ObservableObject
             }
         }
     }
+
+    partial void OnIsEnabledChanged(bool value)
+    {
+        TkProfile.OnStateChanged();
+    }
 }

@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Logging;
@@ -8,9 +7,7 @@ namespace TkSharp.Core.Models;
 
 public sealed partial class TkProfile : TkItem
 {
-    public static event NotifyCollectionChangedEventHandler ModsUpdated = delegate { };
-    
-    public static event Action<TkProfileMod?> SelectionChanged = delegate { };
+    public static event Action StateChanged = delegate { };
     
     [ObservableProperty]
     private TkProfileMod? _selected;
@@ -20,7 +17,7 @@ public sealed partial class TkProfile : TkItem
     public TkProfile()
     {
         Mods.CollectionChanged += (_, e) => {
-            ModsUpdated(this, e);
+            StateChanged();
         };
     }
 
@@ -100,7 +97,7 @@ public sealed partial class TkProfile : TkItem
     partial void OnSelectedChanged(TkProfileMod? value)
     {
         RebaseOptions(value);
-        SelectionChanged(value);
+        StateChanged();
     }
 
     public void AddOrUpdate(TkMod target)
@@ -131,5 +128,10 @@ public sealed partial class TkProfile : TkItem
                 return;
             }
         }
+    }
+
+    public static void OnStateChanged()
+    {
+        StateChanged();
     }
 }

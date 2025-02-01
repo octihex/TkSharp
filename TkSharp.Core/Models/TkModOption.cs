@@ -22,6 +22,7 @@ public sealed partial class TkModOption : TkStoredItem
             OnPropertyChanging();
             StateLookup.SetIsEnabled(value);
             OnPropertyChanged();
+            TkProfile.OnStateChanged();
         }
     }
 

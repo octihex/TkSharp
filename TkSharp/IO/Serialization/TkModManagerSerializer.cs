@@ -74,6 +74,7 @@ internal static class TkModManagerSerializer
             manager.CurrentProfile = manager.Profiles[currentProfileIndex];
         }
 
+        manager.Unlock();
         return manager;
     }
 }

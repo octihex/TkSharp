@@ -12,6 +12,8 @@ namespace TkSharp;
 
 public sealed partial class TkModManager : ObservableObject, ITkSystemProvider
 {
+    private bool _isStateFrozen = true;
+    
     public static TkModManager CreatePortable()
     {
         string portableDataFolder = Path.Combine(AppContext.BaseDirectory, ".data");
@@ -43,9 +45,8 @@ public sealed partial class TkModManager : ObservableObject, ITkSystemProvider
     {
         DataFolderPath = dataFolderPath;
         ModsFolderPath = Path.Combine(dataFolderPath, "contents");
-        
-        TkProfile.ModsUpdated += (_, _) => Save();
-        TkProfile.SelectionChanged += _ => Save();
+
+        TkProfile.StateChanged += Save;
     }
 
     public ObservableCollection<TkMod> Mods { get; } = [];
@@ -128,6 +129,8 @@ public sealed partial class TkModManager : ObservableObject, ITkSystemProvider
         }
 
     Remove:
+        Lock();
+        
         Mods.Remove(target);
 
         foreach (TkProfile profile in Profiles) {
@@ -135,12 +138,17 @@ public sealed partial class TkModManager : ObservableObject, ITkSystemProvider
                 profile.Mods.Remove(profileMod);
             }
         }
-        
+
+        Unlock();
         Save();
     }
 
     public void Save()
     {
+        if (_isStateFrozen) {
+            return;
+        }
+        
         Directory.CreateDirectory(DataFolderPath);
 
         try {
@@ -150,9 +158,22 @@ public sealed partial class TkModManager : ObservableObject, ITkSystemProvider
             using FileStream fs = File.Create(Path.Combine(DataFolderPath, "state.db"));
             fs.Write(ms.GetSpan());
         }
+        catch (IOException ex) {
+            TkLog.Instance.LogWarning(ex, "State save failed with an IO exception (likely concurrent saving).");
+        }
         catch (Exception ex) {
             TkLog.Instance.LogError(ex, "Failed to save mod manager state.");
         }
+    }
+
+    internal void Lock()
+    {
+        _isStateFrozen = true;
+    }
+
+    internal void Unlock()
+    {
+        _isStateFrozen = false;
     }
 
     /// <summary>
@@ -191,11 +212,7 @@ public sealed partial class TkModManager : ObservableObject, ITkSystemProvider
     partial void OnCurrentProfileChanged(TkProfile? value)
     {
         value?.RebaseOptions(value.Selected);
-        Save();
-    }
 
-    partial void OnSelectedChanged(TkMod? value)
-    {
         Save();
     }
 }
