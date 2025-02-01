@@ -30,10 +30,6 @@ public class TkExtensibleRomProvider : ITkRomProvider
             rom = GetRom();
             return true;
         }
-        catch (ArgumentException) {
-            rom = null;
-            return false;
-        }
         catch (Exception ex) {
             TkLog.Instance.LogError(ex, "Unexpected error when retrieving the configured TotK rom (TkRom).");
             rom = null;
@@ -86,9 +82,11 @@ public class TkExtensibleRomProvider : ITkRomProvider
     private KeySet? TryGetKeys()
     {
         if (_config.KeysFolder.Get(out string? keysFolder)) {
+            TkLog.Instance.LogDebug("[ROM *] Looking for Keys in {KeysFolder}", keysFolder);
             return TkKeyUtils.GetKeysFromFolder(keysFolder);
         }
 
+        TkLog.Instance.LogDebug("[ROM *] Looking for roaming keys");
         TkKeyUtils.TryGetKeys(out KeySet? keys);
         return keys;
     }
