@@ -69,8 +69,8 @@ public class TkExtensibleRomProvider : ITkRomProvider
             return buildSdCard;
         }
 
-        TkLog.Instance.LogDebug("[ROM *] Configuration Valid (Mixed)");
         if (main is not null && update is not null) {
+            TkLog.Instance.LogDebug("[ROM *] Configuration Valid (Mixed)");
             IFileSystem fs = main.MainNca.Nca
                 .OpenFileSystemWithPatch(update.MainNca.Nca, NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
             return new TkSwitchRom(fs, collected.AsFsList(), _checksums);

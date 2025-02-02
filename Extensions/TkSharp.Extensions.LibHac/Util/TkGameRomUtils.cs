@@ -45,15 +45,17 @@ public static class TkGameRomUtils
             return false;
         }
 
-        using LocalStorage storage = new(target, FileAccess.Read);
+        LocalStorage storage = new(target, FileAccess.Read);
         SwitchFs nx = storage.GetSwitchFs(target, keys);
         bool result = IsValid(nx, out hasUpdate);
 
         if (switchFsContainer is null) {
             nx.Dispose();
+            storage.Dispose();
             return result;
         }
 
+        switchFsContainer.CleanupLater(storage);
         switchFsContainer.Add((target, nx));
         return result;
     }
@@ -77,15 +79,17 @@ public static class TkGameRomUtils
                 .Select(f => new LocalStorage(f, FileAccess.Read))
         ];
 
-        using ConcatenationStorage storage = new(splitFiles, true);
+        ConcatenationStorage storage = new(splitFiles, true);
         SwitchFs nx = storage.GetSwitchFs(target, keys);
         bool result = IsValid(nx, out hasUpdate);
         
         if (switchFsContainer is null) {
             nx.Dispose();
+            storage.Dispose();
             return result;
         }
 
+        switchFsContainer.CleanupLater(storage);
         switchFsContainer.Add(($"{target} (Split File)", nx));
         return result;
     }

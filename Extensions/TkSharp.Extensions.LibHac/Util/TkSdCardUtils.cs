@@ -64,16 +64,20 @@ internal static class TkSdCardUtils
     {
         FatFileSystem.Create(out FatFileSystem? fatFileSystem, target)
             .ThrowIfFailure();
-        using FatFileSystem localFs = fatFileSystem;
-        UniqueRef<IAttributeFileSystem> fs = new(localFs);
+        UniqueRef<IAttributeFileSystem> fs = new(fatFileSystem);
 
         SwitchFs switchFs = SwitchFs.OpenSdCard(keys, ref fs);
-        if (TkGameRomUtils.IsValid(switchFs, out hasUpdate)) {
-            switchFsContainer?.Add((target, switchFs));
-            return true;
+        bool result = TkGameRomUtils.IsValid(switchFs, out hasUpdate);
+
+        if (switchFsContainer is not null && result) {
+            switchFsContainer.CleanupLater(fatFileSystem);
+            switchFsContainer.Add((target, switchFs));
+            return result;
         }
 
-        return false;
+        fatFileSystem.Dispose();
+        switchFs.Dispose();
+        return result;
     }
 
     private static bool CheckForDumps(KeySet keys, string dumpFolder, out bool hasUpdate, SwitchFsContainer? switchFsContainer)
