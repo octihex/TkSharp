@@ -64,7 +64,8 @@ public sealed class ArchiveModReader(ITkSystemProvider systemProvider, ITkRomPro
             }
             
             ReadOnlySpan<char> normalizedKey = key[^1] is '/' or '\\' ? key[..^1] : key;
-            if (normalizedKey is "romfs" or "exefs" or "cheats") {
+            
+            if (normalizedKey[..5] is "romfs" or "exefs" || normalizedKey[..6] is "cheats") {
                 root = null;
                 return true;
             }
