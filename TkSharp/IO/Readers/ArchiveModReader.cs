@@ -63,7 +63,9 @@ public sealed class ArchiveModReader(ITkSystemProvider systemProvider, ITkRomPro
                 continue;
             }
             
-            ReadOnlySpan<char> normalizedKey = key[^1] is '/' or '\\' ? key[..^1] : key;
+            ReadOnlySpan<char> normalizedKey = (key[^1] is '/' or '\\' ? key[..^1] : key)
+                .ToString()
+                .ToLower();
             
             if (normalizedKey[..5] is "romfs" or "exefs" || normalizedKey[..6] is "cheats") {
                 root = null;
