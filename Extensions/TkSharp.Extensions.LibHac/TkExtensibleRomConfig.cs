@@ -6,6 +6,8 @@ namespace TkSharp.Extensions.LibHac;
 
 internal struct TkExtensibleRomConfig
 {
+    public TkExtensibleConfig<string> PreferredVersion = new(TkExtensibleConfigType.None);
+    
     public TkExtensibleConfig<string> KeysFolder = new(TkExtensibleConfigType.Folder);
     
     public TkExtensibleConfig<string> ExtractedGameDumpFolderPath = new(TkExtensibleConfigType.Folder);

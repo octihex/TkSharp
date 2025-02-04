@@ -30,6 +30,18 @@ public class TkExtensibleRomProviderBuilder
         return new TkExtensibleRomProvider(_root, _checksums);
     }
 
+    public TkExtensibleRomProviderBuilder WithPreferredVersion(string? preferredVersion)
+    {
+        _root.PreferredVersion.Set(() => preferredVersion);
+        return this;
+    }
+
+    public TkExtensibleRomProviderBuilder WithPreferredVersion(Func<string?> preferredVersion)
+    {
+        _root.PreferredVersion.Set(preferredVersion);
+        return this;
+    }
+
     public TkExtensibleRomProviderBuilder WithKeysFolder(string? keysFolderPath)
     {
         _root.KeysFolder.Set(() => keysFolderPath);

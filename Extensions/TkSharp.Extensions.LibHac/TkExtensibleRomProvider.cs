@@ -49,30 +49,39 @@ public class TkExtensibleRomProvider : ITkRomProvider
             throw new ArgumentException("The TotK configuration could not be read because no prod.keys file is configured.");
         }
 
+        _ = _config.PreferredVersion.Get(out string? preferredVersion);
+        
         // Track a list of SwitchFs instances in use
         // and dispose with the ITkRom 
         SwitchFsContainer collected = [];
-        Title? main = null, update = null;
+        Title? main = null, update = null, alternateUpdate = null;
 
         TkLog.Instance.LogDebug("[ROM *] Checking Packaged Base Game");
-        if (TryBuild(_config.PackagedBaseGame, keys, collected, ref main, ref update) is { } buildAfterBaseGame) {
+        if (TryBuild(_config.PackagedBaseGame, keys, collected, preferredVersion, ref main, ref update, ref alternateUpdate) is { } buildAfterBaseGame) {
             return buildAfterBaseGame;
         }
 
         TkLog.Instance.LogDebug("[ROM *] Checking Packaged Update");
-        if (TryBuild(_config.PackagedUpdate, keys, collected, ref main, ref update) is { } buildAfterUpdate) {
+        if (TryBuild(_config.PackagedUpdate, keys, collected, preferredVersion, ref main, ref update, ref alternateUpdate) is { } buildAfterUpdate) {
             return buildAfterUpdate;
         }
 
         TkLog.Instance.LogDebug("[ROM *] Checking SD Card");
-        if (TryBuild(_config.SdCard, keys, collected, ref main, ref update) is { } buildSdCard) {
+        if (TryBuild(_config.SdCard, keys, collected, preferredVersion, ref main, ref update, ref alternateUpdate) is { } buildSdCard) {
             return buildSdCard;
         }
 
-        if (main is not null && update is not null) {
+        if (main is not null && (update is not null || alternateUpdate is not null)) {
+            if (update is null) {
+                TkLog.Instance.LogWarning(
+                    "[ROM *] The configured preferred version ({Version}) could not be found",
+                    preferredVersion);
+            }
+            
             TkLog.Instance.LogDebug("[ROM *] Configuration Valid (Mixed)");
             IFileSystem fs = main.MainNca.Nca
-                .OpenFileSystemWithPatch(update.MainNca.Nca, NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
+                .OpenFileSystemWithPatch((update ?? alternateUpdate)!.MainNca.Nca,
+                    NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
             return new TkSwitchRom(fs, collected.AsFsList(), _checksums);
         }
         
@@ -91,7 +100,8 @@ public class TkExtensibleRomProvider : ITkRomProvider
         return keys;
     }
 
-    private TkSwitchRom? TryBuild<T>(in TkExtensibleConfig<T> config, KeySet keys, SwitchFsContainer collected, ref Title? main, ref Title? update)
+    private TkSwitchRom? TryBuild<T>(in TkExtensibleConfig<T> config, KeySet keys, SwitchFsContainer collected,
+        string? preferredVersion, ref Title? main, ref Title? update, ref Title? alternateUpdate)
     {
         if (!config.Get(out _, keys, collected)) {
             return null;
@@ -109,6 +119,13 @@ public class TkExtensibleRomProvider : ITkRomProvider
             }
 
             if (totk.Patch is not null) {
+                if (preferredVersion is not null && preferredVersion != totk.DisplayVersion) {
+                    TkLog.Instance.LogDebug("[ROM *] Update {Version} found in {Label} but is not preferred.",
+                        totk.DisplayVersion, label);
+                    alternateUpdate = totk.Patch;
+                    continue;
+                }
+                
                 TkLog.Instance.LogDebug("[ROM *] Update {Version} found in {Label}", totk.DisplayVersion, label);
                 update = totk.Patch;
             }
