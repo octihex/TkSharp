@@ -50,7 +50,7 @@ internal struct TkExtensibleConfig<T>(TkExtensibleConfigType type, TkConfigValid
             _ => true
         };
 
-        if (keys is null) {
+        if (keys is null || !isValid) {
             return isValid;
         }
 
