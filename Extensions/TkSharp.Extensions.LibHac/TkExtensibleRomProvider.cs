@@ -31,7 +31,7 @@ public class TkExtensibleRomProvider : ITkRomProvider
             return true;
         }
         catch (Exception ex) {
-            TkLog.Instance.LogError(ex, "Unexpected error when retrieving the configured TotK rom (TkRom).");
+            TkLog.Instance.LogDebug(ex, "Unexpected error when retrieving the configured TotK rom (TkRom).");
             rom = null;
             return false;
         }
