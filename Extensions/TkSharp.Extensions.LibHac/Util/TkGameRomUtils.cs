@@ -5,6 +5,7 @@ using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
 using TkSharp.Extensions.LibHac.Extensions;
 using TkSharp.Extensions.LibHac.Models;
+using Path = System.IO.Path;
 
 namespace TkSharp.Extensions.LibHac.Util;
 
@@ -104,5 +105,31 @@ public static class TkGameRomUtils
         bool result = totk.Main is not null;
         hasUpdate = totk.DisplayVersion is not "1.0.0";
         return result;
+    }
+
+    public static IEnumerable<(Application TotK, string FilePath)> ScanFolders(IEnumerable<string> targetFolders, KeySet keys)
+    {
+        return targetFolders.SelectMany(
+            targetFolder => ScanFolder(targetFolder, keys)
+        );
+    }
+
+    public static IEnumerable<(Application TotK, string FilePath)> ScanFolder(string target, KeySet keys)
+    {
+        foreach (string file in Directory.EnumerateFiles(target, "*.*", SearchOption.AllDirectories)) {
+            ReadOnlySpan<char> ext = Path.GetExtension(file.AsSpan());
+            if (ext is not (".xci" or ".nsp")) {
+                continue;
+            }
+            
+            using LocalStorage storage = new(file, FileAccess.Read);
+            using SwitchFs nx = storage.GetSwitchFs(file, keys);
+
+            if (!nx.Applications.TryGetValue(EX_KING_APP_ID, out Application? totk)) {
+                continue;
+            }
+            
+            yield return (totk, file);
+        }
     }
 }
