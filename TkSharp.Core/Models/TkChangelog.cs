@@ -18,5 +18,9 @@ public class TkChangelog
 
     public List<string> CheatFiles { get; } = [];
 
+    public List<string> Reserved1 { get; } = [];
+
+    public List<string> Reserved2 { get; } = [];
+
     public ITkSystemSource? Source { get; init; }
 }

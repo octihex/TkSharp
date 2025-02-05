@@ -19,6 +19,8 @@ public static class TkChangelogWriter
         WriteFileList(output, changelog.SubSdkFiles);
         WriteFileList(output, changelog.ExeFiles);
         WriteFileList(output, changelog.CheatFiles);
+        WriteFileList(output, changelog.Reserved1);
+        WriteFileList(output, changelog.Reserved2);
     }
 
     private static void WriteChangelogFiles(in Stream output, IList<TkChangelogEntry> changelogs)

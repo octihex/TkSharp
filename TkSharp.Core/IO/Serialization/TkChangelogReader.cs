@@ -44,6 +44,8 @@ public static class TkChangelogReader
         ReadFileList(input, result.SubSdkFiles);
         ReadFileList(input, result.ExeFiles);
         ReadFileList(input, result.CheatFiles);
+        ReadFileList(input, result.Reserved1);
+        ReadFileList(input, result.Reserved2);
         
         return result;
     }
