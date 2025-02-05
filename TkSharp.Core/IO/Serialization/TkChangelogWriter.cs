@@ -17,6 +17,7 @@ public static class TkChangelogWriter
         WriteFileList(output, changelog.MalsFiles);
         WritePatchFiles(output, changelog.PatchFiles);
         WriteFileList(output, changelog.SubSdkFiles);
+        WriteFileList(output, changelog.ExeFiles);
         WriteFileList(output, changelog.CheatFiles);
     }
 
