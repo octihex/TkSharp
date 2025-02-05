@@ -24,7 +24,9 @@ public sealed partial class TkModManager : ObservableObject, ITkSystemProvider
     {
         string portableManagerStateFile = Path.Combine(dataFolderPath, "state.db");
         if (!File.Exists(portableManagerStateFile)) {
-            return new TkModManager(dataFolderPath);
+            return new TkModManager(dataFolderPath) {
+                _isStateFrozen = false
+            };
         }
 
         using FileStream fs = File.OpenRead(portableManagerStateFile);
