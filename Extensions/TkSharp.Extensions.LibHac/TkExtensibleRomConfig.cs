@@ -10,21 +10,28 @@ internal struct TkExtensibleRomConfig
     
     public TkExtensibleConfig<string> KeysFolder = new(TkExtensibleConfigType.Folder);
     
-    public TkExtensibleConfig<string> ExtractedGameDumpFolderPath = new(TkExtensibleConfigType.Folder);
+    public TkExtensibleConfig<IEnumerable<string>> ExtractedGameDumpFolderPath = new(TkExtensibleConfigType.Folder);
     
     public TkExtensibleConfig<string> SdCard = new(TkExtensibleConfigType.Folder, CheckSdCard);
     
-    public TkExtensibleConfig<string> PackagedBaseGame = new(TkExtensibleConfigType.Path, CheckPackagedFile);
+    public TkExtensibleConfig<IEnumerable<string>> PackagedBaseGame = new(TkExtensibleConfigType.Path, CheckPackagedFile);
     
-    public TkExtensibleConfig<string> PackagedUpdate = new(TkExtensibleConfigType.Path, CheckPackagedFile);
+    public TkExtensibleConfig<IEnumerable<string>> PackagedUpdate = new(TkExtensibleConfigType.Path, CheckPackagedFile);
 
     public TkExtensibleRomConfig()
     {
     }
 
-    private static bool CheckPackagedFile(string value, KeySet keys, SwitchFsContainer? switchFsContainer)
+    private static bool CheckPackagedFile(IEnumerable<string> values, KeySet keys, SwitchFsContainer? switchFsContainer)
     {
-        bool result = TkGameRomUtils.IsValid(keys, value, out bool hasUpdate, switchFsContainer);
+        bool result = false;
+        bool hasUpdate = false;
+
+        foreach (string path in values) {
+            result = TkGameRomUtils.IsValid(keys, path, out bool hasUpdateInline, switchFsContainer);
+            if (!hasUpdate) hasUpdate = hasUpdateInline;
+        }
+        
         return result || hasUpdate;
     }
 

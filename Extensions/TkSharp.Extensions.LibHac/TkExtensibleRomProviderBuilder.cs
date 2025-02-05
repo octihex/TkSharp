@@ -54,13 +54,13 @@ public class TkExtensibleRomProviderBuilder
         return this;
     }
 
-    public TkExtensibleRomProviderBuilder WithExtractedGameDump(string? gameDumpPath)
+    public TkExtensibleRomProviderBuilder WithExtractedGameDump(IEnumerable<string>? gameDumpPath)
     {
         _root.ExtractedGameDumpFolderPath.Set(() => gameDumpPath);
         return this;
     }
 
-    public TkExtensibleRomProviderBuilder WithExtractedGameDump(Func<string?> gameDumpPath)
+    public TkExtensibleRomProviderBuilder WithExtractedGameDump(Func<IEnumerable<string>?> gameDumpPath)
     {
         _root.ExtractedGameDumpFolderPath.Set(gameDumpPath);
         return this;
@@ -78,25 +78,25 @@ public class TkExtensibleRomProviderBuilder
         return this;
     }
 
-    public TkExtensibleRomProviderBuilder WithPackagedBaseGame(string? packagedBaseGamePath)
+    public TkExtensibleRomProviderBuilder WithPackagedBaseGame(IEnumerable<string>? packagedBaseGamePath)
     {
         _root.PackagedBaseGame.Set(() => packagedBaseGamePath);
         return this;
     }
 
-    public TkExtensibleRomProviderBuilder WithPackagedBaseGame(Func<string?> packagedBaseGamePath)
+    public TkExtensibleRomProviderBuilder WithPackagedBaseGame(Func<IEnumerable<string>?> packagedBaseGamePath)
     {
         _root.PackagedBaseGame.Set(packagedBaseGamePath);
         return this;
     }
 
-    public TkExtensibleRomProviderBuilder WithPackagedUpdate(string? packagedUpdatePath)
+    public TkExtensibleRomProviderBuilder WithPackagedUpdate(IEnumerable<string>? packagedUpdatePath)
     {
         _root.PackagedUpdate.Set(() => packagedUpdatePath);
         return this;
     }
 
-    public TkExtensibleRomProviderBuilder WithPackagedUpdate(Func<string?> packagedUpdatePath)
+    public TkExtensibleRomProviderBuilder WithPackagedUpdate(Func<IEnumerable<string>?> packagedUpdatePath)
     {
         _root.PackagedUpdate.Set(packagedUpdatePath);
         return this;
@@ -111,15 +111,16 @@ public class TkExtensibleRomProviderBuilder
     {
         var report = TkExtensibleRomReportBuilder.Create();
 
-        if (_root.ExtractedGameDumpFolderPath.Get(out string? gameDumpPath)) {
-            const string infoKey = "Game Dump Path";
-            bool hasBaseGame = TkGameDumpUtils.CheckGameDump(gameDumpPath, out bool hasUpdate);
-            report.SetHasBaseGame(hasBaseGame, infoKey);
-            report.SetHasUpdate(hasUpdate, infoKey);
+        if (_root.ExtractedGameDumpFolderPath.Get(out IEnumerable<string>? gameDumpPaths)) {
+            const string infoKey = "Game Dump Path(s)";
+            foreach (string gameDumpPath in gameDumpPaths) {
+                bool hasBaseGame = TkGameDumpUtils.CheckGameDump(gameDumpPath, out bool hasUpdate);
+                report.SetHasBaseGame(hasBaseGame, infoKey);
+                report.SetHasUpdate(hasUpdate, infoKey);
+            }
         }
 
         if (!TkKeyUtils.TryGetKeys(out KeySet? keys)) {
-            // Without keys, further analysis is impossible
             goto Result;
         }
         
@@ -132,28 +133,34 @@ public class TkExtensibleRomProviderBuilder
             report.SetHasUpdate(hasUpdateInSdCard, infoKey);
         }
 
-        if (_root.PackagedBaseGame.Get(out string? packagedBaseGamePath)) {
-            const string packagedInfoKey = "Packaged Base Game File";
-            bool hasBaseGameAsFile = TkGameRomUtils.IsFileValid(keys, packagedBaseGamePath, out bool hasUpdateAsFile);
-            report.SetHasBaseGame(hasBaseGameAsFile, packagedInfoKey);
-            report.SetHasUpdate(hasUpdateAsFile, packagedInfoKey);
-            
-            const string splitFileInfoKey = "Packaged Base Game Split File";
-            bool hasBaseGameAsSplitFile = TkGameRomUtils.IsSplitFileValid(keys, packagedBaseGamePath, out bool hasUpdateAsSplitFile);
-            report.SetHasBaseGame(hasBaseGameAsSplitFile, splitFileInfoKey);
-            report.SetHasUpdate(hasUpdateAsSplitFile, splitFileInfoKey);
+        if (_root.PackagedBaseGame.Get(out IEnumerable<string>? packagedBaseGamePaths)) {
+            const string packagedInfoKey = "Packaged Base Game File(s)";
+            const string splitFileInfoKey = "Packaged Base Game Split File(s)";
+
+            foreach (string packagedBaseGamePath in packagedBaseGamePaths) {
+                bool hasBaseGameAsFile = TkGameRomUtils.IsFileValid(keys, packagedBaseGamePath, out bool hasUpdateAsFile);
+                report.SetHasBaseGame(hasBaseGameAsFile, packagedInfoKey);
+                report.SetHasUpdate(hasUpdateAsFile, packagedInfoKey);
+                
+                bool hasBaseGameAsSplitFile = TkGameRomUtils.IsSplitFileValid(keys, packagedBaseGamePath, out bool hasUpdateAsSplitFile);
+                report.SetHasBaseGame(hasBaseGameAsSplitFile, splitFileInfoKey);
+                report.SetHasUpdate(hasUpdateAsSplitFile, splitFileInfoKey);
+            }
         }
 
-        if (_root.PackagedUpdate.Get(out string? packagedUpdatePath)) {
-            const string packagedInfoKey = "Packaged Update File";
-            bool hasBaseGameAsFile = TkGameRomUtils.IsFileValid(keys, packagedUpdatePath, out bool hasUpdateAsFile);
-            report.SetHasBaseGame(hasBaseGameAsFile, packagedInfoKey);
-            report.SetHasUpdate(hasUpdateAsFile, packagedInfoKey);
+        if (_root.PackagedUpdate.Get(out IEnumerable<string>? packagedUpdatePaths)) {
+            const string packagedInfoKey = "Packaged Update File(s)";
+            const string splitFileInfoKey = "Packaged Update Split File(s)";
             
-            const string splitFileInfoKey = "Packaged Update Split File";
-            bool hasBaseGameAsSplitFile = TkGameRomUtils.IsSplitFileValid(keys, packagedUpdatePath, out bool hasUpdateAsSplitFile);
-            report.SetHasBaseGame(hasBaseGameAsSplitFile, splitFileInfoKey);
-            report.SetHasUpdate(hasUpdateAsSplitFile, splitFileInfoKey);
+            foreach (string packagedUpdatePath in packagedUpdatePaths) {
+                bool hasBaseGameAsFile = TkGameRomUtils.IsFileValid(keys, packagedUpdatePath, out bool hasUpdateAsFile);
+                report.SetHasBaseGame(hasBaseGameAsFile, packagedInfoKey);
+                report.SetHasUpdate(hasUpdateAsFile, packagedInfoKey);
+                
+                bool hasBaseGameAsSplitFile = TkGameRomUtils.IsSplitFileValid(keys, packagedUpdatePath, out bool hasUpdateAsSplitFile);
+                report.SetHasBaseGame(hasBaseGameAsSplitFile, splitFileInfoKey);
+                report.SetHasUpdate(hasUpdateAsSplitFile, splitFileInfoKey);
+            }
         }
 
     Result:

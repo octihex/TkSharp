@@ -46,7 +46,12 @@ internal struct TkExtensibleConfig<T>(TkExtensibleConfigType type, TkConfigValid
                 => Directory.Exists(folderPath),
             TkExtensibleConfigType.Path when result is string path
                 => Path.Exists(path),
-
+            TkExtensibleConfigType.File when result is IEnumerable<string> filePaths
+                => filePaths.Any(File.Exists),
+            TkExtensibleConfigType.Folder when result is IEnumerable<string> folderPaths
+                => folderPaths.Any(Directory.Exists),
+            TkExtensibleConfigType.Path when result is IEnumerable<string> paths
+                => paths.Any(Path.Exists),
             _ => true
         };
 

@@ -23,7 +23,7 @@ public class TkExtensibleRomProvider : ITkRomProvider
         _config = config;
         _checksums = checksums;
     }
-    
+
     public bool TryGetRom([MaybeNullWhen(false)] out ITkRom rom)
     {
         try {
@@ -36,11 +36,14 @@ public class TkExtensibleRomProvider : ITkRomProvider
             return false;
         }
     }
-    
+
     public ITkRom GetRom()
     {
+        _ = _config.PreferredVersion.Get(out string? preferredVersion);
+
         TkLog.Instance.LogDebug("[ROM *] Checking Extracted Game Dump");
-        if (_config.ExtractedGameDumpFolderPath.Get(out string? extractedGameDumpPath)) {
+        if (_config.ExtractedGameDumpFolderPath.Get(out IEnumerable<string>? extractedGameDumpPaths)
+            && GetPreferred(extractedGameDumpPaths, preferredVersion) is string extractedGameDumpPath) {
             return new ExtractedTkRom(extractedGameDumpPath, _checksums);
         }
 
@@ -49,8 +52,6 @@ public class TkExtensibleRomProvider : ITkRomProvider
             throw new ArgumentException("The TotK configuration could not be read because no prod.keys file is configured.");
         }
 
-        _ = _config.PreferredVersion.Get(out string? preferredVersion);
-        
         // Track a list of SwitchFs instances in use
         // and dispose with the ITkRom 
         SwitchFsContainer collected = [];
@@ -77,14 +78,14 @@ public class TkExtensibleRomProvider : ITkRomProvider
                     "[ROM *] The configured preferred version ({Version}) could not be found",
                     preferredVersion);
             }
-            
+
             TkLog.Instance.LogDebug("[ROM *] Configuration Valid (Mixed)");
             IFileSystem fs = main.MainNca.Nca
                 .OpenFileSystemWithPatch((update ?? alternateUpdate)!.MainNca.Nca,
                     NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
             return new TkSwitchRom(fs, collected.AsFsList(), _checksums);
         }
-        
+
         throw new ArgumentException("Invalid or incomplete TotK configuration.");
     }
 
@@ -125,7 +126,7 @@ public class TkExtensibleRomProvider : ITkRomProvider
                     alternateUpdate = totk.Patch;
                     continue;
                 }
-                
+
                 TkLog.Instance.LogDebug("[ROM *] Update {Version} found in {Label}", totk.DisplayVersion, label);
                 update = totk.Patch;
             }
@@ -136,11 +137,38 @@ public class TkExtensibleRomProvider : ITkRomProvider
         }
 
         return null;
-    
+
     IsValid:
         TkLog.Instance.LogDebug("[ROM *] Configuration Valid");
         IFileSystem fs = main.MainNca.Nca
             .OpenFileSystemWithPatch(update.MainNca.Nca, NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
         return new TkSwitchRom(fs, collected.AsFsList(), _checksums);
+    }
+
+    private static string? GetPreferred(IEnumerable<string> extractedGameDumpPaths, string? preferredVersion)
+    {
+        int? parsedVersion = int.TryParse(preferredVersion?.Replace(".", string.Empty), out int parsedVersionInline)
+            ? parsedVersionInline
+            : null;
+
+        if (parsedVersion is not int version) {
+            return extractedGameDumpPaths
+                .FirstOrDefault(path => TkGameDumpUtils.CheckGameDump(path, out bool hasUpdate) && hasUpdate);
+        }
+
+        string? result = null;
+        foreach (string gameDumpPath in extractedGameDumpPaths) {
+            if (!TkGameDumpUtils.CheckGameDump(gameDumpPath, out bool hasUpdate, out int foundVersion) || !hasUpdate) {
+                continue;
+            }
+            
+            result = gameDumpPath;
+
+            if (foundVersion == version) {
+                return gameDumpPath;
+            }
+        }
+
+        return result;
     }
 }
