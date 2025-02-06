@@ -1,6 +1,4 @@
-using System.Collections.ObjectModel;
 using System.Diagnostics.Contracts;
-using LibHac.Fs.Fsa;
 using LibHac.Tools.Fs;
 
 namespace TkSharp.Extensions.LibHac.Models;
