@@ -17,6 +17,8 @@ internal struct TkExtensibleRomConfig
     public TkExtensibleConfig<IEnumerable<string>> PackagedBaseGame = new(TkExtensibleConfigType.Path, CheckPackagedFile);
     
     public TkExtensibleConfig<IEnumerable<string>> PackagedUpdate = new(TkExtensibleConfigType.Path, CheckPackagedFile);
+    
+    public TkExtensibleConfig<IEnumerable<string>> NandFolders = new(TkExtensibleConfigType.Path, CheckNandFolder);
 
     public TkExtensibleRomConfig()
     {
@@ -38,6 +40,19 @@ internal struct TkExtensibleRomConfig
     private static bool CheckSdCard(string value, KeySet keys, SwitchFsContainer? switchFsContainer)
     {
         bool result = TkSdCardUtils.CheckSdCard(keys, value, out bool hasUpdate, switchFsContainer);
+        return result || hasUpdate;
+    }
+
+    private static bool CheckNandFolder(IEnumerable<string> values, KeySet keys, SwitchFsContainer? switchFsContainer)
+    {
+        bool result = false;
+        bool hasUpdate = false;
+
+        foreach (string path in values) {
+            result = TkNandUtils.IsValid(keys, path, out bool hasUpdateInline, switchFsContainer);
+            if (!hasUpdate) hasUpdate = hasUpdateInline;
+        }
+
         return result || hasUpdate;
     }
 }

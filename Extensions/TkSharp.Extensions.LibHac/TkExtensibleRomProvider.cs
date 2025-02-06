@@ -68,8 +68,13 @@ public class TkExtensibleRomProvider : ITkRomProvider
         }
 
         TkLog.Instance.LogDebug("[ROM *] Checking SD Card");
-        if (TryBuild(_config.SdCard, keys, collected, preferredVersion, ref main, ref update, ref alternateUpdate) is { } buildSdCard) {
-            return buildSdCard;
+        if (TryBuild(_config.SdCard, keys, collected, preferredVersion, ref main, ref update, ref alternateUpdate) is { } buildAfterSdCard) {
+            return buildAfterSdCard;
+        }
+
+        TkLog.Instance.LogDebug("[ROM *] Checking NAND");
+        if (TryBuild(_config.NandFolders, keys, collected, preferredVersion, ref main, ref update, ref alternateUpdate) is { } buildAfterNand) {
+            return buildAfterNand;
         }
 
         if (main is not null && (update is not null || alternateUpdate is not null)) {

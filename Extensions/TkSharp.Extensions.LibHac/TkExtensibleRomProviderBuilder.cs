@@ -102,6 +102,18 @@ public class TkExtensibleRomProviderBuilder
         return this;
     }
 
+    public TkExtensibleRomProviderBuilder WithNand(IEnumerable<string>? nandFolderPath)
+    {
+        _root.NandFolders.Set(() => nandFolderPath);
+        return this;
+    }
+
+    public TkExtensibleRomProviderBuilder WithNand(Func<IEnumerable<string>?> nandFolderPath)
+    {
+        _root.NandFolders.Set(nandFolderPath);
+        return this;
+    }
+
     /// <summary>
     /// Get a report on the current state of the builder.
     /// </summary>
@@ -160,6 +172,16 @@ public class TkExtensibleRomProviderBuilder
                 bool hasBaseGameAsSplitFile = TkGameRomUtils.IsSplitFileValid(keys, packagedUpdatePath, out bool hasUpdateAsSplitFile);
                 report.SetHasBaseGame(hasBaseGameAsSplitFile, splitFileInfoKey);
                 report.SetHasUpdate(hasUpdateAsSplitFile, splitFileInfoKey);
+            }
+        }
+        
+        if (_root.NandFolders.Get(out IEnumerable<string>? nandFolderPaths)) {
+            const string infoKey = "Nand Folder(s)";
+
+            foreach (string nandFolderPath in nandFolderPaths) {
+                bool hasBaseGame = TkNandUtils.IsValid(keys, nandFolderPath, out bool hasUpdateAsFile);
+                report.SetHasBaseGame(hasBaseGame, infoKey);
+                report.SetHasUpdate(hasUpdateAsFile, infoKey);
             }
         }
 
