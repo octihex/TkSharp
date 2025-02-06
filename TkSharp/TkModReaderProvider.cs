@@ -15,7 +15,9 @@ public class TkModReaderProvider(ITkSystemProvider tkWriterProvider, ITkRomProvi
 
     public void Register(ITkModReader reader)
     {
-        _readers.Add(reader);
+        // Use insert to ensure readers
+        // added later take precedence
+        _readers.Insert(0, reader);
     }
 
     public ITkModReader? GetReader(object input)
