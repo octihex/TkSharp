@@ -73,8 +73,11 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
                 _changelog.ExeFiles.Add(canonical);
                 goto Copy;
             case { Root: "cheats" }:
-                _changelog.CheatFiles.Add(canonical);
-                goto Copy;
+                if (TkCheat.FromText(content, Path.GetFileNameWithoutExtension(canonical)) is var cheat and { Count: > 0 }) {
+                    _changelog.CheatFiles.Add(cheat);
+                }
+
+                return;
             case { Extension: ".rsizetable" } or { Canonical: "desktop.ini" }:
                 return;
         }

@@ -16,14 +16,14 @@ public static class TkChangelogWriter
         WriteChangelogFiles(output, changelog.ChangelogFiles);
         WriteFileList(output, changelog.MalsFiles);
         WritePatchFiles(output, changelog.PatchFiles);
+        WriteCheatFiles(output, changelog.CheatFiles);
         WriteFileList(output, changelog.SubSdkFiles);
         WriteFileList(output, changelog.ExeFiles);
-        WriteFileList(output, changelog.CheatFiles);
         WriteFileList(output, changelog.Reserved1);
         WriteFileList(output, changelog.Reserved2);
     }
 
-    private static void WriteChangelogFiles(in Stream output, IList<TkChangelogEntry> changelogs)
+    private static void WriteChangelogFiles(in Stream output, List<TkChangelogEntry> changelogs)
     {
         output.Write(changelogs.Count);
 
@@ -35,7 +35,7 @@ public static class TkChangelogWriter
         }
     }
 
-    private static void WritePatchFiles(in Stream output, IList<TkPatch> patches)
+    private static void WritePatchFiles(in Stream output, List<TkPatch> patches)
     {
         output.Write(patches.Count);
 
@@ -50,7 +50,15 @@ public static class TkChangelogWriter
         }
     }
 
-    private static void WriteFileList(in Stream output, IList<string> files)
+    private static void WriteCheatFiles(in Stream output, List<TkCheat> cheats)
+    {
+        output.Write(cheats.Count);
+        foreach (TkCheat cheat in cheats) {
+            cheat.WriteBinary(output);
+        }
+    }
+
+    private static void WriteFileList(in Stream output, List<string> files)
     {
         output.Write(files.Count);
 

@@ -39,7 +39,7 @@ public sealed class TkMerger
         Task[] tasks = [
             Task.Run(() => MergeIps(tkChangelogs), ct),
             Task.Run(() => MergeSubSdk(tkChangelogs), ct),
-            Task.Run(() => CopyCheats(tkChangelogs), ct),
+            Task.Run(() => MergeCheats(tkChangelogs), ct),
             Task.Run(() => CopyExe(tkChangelogs), ct),
             Task.Run(() => MergeMals(tkChangelogs), ct),
             .. GetTargets(tkChangelogs)
@@ -60,7 +60,7 @@ public sealed class TkMerger
 
         MergeSubSdk(tkChangelogs);
 
-        CopyCheats(tkChangelogs);
+        MergeCheats(tkChangelogs);
 
         CopyExe(tkChangelogs);
 
@@ -202,6 +202,26 @@ public sealed class TkMerger
         using Stream output = _output.OpenWrite(outputFile);
         merged.WriteIps(output);
     }
+    
+    private void MergeCheats(TkChangelog[] changelogs)
+    {
+        IEnumerable<IGrouping<string, TkCheat>> allCheats = changelogs
+            .SelectMany(entry => entry.CheatFiles)
+            .GroupBy(patch => patch.Name);
+
+        foreach (IGrouping<string, TkCheat> cheats in allCheats) {
+            TkCheat merged = new(cheats.Key);
+            foreach ((string key, uint[][] bin) in cheats.SelectMany(x => x.Select(cheat => (cheat.Key, cheat.Value)))) {
+                merged[key] = bin;
+            }
+            
+            string outputFile = Path.Combine("cheats", $"{cheats.Key}.txt");
+            
+            using Stream output = _output.OpenWrite(outputFile);
+            using StreamWriter writer = new(output);
+            merged.WriteText(writer);
+        }
+    }
 
     private void MergeSubSdk(TkChangelog[] changelogs)
     {
@@ -245,24 +265,6 @@ public sealed class TkMerger
             }
 
             foreach (string inputOutput in changelog.ExeFiles.Select(exeFile => $"exefs/{exeFile}")) {
-                using Stream input = changelog.Source.OpenRead(inputOutput);
-                using Stream output = _output.OpenWrite(inputOutput);
-                input.CopyTo(output);
-            }
-        }
-    }
-
-    private void CopyCheats(TkChangelog[] changelogs)
-    {
-        foreach (TkChangelog changelog in changelogs) {
-            if (changelog.Source is null) {
-                TkLog.Instance.LogError(
-                    "Changelog '{Changelog}' has not been initialized. Try restarting to resolve the issue.",
-                    changelog);
-                continue;
-            }
-
-            foreach (string inputOutput in changelog.CheatFiles.Select(cheatFile => $"cheats/{cheatFile}")) {
                 using Stream input = changelog.Source.OpenRead(inputOutput);
                 using Stream output = _output.OpenWrite(inputOutput);
                 input.CopyTo(output);

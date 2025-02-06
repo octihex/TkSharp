@@ -41,9 +41,15 @@ public static class TkChangelogReader
             );
         }
         
+        int cheatFileCount = input.Read<int>();
+        for (int i = 0; i < cheatFileCount; i++) {
+            result.CheatFiles.Add(
+                TkCheat.FromBinary(input)
+            );
+        }
+        
         ReadFileList(input, result.SubSdkFiles);
         ReadFileList(input, result.ExeFiles);
-        ReadFileList(input, result.CheatFiles);
         ReadFileList(input, result.Reserved1);
         ReadFileList(input, result.Reserved2);
         
