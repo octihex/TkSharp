@@ -100,7 +100,7 @@ public class TkExtensibleRomProvider : ITkRomProvider
         
         if (_config.SdCard.Get(out string? sdCardFolder)) {
             TkLog.Instance.LogDebug("[ROM *] Looking for Keys in SD card '{SdCard}'", sdCardFolder);
-            if (TkKeyUtils.GetKeysFromFolder(sdCardFolder) is KeySet keyFromSdCard) {
+            if (TkKeyUtils.TryGetKeys(sdCardFolder, out KeySet? keyFromSdCard)) {
                 return keyFromSdCard;
             };
         }
