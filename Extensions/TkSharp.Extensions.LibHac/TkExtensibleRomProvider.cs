@@ -93,7 +93,16 @@ public class TkExtensibleRomProvider : ITkRomProvider
     {
         if (_config.KeysFolder.Get(out string? keysFolder)) {
             TkLog.Instance.LogDebug("[ROM *] Looking for Keys in {KeysFolder}", keysFolder);
-            return TkKeyUtils.GetKeysFromFolder(keysFolder);
+            if (TkKeyUtils.GetKeysFromFolder(keysFolder) is KeySet keyFromFolder) {
+                return keyFromFolder;
+            }
+        }
+        
+        if (_config.SdCard.Get(out string? sdCardFolder)) {
+            TkLog.Instance.LogDebug("[ROM *] Looking for Keys in SD card '{SdCard}'", sdCardFolder);
+            if (TkKeyUtils.GetKeysFromFolder(sdCardFolder) is KeySet keyFromSdCard) {
+                return keyFromSdCard;
+            };
         }
 
         TkLog.Instance.LogDebug("[ROM *] Looking for roaming keys");
