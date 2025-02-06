@@ -13,7 +13,6 @@ namespace TkSharp.Merging;
 
 public sealed class TkMerger
 {
-    
     private readonly ITkModWriter _output;
     private readonly ITkRom _rom;
     private readonly string _locale;
@@ -71,6 +70,17 @@ public sealed class TkMerger
         }
         
         _resourceSizeCollector.Write();
+    }
+
+    public Task MergeCheatsAsync(IEnumerable<TkChangelog> changelogs, CancellationToken ct = default)
+        => Task.Run(() => MergeCheats(changelogs), ct); 
+
+    public void MergeCheats(IEnumerable<TkChangelog> changelogs)
+    {
+        TkChangelog[] tkChangelogs =
+            changelogs as TkChangelog[] ?? changelogs.ToArray();
+        
+        MergeCheats(tkChangelogs);
     }
 
     public void MergeTarget(TkChangelogEntry changelog, Either<(ITkMerger, Stream[]), Stream> target)
