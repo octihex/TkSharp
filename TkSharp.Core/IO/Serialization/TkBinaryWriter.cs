@@ -77,6 +77,7 @@ public static class TkBinaryWriter
 
     public static void WriteTkProfile(in Stream output, TkProfile profile, TkLookupContext lookup)
     {
+        output.Write(profile.Id);
         WriteTkItem(output, profile);
         
         output.Write(profile.Mods.Count);

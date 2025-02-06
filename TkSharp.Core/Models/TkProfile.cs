@@ -8,6 +8,8 @@ namespace TkSharp.Core.Models;
 public sealed partial class TkProfile : TkItem
 {
     public static event Action StateChanged = delegate { };
+
+    public Ulid Id { get; init; } = Ulid.NewUlid();
     
     [ObservableProperty]
     private TkProfileMod? _selected;

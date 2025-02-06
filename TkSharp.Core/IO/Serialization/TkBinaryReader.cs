@@ -114,6 +114,7 @@ public static class TkBinaryReader
     public static TkProfile ReadTkProfile(in Stream input, ObservableCollection<TkMod> mods)
     {
         var result = new TkProfile {
+            Id = input.Read<Ulid>(),
             Name = input.ReadString()!,
             Description = input.ReadString()!,
             Thumbnail = ReadTkThumbnail(input),
