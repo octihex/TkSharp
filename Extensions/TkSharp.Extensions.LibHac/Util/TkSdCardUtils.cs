@@ -69,7 +69,7 @@ internal static class TkSdCardUtils
         SwitchFs switchFs = SwitchFs.OpenSdCard(keys, ref fs);
         bool result = TkGameRomUtils.IsValid(switchFs, out hasUpdate);
 
-        if (switchFsContainer is not null && result) {
+        if (switchFsContainer is not null) {
             switchFsContainer.CleanupLater(fatFileSystem);
             switchFsContainer.Add((target, switchFs));
             return result;
