@@ -82,6 +82,17 @@ public sealed class TkMerger
         
         MergeCheats(tkChangelogs);
     }
+    
+    public Task MergeExeFsAsync(IEnumerable<TkChangelog> changelogs, CancellationToken ct)
+        => Task.Run(() => MergeExeFs(changelogs), ct);
+    
+    public void MergeExeFs(IEnumerable<TkChangelog> changelogs)
+    {
+        TkChangelog[] tkChangelogs =
+            changelogs as TkChangelog[] ?? changelogs.ToArray();
+        
+        CopyExe(tkChangelogs);
+    }
 
     public void MergeTarget(TkChangelogEntry changelog, Either<(ITkMerger, Stream[]), Stream> target)
     {
