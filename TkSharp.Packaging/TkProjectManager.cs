@@ -40,7 +40,7 @@ public static class TkProjectManager
         List<string> recentProjectFolders = JsonSerializer.Deserialize<List<string>>(fs)
                                             ?? [];
 
-        foreach (TkProject project in recentProjectFolders.Select(projectFolder => new TkProject(projectFolder))) {
+        foreach (TkProject project in recentProjectFolders.Where(Directory.Exists).Select(projectFolder => new TkProject(projectFolder))) {
             LoadProjectMetadataFromFolder(project);
             RecentProjects.Add(project);
         }
