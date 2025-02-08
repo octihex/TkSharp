@@ -33,24 +33,24 @@ public sealed partial class TkProfile : TkItem
     /// <summary>
     /// Moves the <see cref="Selected"/> mod up in the <see cref="Mods"/> collection.
     /// </summary>
-    public TkProfileMod? MoveUp() => MoveUp(Selected);
+    public TkProfileMod? MoveUp() => Selected = MoveUp(Selected);
     
     /// <summary>
     /// Moves the <paramref name="target"/> up in the <see cref="Mods"/> collection.
     /// </summary>
     /// <param name="target">The target <see cref="TkMod"/> to be repositioned.</param>
-    public TkProfileMod? MoveUp(TkProfileMod? target) => Move(target, direction: -1);
+    public TkProfileMod? MoveUp(TkProfileMod? target) => Selected = Move(target, direction: -1);
     
     /// <summary>
     /// Moves the <see cref="Selected"/> mod up in the <see cref="Mods"/> collection.
     /// </summary>
-    public TkProfileMod? MoveDown() => MoveDown(Selected);
+    public TkProfileMod? MoveDown() => Selected = MoveDown(Selected);
 
     /// <summary>
     /// Moves the <paramref name="target"/> down in the <see cref="Mods"/> collection.
     /// </summary>
     /// <param name="target">The target <see cref="TkMod"/> to be repositioned.</param>
-    public TkProfileMod? MoveDown(TkProfileMod? target) => Move(target, direction: 1);
+    public TkProfileMod? MoveDown(TkProfileMod? target) => Selected = Move(target, direction: 1);
 
     /// <summary>
     /// Move the <paramref name="target"/> in the provided <paramref name="direction"/>.<br/>
