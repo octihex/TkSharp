@@ -14,4 +14,12 @@ public class TkLocalizationInterface
 
     public string this[string key, bool failSoftly] => GetLocale(key, failSoftly);
     
+    public static string GetLocaleOrDefault(string localeName, string @default)
+    {
+        if (Locale[localeName, failSoftly: true] is not { } translated || translated == localeName) {
+            return @default;
+        }
+
+        return translated;
+    }
 }
