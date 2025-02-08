@@ -13,4 +13,11 @@ public sealed class TkSystemSource(string rootFolderPath) : ITkSystemSource
     {
         return File.Exists(Path.Combine(rootFolderPath, relativeFilePath));
     }
+
+    public ITkSystemSource GetRelative(string relativeSourcePath)
+    {
+        return new TkSystemSource(
+            Path.Combine(rootFolderPath, relativeSourcePath)
+        );
+    }
 }

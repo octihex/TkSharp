@@ -8,4 +8,6 @@ public interface ITkSystemSource
     Stream OpenRead(string relativeFilePath);
     
     bool Exists(string relativeFilePath);
+
+    ITkSystemSource GetRelative(string relativeSourcePath);
 }
