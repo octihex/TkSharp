@@ -57,8 +57,10 @@ public partial class TkProject(string folderPath) : ObservableObject
             }
             
             FolderModSource optionSource = new(optionPath);
-            writer.SetRelativeFolder(option.Id.ToString());
-            option.Changelog = await Build(option, optionSource, writer, rom, ct: ct);
+
+            string id = option.Id.ToString();
+            writer.SetRelativeFolder(id);
+            option.Changelog = await Build(option, optionSource, writer, rom, systemSource?.GetRelative(id), ct);
         }
         
         TkLog.Instance.LogInformation("Build completed");
