@@ -78,6 +78,38 @@ public sealed partial class TkProfile : TkItem
         return target;
     }
 
+    public TkProfileMod? MoveToTop() => MoveToTop(Selected);
+
+    /// <summary>
+    /// Move the <paramref name="target"/> to the highest position.<br/>
+    /// </summary>
+    /// <param name="target">The target <see cref="TkMod"/> to be repositioned.</param>
+    public TkProfileMod? MoveToTop(TkProfileMod? target)
+    {
+        if (target is null) {
+            return target;
+        }
+        
+        int currentIndex = Mods.IndexOf(target);
+        return Move(target, -currentIndex);
+    }
+
+    public TkProfileMod? MoveToBottom() => Selected = MoveToBottom(Selected);
+
+    /// <summary>
+    /// Move the <paramref name="target"/> to the highest position.<br/>
+    /// </summary>
+    /// <param name="target">The target <see cref="TkMod"/> to be repositioned.</param>
+    public TkProfileMod? MoveToBottom(TkProfileMod? target)
+    {
+        if (target is null) {
+            return target;
+        }
+        
+        int currentIndex = Mods.IndexOf(target);
+        return Move(target, Mods.Count - 1 - currentIndex);
+    }
+
     public void RebaseOptions(TkProfileMod? target = null)
     {
         target ??= Selected;
