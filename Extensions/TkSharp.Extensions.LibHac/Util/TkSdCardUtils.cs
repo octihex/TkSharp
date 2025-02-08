@@ -29,15 +29,15 @@ internal static class TkSdCardUtils
             using StreamReader reader = new(fs);
             while (reader.ReadLine() is string line) {
                 ReadOnlySpan<char> lineContents = line.AsSpan();
-                if (lineContents.Length < 15) {
+                if (lineContents.Length < 5) {
                     continue;
                 }
 
-                if (lineContents[..13] is not "nintendo_path" || lineContents[14] is not '=') {
+                if (lineContents[..4] is not "path" || lineContents[4] is not '=') {
                     continue;
                 }
 
-                emummcNintendoPath = Path.Combine(sdCardFolderPath, line[15..]);
+                emummcNintendoPath = Path.Combine(sdCardFolderPath, line[4..]);
                 if (!Directory.Exists(emummcNintendoPath)) {
                     break;
                 }
