@@ -36,12 +36,14 @@ public sealed partial class TkMod : TkStoredItem
     public ObservableCollection<TkModDependency> Dependencies { get; init; } = [];
 
     [RelayCommand]
+    [property: JsonIgnore]
     private void NewContributor()
     {
         Contributors.Add(new TkModContributor(string.Empty, string.Empty));
     }
 
     [RelayCommand]
+    [property: JsonIgnore]
     private void RemoveContributor(TkModContributor target)
     {
         Contributors.Remove(target);
