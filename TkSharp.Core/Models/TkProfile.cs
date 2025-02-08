@@ -110,6 +110,7 @@ public sealed partial class TkProfile : TkItem
             if (existingProfileMod.Mod.Id == target.Id) {
                 profileMod = existingProfileMod;
                 existingProfileMod.Mod = target;
+                RebaseOptions(existingProfileMod);
                 goto EnsureOptions;
             }
         }
@@ -126,6 +127,7 @@ public sealed partial class TkProfile : TkItem
         foreach (TkProfileMod existingProfileMod in Mods) {
             if (existingProfileMod.Mod.Id == target.Id) {
                 existingProfileMod.Mod = target;
+                existingProfileMod.SelectedOptions = [];
                 existingProfileMod.EnsureOptionSelection();
                 return;
             }
