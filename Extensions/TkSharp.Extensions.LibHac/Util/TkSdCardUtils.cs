@@ -2,6 +2,8 @@ using LibHac.Common;
 using LibHac.Common.Keys;
 using LibHac.Fs.Fsa;
 using LibHac.Tools.Fs;
+using Microsoft.Extensions.Logging;
+using TkSharp.Core;
 using TkSharp.Extensions.LibHac.IO;
 using TkSharp.Extensions.LibHac.Models;
 
@@ -13,9 +15,8 @@ internal static class TkSdCardUtils
 
     public static bool CheckSdCard(KeySet keys, string sdCardFolderPath, out bool hasUpdate, SwitchFsContainer? switchFsContainer)
     {
-        if (CheckSwitchFolder(keys, sdCardFolderPath, out hasUpdate, switchFsContainer) && hasUpdate) {
-            return true;
-        }
+        TkLog.Instance.LogDebug("[ROM *] [SD Card] Checking system");
+        bool result = CheckSwitchFolder(keys, sdCardFolderPath, out hasUpdate, switchFsContainer);
 
         string emummcConfig = Path.Combine(sdCardFolderPath, "emuMMC", "emummc.ini");
         if (!File.Exists(emummcConfig)) {
@@ -48,16 +49,25 @@ internal static class TkSdCardUtils
         goto CheckDumps;
 
     ProcessEmummc:
-        return CheckSwitchFolder(keys, emummcNintendoPath, out hasUpdate, switchFsContainer) && hasUpdate;
+        TkLog.Instance.LogDebug("[ROM *] [SD Card] Checking EmuMMC.");
+        bool emummcResult = CheckSwitchFolder(keys, emummcNintendoPath, out bool emummcHasUpdate, switchFsContainer) && hasUpdate;
+        if (!result) result = emummcResult;
+        if (!hasUpdate) hasUpdate = emummcHasUpdate;
 
     CheckDumps:
+        TkLog.Instance.LogDebug("[ROM *] [SD Card] Checking legacy dump folder.");
         string legacyNxDumpToolFolder = Path.Combine(sdCardFolderPath, "switch", "nxdumptool");
-        if (CheckForDumps(keys, legacyNxDumpToolFolder, out hasUpdate, switchFsContainer) && hasUpdate) {
-            return true;
-        }
+        bool legacyDumpResult = CheckForDumps(keys, legacyNxDumpToolFolder, out bool legacyDumpHasUpdate, switchFsContainer);
+        if (!result) result = legacyDumpResult;
+        if (!hasUpdate) hasUpdate = legacyDumpHasUpdate;
 
+        TkLog.Instance.LogDebug("[ROM *] [SD Card] Checking new dump folder.");
         string nxDumpToolFolder = Path.Combine(sdCardFolderPath, "nxdt_rw_poc");
-        return CheckForDumps(keys, nxDumpToolFolder, out hasUpdate, switchFsContainer) && hasUpdate;
+        bool dumpResult = CheckForDumps(keys, nxDumpToolFolder, out bool dumpHasUpdate, switchFsContainer);
+        if (!result) result = dumpResult;
+        if (!hasUpdate) hasUpdate = dumpHasUpdate;
+
+        return result;
     }
 
     private static bool CheckSwitchFolder(KeySet keys, string target, out bool hasUpdate, SwitchFsContainer? switchFsContainer)
