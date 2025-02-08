@@ -12,7 +12,7 @@ public class TkChangelog
 
     public List<TkPatch> PatchFiles { get; } = [];
 
-    public List<TkCheat> CheatFiles { get; } = [];
+    public List<TkCheat> CheatFiles { get; init; } = [];
     
     public List<string> SubSdkFiles { get; } = [];
 
