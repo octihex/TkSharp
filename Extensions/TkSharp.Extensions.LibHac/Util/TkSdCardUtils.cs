@@ -69,7 +69,7 @@ internal static class TkSdCardUtils
 
     private static bool CheckSwitchFolder(KeySet keys, string target, out bool hasUpdate, SwitchFsContainer? switchFsContainer)
     {
-        if (!Directory.Exists(Path.Combine(target, "Nintendo", "Content"))) {
+        if (!Directory.Exists(Path.Combine(target, "Nintendo", "Contents"))) {
             hasUpdate = false;
             return false;
         }
