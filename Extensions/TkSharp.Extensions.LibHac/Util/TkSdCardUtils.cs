@@ -72,6 +72,11 @@ internal static class TkSdCardUtils
 
     private static bool CheckSwitchFolder(KeySet keys, string target, out bool hasUpdate, SwitchFsContainer? switchFsContainer)
     {
+        if (!Directory.Exists(Path.Combine(target, "Nintendo", "Content"))) {
+            hasUpdate = false;
+            return false;
+        }
+        
         FatFileSystem.Create(out FatFileSystem? fatFileSystem, target)
             .ThrowIfFailure();
         UniqueRef<IAttributeFileSystem> fs = new(fatFileSystem);
