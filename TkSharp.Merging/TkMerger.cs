@@ -37,9 +37,9 @@ public sealed class TkMerger
 
         Task[] tasks = [
             Task.Run(() => MergeIps(tkChangelogs), ct),
-            Task.Run(() => MergeSubSdk(tkChangelogs), ct),
-            Task.Run(() => MergeCheats(tkChangelogs), ct),
-            Task.Run(() => CopyExe(tkChangelogs), ct),
+            Task.Run(() => MergeSubSdk(_output, tkChangelogs), ct),
+            Task.Run(() => MergeCheats(_output, tkChangelogs), ct),
+            Task.Run(() => MergeExeFs(_output, tkChangelogs), ct),
             Task.Run(() => MergeMals(tkChangelogs), ct),
             .. GetTargets(tkChangelogs)
                 .Select(entry => Task.Run(() => MergeTarget(entry.Changelog, entry.Target), ct))
@@ -57,11 +57,11 @@ public sealed class TkMerger
 
         MergeIps(tkChangelogs);
 
-        MergeSubSdk(tkChangelogs);
+        MergeSubSdk(_output, tkChangelogs);
 
-        MergeCheats(tkChangelogs);
+        MergeCheats(_output, tkChangelogs);
 
-        CopyExe(tkChangelogs);
+        MergeExeFs(_output, tkChangelogs);
 
         MergeMals(tkChangelogs);
 
@@ -70,28 +70,6 @@ public sealed class TkMerger
         }
         
         _resourceSizeCollector.Write();
-    }
-
-    public Task MergeCheatsAsync(IEnumerable<TkChangelog> changelogs, CancellationToken ct = default)
-        => Task.Run(() => MergeCheats(changelogs), ct); 
-
-    public void MergeCheats(IEnumerable<TkChangelog> changelogs)
-    {
-        TkChangelog[] tkChangelogs =
-            changelogs as TkChangelog[] ?? changelogs.ToArray();
-        
-        MergeCheats(tkChangelogs);
-    }
-    
-    public Task MergeExeFsAsync(IEnumerable<TkChangelog> changelogs, CancellationToken ct)
-        => Task.Run(() => MergeExeFs(changelogs), ct);
-    
-    public void MergeExeFs(IEnumerable<TkChangelog> changelogs)
-    {
-        TkChangelog[] tkChangelogs =
-            changelogs as TkChangelog[] ?? changelogs.ToArray();
-        
-        CopyExe(tkChangelogs);
     }
 
     public void MergeTarget(TkChangelogEntry changelog, Either<(ITkMerger, Stream[]), Stream> target)
@@ -129,6 +107,75 @@ public sealed class TkMerger
         }
 
         CopyMergedToOutput(output, relativeFilePath, changelog);
+    }
+    
+    public static void MergeCheats(ITkModWriter mergeOutput, IEnumerable<TkChangelog> changelogs)
+    {
+        IEnumerable<IGrouping<string, TkCheat>> allCheats = changelogs
+            .SelectMany(entry => entry.CheatFiles)
+            .GroupBy(patch => patch.Name);
+
+        foreach (IGrouping<string, TkCheat> cheats in allCheats) {
+            TkCheat merged = new(cheats.Key);
+            foreach ((string key, uint[][] bin) in cheats.SelectMany(x => x.Select(cheat => (cheat.Key, cheat.Value)))) {
+                merged[key] = bin;
+            }
+            
+            string outputFile = Path.Combine("cheats", $"{cheats.Key}.txt");
+            
+            using Stream output = mergeOutput.OpenWrite(outputFile);
+            using StreamWriter writer = new(output);
+            merged.WriteText(writer);
+        }
+    }
+
+    public static void MergeSubSdk(ITkModWriter mergeOutput, IEnumerable<TkChangelog> changelogs)
+    {
+        int index = 0;
+
+        foreach (TkChangelog changelog in changelogs.Reverse()) {
+            if (changelog.Source is null) {
+                TkLog.Instance.LogError(
+                    "Changelog '{Changelog}' has not been initialized. Try restarting to resolve the issue.",
+                    changelog);
+                continue;
+            }
+
+            foreach (string subSdkFile in changelog.SubSdkFiles) {
+                if (index > 9) {
+                    index++;
+                    continue;
+                }
+
+                using Stream input = changelog.Source.OpenRead($"exefs/{subSdkFile}");
+                using Stream output = mergeOutput.OpenWrite($"exefs/subsdk{++index}");
+                input.CopyTo(output);
+            }
+        }
+
+        if (index > 9) {
+            TkLog.Instance.LogWarning(
+                "{Count} SubSdk files were skipped when merging from the lowest priority mods.",
+                index - 9);
+        }
+    }
+
+    public static void MergeExeFs(ITkModWriter mergeOutput, IEnumerable<TkChangelog> changelogs)
+    {
+        foreach (TkChangelog changelog in changelogs) {
+            if (changelog.Source is null) {
+                TkLog.Instance.LogError(
+                    "Changelog '{Changelog}' has not been initialized. Try restarting to resolve the issue.",
+                    changelog);
+                continue;
+            }
+
+            foreach (string inputOutput in changelog.ExeFiles.Select(exeFile => $"exefs/{exeFile}")) {
+                using Stream input = changelog.Source.OpenRead(inputOutput);
+                using Stream output = mergeOutput.OpenWrite(inputOutput);
+                input.CopyTo(output);
+            }
+        }
     }
 
     private void MergeCustomTarget(ITkMerger merger, Stream @base, IEnumerable<Stream> targets, TkChangelogEntry changelog, Stream output)
@@ -222,75 +269,6 @@ public sealed class TkMerger
 
         using Stream output = _output.OpenWrite(outputFile);
         merged.WriteIps(output);
-    }
-    
-    private void MergeCheats(TkChangelog[] changelogs)
-    {
-        IEnumerable<IGrouping<string, TkCheat>> allCheats = changelogs
-            .SelectMany(entry => entry.CheatFiles)
-            .GroupBy(patch => patch.Name);
-
-        foreach (IGrouping<string, TkCheat> cheats in allCheats) {
-            TkCheat merged = new(cheats.Key);
-            foreach ((string key, uint[][] bin) in cheats.SelectMany(x => x.Select(cheat => (cheat.Key, cheat.Value)))) {
-                merged[key] = bin;
-            }
-            
-            string outputFile = Path.Combine("cheats", $"{cheats.Key}.txt");
-            
-            using Stream output = _output.OpenWrite(outputFile);
-            using StreamWriter writer = new(output);
-            merged.WriteText(writer);
-        }
-    }
-
-    private void MergeSubSdk(TkChangelog[] changelogs)
-    {
-        int index = 0;
-
-        foreach (TkChangelog changelog in changelogs.Reverse()) {
-            if (changelog.Source is null) {
-                TkLog.Instance.LogError(
-                    "Changelog '{Changelog}' has not been initialized. Try restarting to resolve the issue.",
-                    changelog);
-                continue;
-            }
-
-            foreach (string subSdkFile in changelog.SubSdkFiles) {
-                if (index > 9) {
-                    index++;
-                    continue;
-                }
-
-                using Stream input = changelog.Source.OpenRead($"exefs/{subSdkFile}");
-                using Stream output = _output.OpenWrite($"exefs/subsdk{++index}");
-                input.CopyTo(output);
-            }
-        }
-
-        if (index > 9) {
-            TkLog.Instance.LogWarning(
-                "{Count} SubSdk files were skipped when merging from the lowest priority mods.",
-                index - 9);
-        }
-    }
-
-    private void CopyExe(TkChangelog[] changelogs)
-    {
-        foreach (TkChangelog changelog in changelogs) {
-            if (changelog.Source is null) {
-                TkLog.Instance.LogError(
-                    "Changelog '{Changelog}' has not been initialized. Try restarting to resolve the issue.",
-                    changelog);
-                continue;
-            }
-
-            foreach (string inputOutput in changelog.ExeFiles.Select(exeFile => $"exefs/{exeFile}")) {
-                using Stream input = changelog.Source.OpenRead(inputOutput);
-                using Stream output = _output.OpenWrite(inputOutput);
-                input.CopyTo(output);
-            }
-        }
     }
 
     private void MergeMals(TkChangelog[] changelogs)
