@@ -38,7 +38,7 @@ internal static class TkSdCardUtils
                     continue;
                 }
 
-                emummcNintendoPath = Path.Combine(sdCardFolderPath, line[4..]);
+                emummcNintendoPath = Path.Combine(sdCardFolderPath, line[5..]);
                 if (!Directory.Exists(emummcNintendoPath)) {
                     break;
                 }
