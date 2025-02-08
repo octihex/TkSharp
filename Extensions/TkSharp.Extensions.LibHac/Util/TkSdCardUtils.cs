@@ -1,3 +1,4 @@
+using LibHac;
 using LibHac.Common;
 using LibHac.Common.Keys;
 using LibHac.Fs.Fsa;
@@ -57,15 +58,11 @@ internal static class TkSdCardUtils
     CheckDumps:
         TkLog.Instance.LogDebug("[ROM *] [SD Card] Checking legacy dump folder.");
         string legacyNxDumpToolFolder = Path.Combine(sdCardFolderPath, "switch", "nxdumptool");
-        bool legacyDumpResult = CheckForDumps(keys, legacyNxDumpToolFolder, out bool legacyDumpHasUpdate, switchFsContainer);
-        if (!result) result = legacyDumpResult;
-        if (!hasUpdate) hasUpdate = legacyDumpHasUpdate;
+        CheckForDumps(keys, legacyNxDumpToolFolder, ref result, ref hasUpdate, switchFsContainer);
 
         TkLog.Instance.LogDebug("[ROM *] [SD Card] Checking new dump folder.");
         string nxDumpToolFolder = Path.Combine(sdCardFolderPath, "nxdt_rw_poc");
-        bool dumpResult = CheckForDumps(keys, nxDumpToolFolder, out bool dumpHasUpdate, switchFsContainer);
-        if (!result) result = dumpResult;
-        if (!hasUpdate) hasUpdate = dumpHasUpdate;
+        CheckForDumps(keys, nxDumpToolFolder, ref result, ref hasUpdate, switchFsContainer);
 
         return result;
     }
@@ -95,14 +92,13 @@ internal static class TkSdCardUtils
         return result;
     }
 
-    private static bool CheckForDumps(KeySet keys, string dumpFolder, out bool hasUpdate, SwitchFsContainer? switchFsContainer)
+    private static void CheckForDumps(KeySet keys, string dumpFolder, ref bool result, ref bool hasUpdate, SwitchFsContainer? switchFsContainer)
     {
         bool hasBaseGame = false;
-        hasUpdate = false;
+        bool dumpHasUpdate = false;
 
         if (!Directory.Exists(dumpFolder)) {
-            hasUpdate = false;
-            return false;
+            return;
         }
 
         foreach (string file in Directory.EnumerateFiles(dumpFolder, "*.*", SearchOption.AllDirectories)) {
@@ -110,8 +106,7 @@ internal static class TkSdCardUtils
                 continue;
             }
 
-            hasBaseGame = TkGameRomUtils.IsFileValid(keys, file, out hasUpdate, switchFsContainer);
-            if (hasBaseGame && hasUpdate) return true;
+            hasBaseGame = TkGameRomUtils.IsFileValid(keys, file, out dumpHasUpdate, switchFsContainer);
         }
 
         foreach (string file in Directory.EnumerateDirectories(dumpFolder, "*.*", SearchOption.AllDirectories)) {
@@ -119,10 +114,11 @@ internal static class TkSdCardUtils
                 continue;
             }
 
-            hasBaseGame = TkGameRomUtils.IsSplitFileValid(keys, file, out hasUpdate, switchFsContainer);
-            if (hasBaseGame && hasUpdate) return true;
+            hasBaseGame = TkGameRomUtils.IsSplitFileValid(keys, file, out dumpHasUpdate, switchFsContainer);
         }
-
-        return hasBaseGame;
+        
+    Result:
+        if (!result) result = hasBaseGame;
+        if (!hasUpdate) hasUpdate = dumpHasUpdate;
     }
 }
