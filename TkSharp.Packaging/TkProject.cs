@@ -34,8 +34,6 @@ public partial class TkProject(string folderPath) : ObservableObject
         TkLog.Instance.LogInformation("Packaging '{ModName}'", Mod.Name);
 
         ArchiveModWriter writer = new();
-        PackThumbnails(writer);
-        
         await Build(writer, rom, ct: ct);
         
         using MemoryStream contentArchiveOutput = new();
@@ -48,6 +46,8 @@ public partial class TkProject(string folderPath) : ObservableObject
 
     public async ValueTask Build(ITkModWriter writer, ITkRom rom, ITkSystemSource? systemSource = null, CancellationToken ct = default)
     {
+        PackThumbnails(writer);
+        
         FolderModSource source = new(FolderPath);
         Mod.Changelog = await Build(Mod, source, writer, rom, systemSource, ct);
 
