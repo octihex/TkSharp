@@ -5,6 +5,8 @@ namespace TkSharp.Core.Common;
 public class TkLocalizationInterface
 {
     public static Func<string, bool, string> GetLocale { get; set; } = (key, _) => key;
+    
+    public static Func<string, string> GetCultureName { get; set; } = culture => culture;
         
     public static readonly TkLocalizationInterface Locale = new();
 
@@ -21,5 +23,10 @@ public class TkLocalizationInterface
         }
 
         return translated;
+    }
+    
+    public static string GetCultureNameFromLocale(string culture)
+    {
+        return GetCultureName(culture);
     }
 }
