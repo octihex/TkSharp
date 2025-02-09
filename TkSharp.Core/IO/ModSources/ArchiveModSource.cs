@@ -25,6 +25,6 @@ public sealed class ArchiveModSource(IArchive archive, IArchiveEntry? rootEntry)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected override string GetFileName(IArchiveEntry input)
     {
-        return input.Key!;
+        return input.Key!.Replace('\\', '/');
     }
 }

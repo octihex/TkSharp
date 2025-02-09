@@ -45,7 +45,7 @@ public sealed class TkPackReader(ITkSystemProvider systemProvider) : ITkModReade
         while (reader.MoveToNextEntry()) {
             ZipEntry entry = reader.Entry;
             await using Stream archiveStream = reader.OpenEntryStream();
-            await using Stream output = writer.OpenWrite(entry.Key!);
+            await using Stream output = writer.OpenWrite(entry.Key!.Replace('\\', '/'));
             await archiveStream.CopyToAsync(output, ct);
         }
 
