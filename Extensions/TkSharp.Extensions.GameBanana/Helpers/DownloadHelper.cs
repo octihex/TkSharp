@@ -12,8 +12,8 @@ public static class DownloadHelper
     public static readonly HttpClient Client = new() {
         Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds)
     };
-    
-    public static DownloadReporter? Reporter { get; set; }
+
+    public static Stack<DownloadReporter> Reporters { get; } = [];
     
     public static event Func<Task> OnDownloadStarted = () => Task.CompletedTask;
     public static event Func<Task> OnDownloadCompleted = () => Task.CompletedTask;
@@ -45,7 +45,7 @@ public static class DownloadHelper
 
             try {
                 await OnDownloadStarted();
-                data = await strategy.GetBytesAndReportProgress(fileUrl, Reporter, ct);
+                data = await strategy.GetBytesAndReportProgress(fileUrl, Reporters.TryPeek(out DownloadReporter? reporter) ? reporter : null, ct);
                 hash = MD5.HashData(data);
             }
             catch (HttpRequestException ex) {
