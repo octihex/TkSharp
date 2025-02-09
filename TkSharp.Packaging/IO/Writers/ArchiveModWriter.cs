@@ -19,7 +19,7 @@ public sealed class ArchiveModWriter : ITkModWriter
         using ZipArchive writer = new(output, ZipArchiveMode.Create);
 
         foreach ((string fileName, MemoryStream ms) in _entries.OrderBy(entry => entry.Key)) {
-            using Stream entry = writer.CreateEntry(fileName).Open();
+            using Stream entry = writer.CreateEntry(fileName.Replace('\\', '/')).Open();
             entry.Write(ms.GetSpan());
             ms.Dispose();
         }
