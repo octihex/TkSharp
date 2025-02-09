@@ -117,7 +117,6 @@ internal static class TkSdCardUtils
             hasBaseGame = TkGameRomUtils.IsSplitFileValid(keys, file, out dumpHasUpdate, switchFsContainer);
         }
         
-    Result:
         if (!result) result = hasBaseGame;
         if (!hasUpdate) hasUpdate = dumpHasUpdate;
     }
