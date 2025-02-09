@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using LibHac.Common.Keys;
 using LibHac.Fs.Fsa;
 using LibHac.Tools.Fs;
@@ -6,6 +5,8 @@ using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Microsoft.Extensions.Logging;
 using TkSharp.Core;
+using TkSharp.Core.Common;
+using TkSharp.Core.Exceptions;
 using TkSharp.Core.IO;
 using TkSharp.Extensions.LibHac.IO;
 using TkSharp.Extensions.LibHac.Models;
@@ -24,21 +25,20 @@ public class TkExtensibleRomProvider : ITkRomProvider
         _checksums = checksums;
     }
 
-    public bool TryGetRom([MaybeNullWhen(false)] out ITkRom rom)
-    {
-        try {
-            rom = GetRom();
-            return true;
-        }
-        catch (Exception ex) {
-            TkLog.Instance.LogDebug(ex, "Unexpected error when retrieving the configured TotK rom (TkRom).");
-            rom = null;
-            return false;
-        }
-    }
-
     public ITkRom GetRom()
     {
+        if (TryGetRom(out _, out _, out string? error) is { } rom) {
+            return rom;
+        }
+
+        throw new GameRomException(error ?? "Failed to build ROM access interface (TkRom).");
+    }
+
+    public ITkRom? TryGetRom(out bool hasBaseGame, out bool hasUpdate, out string? error)
+    {
+        hasBaseGame = hasUpdate = true;
+        error = null;
+        
         _ = _config.PreferredVersion.Get(out string? preferredVersion);
 
         TkLog.Instance.LogDebug("[ROM *] Checking Extracted Game Dump");
@@ -49,7 +49,9 @@ public class TkExtensibleRomProvider : ITkRomProvider
 
         TkLog.Instance.LogDebug("[ROM *] Looking for Keys");
         if (TryGetKeys() is not KeySet keys) {
-            throw new ArgumentException("The TotK configuration could not be read because no prod.keys file is configured.");
+            hasBaseGame = hasUpdate = false;
+            error = TkLocalizationInterface.Locale["TkExtensibleRomProvider_MissingKeys"];
+            return null;
         }
 
         // Track a list of SwitchFs instances in use
@@ -91,7 +93,11 @@ public class TkExtensibleRomProvider : ITkRomProvider
             return new TkSwitchRom(fs, collected.AsFsList(), _checksums);
         }
 
-        throw new ArgumentException("Invalid or incomplete TotK configuration.");
+        hasBaseGame = main is not null;
+        hasUpdate = update is not null;
+        
+        error = TkLocalizationInterface.Locale["TkExtensibleRomProvider_InvalidConfig", !hasBaseGame, !hasUpdate];
+        return null;
     }
 
     private KeySet? TryGetKeys()
