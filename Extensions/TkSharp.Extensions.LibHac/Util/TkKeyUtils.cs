@@ -44,11 +44,10 @@ public static class TkKeyUtils
             ExternalKeyReader.ReadKeyFile(keys, titleKeysFilename: titleKeysFile, prodKeysFilename: keysFile);
             return keys;
         }
-        else {
-            KeySet keys = new();
-            ExternalKeyReader.ReadKeyFile(keys, prodKeysFilename: keysFile);
-            return keys;
-        }
+
+        KeySet keys = new();
+        ExternalKeyReader.ReadKeyFile(keys, prodKeysFilename: keysFile);
+        return keys;
     }
     
     private static KeySet? GetKeys(string sdCardRootPath)
