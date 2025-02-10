@@ -39,12 +39,14 @@ public static class TkKeyUtils
         }
         
         string titleKeysFile = Path.Combine(target, "title.keys");
-        if (!File.Exists(titleKeysFile)) {
-            return null;
+        if (File.Exists(titleKeysFile)) {
+            KeySet keys = new();
+            ExternalKeyReader.ReadKeyFile(keys, titleKeysFilename: titleKeysFile, prodKeysFilename: keysFile);
+            return keys;
         }
-        
+
         KeySet keys = new();
-        ExternalKeyReader.ReadKeyFile(keys, titleKeysFilename: titleKeysFile, prodKeysFilename: keysFile);
+        ExternalKeyReader.ReadKeyFile(keys, prodKeysFilename: keysFile);
         return keys;
     }
     
