@@ -16,9 +16,7 @@ public sealed class FolderModReader(ITkSystemProvider systemProvider, ITkRomProv
             return null;
         }
 
-        if (context.Id == Ulid.Empty) {
-            context.Id = Ulid.NewUlid();
-        }
+        context.EnsureId();
         
         FolderModSource source = new(directory);
         ITkModWriter writer = _systemProvider.GetSystemWriter(context);

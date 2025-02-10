@@ -36,8 +36,7 @@ public sealed class TkPackReader(ITkSystemProvider systemProvider) : ITkModReade
                 "Unexpected TotK mod pack version. Expected 1.0.0");
         }
 
-        TkMod result = TkBinaryReader.ReadTkMod(stream, _systemProvider);
-        context.Id = result.Id;
+        TkMod result = TkBinaryReader.ReadTkMod(stream, _systemProvider, context);
 
         ZipReader reader = ZipReader.Open(stream);
         

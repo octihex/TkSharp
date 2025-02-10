@@ -22,9 +22,7 @@ public sealed class ArchiveModReader(ITkSystemProvider systemProvider, ITkRomPro
             return null;
         }
 
-        if (context.Id == Ulid.Empty) {
-            context.Id = Ulid.NewUlid();
-        }
+        context.EnsureId();
         
         ArchiveModSource source = new(archive, root);
         ITkModWriter writer = _systemProvider.GetSystemWriter(context);

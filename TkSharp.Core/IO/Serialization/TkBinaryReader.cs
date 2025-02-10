@@ -7,14 +7,15 @@ namespace TkSharp.Core.IO.Serialization;
 
 public static class TkBinaryReader
 {
-    public static TkMod ReadTkMod(in Stream input, ITkSystemProvider systemProvider)
+    public static TkMod ReadTkMod(in Stream input, ITkSystemProvider systemProvider, TkModContext context = default)
     {
-        var id = input.Read<Ulid>();
-        string relativeModFolderPath = id.ToString();
+        context.EnsureId(input.Read<Ulid>());
+        
+        string relativeModFolderPath = context.Id.ToString();
         ITkSystemSource source = systemProvider.GetSystemSource(relativeModFolderPath);
         
         var result = new TkMod {
-            Id = id,
+            Id = context.Id,
             Name = input.ReadString()!,
             Description = input.ReadString()!,
             Thumbnail = ReadTkThumbnail(input),
