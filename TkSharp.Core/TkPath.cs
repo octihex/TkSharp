@@ -52,7 +52,7 @@ public readonly ref struct TkPath(ReadOnlySpan<char> canonical, int fileVersion,
 
         int rootLength = root[..5] switch {
             "romfs" or "exefs" => 5,
-            "cheat" when root[^1] is 's' => 6,
+            "cheat" or "extra" when root[^1] is 's' => 6,
             _ => -1
         };
 

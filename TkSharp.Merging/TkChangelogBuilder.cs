@@ -72,6 +72,8 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             case { Root: "exefs" }:
                 _changelog.ExeFiles.Add(canonical);
                 goto Copy;
+            case { Root: "extras" }:
+                goto Copy;
             case { Root: "cheats" }:
                 if (TkCheat.FromText(content, Path.GetFileNameWithoutExtension(canonical)) is var cheat and { Count: > 0 }) {
                     _changelog.CheatFiles.Add(cheat);
