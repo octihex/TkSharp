@@ -89,10 +89,12 @@ public sealed class GameBananaModReader(ITkModReaderProvider readerProvider) : I
         if (target is null) {
             return null;
         }
+        
+        var fileIdAsInt = (Int128)fileId;
 
         ITkModReader? reader = _readerProvider.GetReader(target.Name);
         context.EnsureId(
-            Unsafe.As<long, Ulid>(ref fileId)
+            Unsafe.As<Int128, Ulid>(ref fileIdAsInt)
         );
         
         byte[] data = await DownloadHelper.DownloadAndVerify(
