@@ -23,20 +23,13 @@ public class TkChangelogEntry(string canonical, ChangelogEntryType type, TkFileA
 
     public override bool Equals(object? obj)
     {
-        if (obj is not TkChangelogEntry entry) {
-            return false;
-        }
-
-        return entry.Canonical == Canonical &&
-               entry.Type == Type &&
-               entry.Attributes == Attributes &&
-               entry.ZsDictionaryId == ZsDictionaryId;
+        return obj is TkChangelogEntry entry && string.Equals(entry.Canonical, Canonical);
     }
 
     public override int GetHashCode()
     {
         // ReSharper disable once NonReadonlyMemberInGetHashCode
-        return HashCode.Combine(Canonical, Type, Attributes, ZsDictionaryId);
+        return HashCode.Combine(Canonical);
     }
 }
 
