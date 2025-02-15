@@ -18,7 +18,7 @@ public sealed class ArchiveModReader(ITkSystemProvider systemProvider, ITkRomPro
         }
         
         using IArchive archive = ArchiveFactory.Open(context.Stream);
-        if (!LocateRoot(archive, out IArchiveEntry? root)) {
+        if (!LocateRoot(archive, out string? root)) {
             return null;
         }
 
@@ -47,10 +47,8 @@ public sealed class ArchiveModReader(ITkSystemProvider systemProvider, ITkRomPro
                Path.GetExtension(path.AsSpan()) is ".zip" or ".rar";
     }
     
-    internal static bool LocateRoot(IArchive archive, out IArchiveEntry? root)
+    internal static bool LocateRoot(IArchive archive, out string? root)
     {
-        ReadOnlySpan<char> romfs = [];
-        
         foreach (IArchiveEntry entry in archive.Entries) {
             if (!entry.IsDirectory) {
                 continue;
@@ -61,36 +59,23 @@ public sealed class ArchiveModReader(ITkSystemProvider systemProvider, ITkRomPro
                 continue;
             }
             
-            ReadOnlySpan<char> normalizedKey = (key[^1] is '/' or '\\' ? key[..^1] : key)
+            ReadOnlySpan<char> normalizedKey = key[^1] is '/' or '\\' ? key[..^1] : key;
+            ReadOnlySpan<char> normalizedKeyLowercase = normalizedKey
                 .ToString()
-                .ToLower();
+                .ToLowerInvariant();
             
-            if (normalizedKey[..5] is "romfs" or "exefs" || normalizedKey[..6] is "cheats") {
+            if (normalizedKeyLowercase[..5] is "romfs" or "exefs" || normalizedKeyLowercase[..6] is "cheats" or "extras") {
                 root = null;
                 return true;
             }
             
-            if (Path.GetFileName(normalizedKey) is "romfs" or "exefs" or "cheats") {
-                romfs = key;
-                break;
-            }
-        }
-
-        if (romfs.IsEmpty) {
-            root = null;
-            return false;
-        }
-        
-        foreach (IArchiveEntry entry in archive.Entries) {
-            if (!entry.IsDirectory) {
-                continue;
-            }
-
-            ReadOnlySpan<char> key = entry.Key.AsSpan();
-
-            if (romfs.Length >= key.Length && romfs[..key.Length].SequenceEqual(key)) {
-                root = entry;
-                return true;
+            switch (Path.GetFileName(normalizedKeyLowercase)) {
+                case "romfs" or "exefs":
+                    root = normalizedKey[..^5].ToString();
+                    return true;
+                case "cheats" or "extras":
+                    root = normalizedKey[..^6].ToString();
+                    return true;
             }
         }
 

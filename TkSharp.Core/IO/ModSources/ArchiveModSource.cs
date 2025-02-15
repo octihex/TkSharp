@@ -3,13 +3,13 @@ using SharpCompress.Archives;
 
 namespace TkSharp.Core.IO.ModSources;
 
-public sealed class ArchiveModSource(IArchive archive, IArchiveEntry? rootEntry) : TkModSourceBase<IArchiveEntry>(rootEntry?.Key)
+public sealed class ArchiveModSource(IArchive archive, string? rootFolderPath) : TkModSourceBase<IArchiveEntry>(rootFolderPath)
 {
     private readonly IArchive _archive = archive;
-    private readonly IArchiveEntry? _rootEntry = rootEntry;
+    private readonly string? _rootFolderPath = rootFolderPath;
 
     protected override IEnumerable<IArchiveEntry> Files => _archive.Entries
-        .Where(entry => !entry.IsDirectory && (_rootEntry is null || entry.Key?.StartsWith(_rootEntry.Key!) is true));
+        .Where(entry => !entry.IsDirectory && (_rootFolderPath is null || entry.Key?.StartsWith(_rootFolderPath) is true));
 
     protected override Stream OpenRead(IArchiveEntry input)
     {

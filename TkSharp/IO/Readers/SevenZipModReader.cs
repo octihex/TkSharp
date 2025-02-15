@@ -19,7 +19,7 @@ public sealed class SevenZipModReader(ITkSystemProvider systemProvider, ITkRomPr
         }
         
         using SevenZipArchive archive = SevenZipArchive.Open(context.Stream);
-        if (!ArchiveModReader.LocateRoot(archive, out IArchiveEntry? root)) {
+        if (!ArchiveModReader.LocateRoot(archive, out string? root)) {
             return null;
         }
 
