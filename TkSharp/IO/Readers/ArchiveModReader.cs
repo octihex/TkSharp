@@ -88,7 +88,7 @@ public sealed class ArchiveModReader(ITkSystemProvider systemProvider, ITkRomPro
 
             ReadOnlySpan<char> key = entry.Key.AsSpan();
 
-            if (romfs.Length > key.Length && romfs[..key.Length].SequenceEqual(key)) {
+            if (romfs.Length >= key.Length && romfs[..key.Length].SequenceEqual(key)) {
                 root = entry;
                 return true;
             }
