@@ -4,9 +4,9 @@ public class TkModContext(Ulid id = default, object? input = null, Stream? strea
 {
     public Ulid Id { get; private set; } = id;
 
-    public object? Input { get; } = input;
+    public object? Input { get; set; } = input;
 
-    public Stream? Stream { get; } = stream;
+    public Stream? Stream { get; set; } = stream;
 
     /// <summary>
     /// Attempt to set the context <see cref="Id"/> to a new <see cref="Ulid"/> if not already set.
