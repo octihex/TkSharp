@@ -166,6 +166,13 @@ public sealed partial class TkProfile : TkItem
         }
     }
 
+    public void EnsureOptionSelection()
+    {
+        foreach (TkProfileMod profileMod in Mods) {
+            profileMod.EnsureOptionSelection();
+        }
+    }
+
     public static void OnStateChanged()
     {
         StateChanged();
