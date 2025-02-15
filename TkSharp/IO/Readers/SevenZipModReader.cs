@@ -12,13 +12,13 @@ public sealed class SevenZipModReader(ITkSystemProvider systemProvider, ITkRomPr
     private readonly ITkSystemProvider _systemProvider = systemProvider;
     private readonly ITkRomProvider _romProvider = romProvider;
 
-    public async ValueTask<TkMod?> ReadMod(object? input, Stream? stream = null, TkModContext context = default, CancellationToken ct = default)
+    public async ValueTask<TkMod?> ReadMod(TkModContext context, CancellationToken ct = default)
     {
-        if (input is not string fileName || stream is null) {
+        if (context.Input is not string fileName || context.Stream is null) {
             return null;
         }
         
-        using SevenZipArchive archive = SevenZipArchive.Open(stream);
+        using SevenZipArchive archive = SevenZipArchive.Open(context.Stream);
         if (!ArchiveModReader.LocateRoot(archive, out IArchiveEntry? root)) {
             return null;
         }

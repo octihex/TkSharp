@@ -11,15 +11,14 @@ namespace TkSharp.IO.Readers;
 public sealed class TkPackReader(ITkSystemProvider systemProvider) : ITkModReader
 {
     private readonly ITkSystemProvider _systemProvider = systemProvider;
-
-    public async ValueTask<TkMod?> ReadMod(object? input, Stream? stream = null, TkModContext context = default, CancellationToken ct = default)
+    
+    public ValueTask<TkMod?> ReadMod(TkModContext context, CancellationToken ct = default)
     {
-        if (input is not string) {
-            throw new ArgumentException(
-                "Input value must be a string.", nameof(input)
-            );
-        }
+        return ReadMod(context, context.Stream, ct);
+    }
 
+    public async ValueTask<TkMod?> ReadMod(TkModContext context, Stream? stream = null, CancellationToken ct = default)
+    {
         if (stream is null) {
             throw new ArgumentException(
                 "Input stream must not be null.", nameof(stream)
@@ -36,7 +35,7 @@ public sealed class TkPackReader(ITkSystemProvider systemProvider) : ITkModReade
                 "Unexpected TotK mod pack version. Expected 1.0.0");
         }
 
-        TkMod result = TkBinaryReader.ReadTkMod(stream, _systemProvider, context);
+        TkMod result = TkBinaryReader.ReadTkMod(context, stream, _systemProvider);
 
         ZipReader reader = ZipReader.Open(stream);
         

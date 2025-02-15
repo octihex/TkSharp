@@ -7,7 +7,7 @@ namespace TkSharp.Core.IO.Serialization;
 
 public static class TkBinaryReader
 {
-    public static TkMod ReadTkMod(in Stream input, ITkSystemProvider systemProvider, TkModContext context = default)
+    public static TkMod ReadTkMod(TkModContext context, in Stream input, ITkSystemProvider systemProvider)
     {
         context.EnsureId(input.Read<Ulid>());
         

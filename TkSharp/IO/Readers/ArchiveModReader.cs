@@ -11,13 +11,13 @@ public sealed class ArchiveModReader(ITkSystemProvider systemProvider, ITkRomPro
     private readonly ITkSystemProvider _systemProvider = systemProvider;
     private readonly ITkRomProvider _romProvider = romProvider;
 
-    public async ValueTask<TkMod?> ReadMod(object? input, Stream? stream = null, TkModContext context = default, CancellationToken ct = default)
+    public async ValueTask<TkMod?> ReadMod(TkModContext context, CancellationToken ct = default)
     {
-        if (input is not string fileName || stream is null) {
+        if (context.Input is not string fileName || context.Stream is null) {
             return null;
         }
         
-        using IArchive archive = ArchiveFactory.Open(stream);
+        using IArchive archive = ArchiveFactory.Open(context.Stream);
         if (!LocateRoot(archive, out IArchiveEntry? root)) {
             return null;
         }

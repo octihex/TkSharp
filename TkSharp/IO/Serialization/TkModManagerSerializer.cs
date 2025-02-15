@@ -53,7 +53,7 @@ internal static class TkModManagerSerializer
         int modCount = input.Read<int>();
         for (int i = 0; i < modCount; i++) {
             manager.Mods.Add(
-                TkBinaryReader.ReadTkMod(input, manager)
+                TkBinaryReader.ReadTkMod(new TkModContext(), input, manager)
             );
         }
         

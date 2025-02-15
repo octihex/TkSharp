@@ -1,8 +1,12 @@
 namespace TkSharp.Core.Models;
 
-public struct TkModContext(Ulid id)
+public class TkModContext(Ulid id = default, object? input = null, Stream? stream = null)
 {
     public Ulid Id { get; private set; } = id;
+
+    public object? Input { get; } = input;
+
+    public Stream? Stream { get; } = stream;
 
     /// <summary>
     /// Attempt to set the context <see cref="Id"/> to a new <see cref="Ulid"/> if not already set.
