@@ -304,29 +304,28 @@ public sealed class TkMerger
             )
             .GroupBy(
                 tuple => tuple.Entry,
-                tuple => tuple.Changelog
+                tuple => (tuple.Entry, tuple.Changelog)
             )
             .Select(GetInputs);
     }
 
-    private MergeTarget GetInputs(IGrouping<TkChangelogEntry, TkChangelog> group)
+    private MergeTarget GetInputs(IGrouping<TkChangelogEntry, (TkChangelogEntry Entry, TkChangelog Changelog)> group)
     {
-        string relativeFilePath = GetRelativeRomFsPath(group.Key);
-
         if (GetMerger(group.Key.Canonical) is ITkMerger merger) {
             return (
                 Changelog: group.Key,
                 Target: (Merger: merger,
                     Streams: group
-                        .Select(changelog => changelog.Source!.OpenRead(relativeFilePath))
+                        .Select(changelog => changelog.Changelog.Source!.OpenRead(GetRelativeRomFsPath(changelog.Entry)))
                         .ToArray()
                 )
             );
         }
 
+        string relativeFilePath = GetRelativeRomFsPath(group.Key);
         return (
             Changelog: group.Key,
-            Target: group.Last().Source!.OpenRead(relativeFilePath)
+            Target: group.Last().Changelog.Source!.OpenRead(relativeFilePath)
         );
     }
 
