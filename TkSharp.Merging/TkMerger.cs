@@ -46,7 +46,7 @@ public sealed class TkMerger
         ];
 
         await Task.WhenAll(tasks);
-        
+
         _resourceSizeCollector.Write();
     }
 
@@ -68,7 +68,7 @@ public sealed class TkMerger
         foreach ((TkChangelogEntry changelog, Either<(ITkMerger, Stream[]), Stream> target) in GetTargets(tkChangelogs)) {
             MergeTarget(changelog, target);
         }
-        
+
         _resourceSizeCollector.Write();
     }
 
@@ -108,7 +108,7 @@ public sealed class TkMerger
 
         CopyMergedToOutput(output, relativeFilePath, changelog);
     }
-    
+
     public static void MergeCheats(ITkModWriter mergeOutput, IEnumerable<TkChangelog> changelogs)
     {
         IEnumerable<IGrouping<string, TkCheat>> allCheats = changelogs
@@ -120,9 +120,9 @@ public sealed class TkMerger
             foreach ((string key, uint[][] bin) in cheats.SelectMany(x => x.Select(cheat => (cheat.Key, cheat.Value)))) {
                 merged[key] = bin;
             }
-            
+
             string outputFile = Path.Combine("cheats", $"{cheats.Key}.txt");
-            
+
             using Stream output = mergeOutput.OpenWrite(outputFile);
             using StreamWriter writer = new(output);
             merged.WriteText(writer);
@@ -186,7 +186,7 @@ public sealed class TkMerger
             using RentedBuffer<byte> alloc = _rom.Zstd.Decompress(stream);
             return alloc.Segment;
         }), changelog.Attributes);
-        
+
         merger.Merge(changelog, changelogs, fakeVanilla.Segment, output);
     }
 
@@ -221,7 +221,7 @@ public sealed class TkMerger
             output.Write(raw);
             return;
         }
-        
+
         using SpanOwner<byte> decompressed = SpanOwner<byte>.Allocate(TkZstd.GetDecompressedSize(raw));
         Span<byte> data = decompressed.Span;
         _rom.Zstd.Decompress(raw, data);
@@ -255,7 +255,7 @@ public sealed class TkMerger
                 .Where(patch => patch.NsoBinaryId.Equals(_rom.NsoBinaryId, StringComparison.InvariantCultureIgnoreCase)));
 
         var merged = TkPatch.CreateWithDefaults(_rom.NsoBinaryId, shopParamLimit: 512);
-        
+
         foreach (TkPatch patch in versionMatchedPatchFiles) {
             foreach ((uint key, uint value) in patch.Entries) {
                 merged.Entries[key] = value;
@@ -311,7 +311,7 @@ public sealed class TkMerger
 
     private MergeTarget GetInputs(IGrouping<TkChangelogEntry, TkChangelog> group)
     {
-        string relativeFilePath = Path.Combine("romfs", group.Key.Canonical);
+        string relativeFilePath = GetRelativeRomFsPath(group.Key);
 
         if (GetMerger(group.Key.Canonical) is ITkMerger merger) {
             return (
@@ -361,5 +361,38 @@ public sealed class TkMerger
                 _ => null
             }
         };
+    }
+
+    private string GetRelativeRomFsPath(TkChangelogEntry entry)
+    {
+        ReadOnlySpan<char> canon = entry.Canonical;
+
+        if (entry.Versions.Count == 0) {
+            return Path.Combine("romfs", entry.Canonical);
+        }
+
+        // ReSharper disable once ConvertIfStatementToSwitchStatement
+        if (canon.Length > 15 && canon[..15] is "Event/EventFlow") {
+            ReadOnlySpan<char> eventName = Path.GetFileNameWithoutExtension(canon);
+            int targetVersion = _rom.EventFlowVersions.TryGetValue(eventName, out string? version)
+                ? GetBestVersion(int.Parse(version), entry.Versions)
+                : entry.Versions[0];
+            return Path.Combine("romfs", $"{entry.Canonical}{targetVersion}");
+        }
+
+        if (canon.Length > 6 && canon[..6] is "Effect") {
+            ReadOnlySpan<char> effectName = Path.GetFileNameWithoutExtension(canon);
+            int targetVersion = _rom.EffectVersions.TryGetValue(effectName, out string? version)
+                ? GetBestVersion(int.Parse(version.AsSpan()[^3..]), entry.Versions)
+                : entry.Versions[0];
+            return Path.Combine("romfs", $"{entry.Canonical}{targetVersion}");
+        }
+        
+        return Path.Combine("romfs", $"{entry.Canonical}{GetBestVersion(_rom.GameVersion, entry.Versions)}");
+    }
+
+    private static int GetBestVersion(int target, List<int> provided)
+    {
+        return provided.LastOrDefault(version => target >= version, provided[0]);
     }
 }

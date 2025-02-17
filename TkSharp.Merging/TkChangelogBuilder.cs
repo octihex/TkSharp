@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using TkSharp.Core;
 using TkSharp.Core.Extensions;
 using TkSharp.Core.IO.Buffers;
@@ -11,6 +12,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
     private readonly ITkModSource _source = source;
     private readonly ITkModWriter _writer = writer;
     private readonly ITkRom _tk = tk;
+    private readonly Dictionary<string, TkChangelogEntry> _entries = [];
 
     private readonly TkChangelog _changelog = new() {
         BuilderVersion = 100,
@@ -25,6 +27,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             ))
             .ConfigureAwait(false);
 
+        InsertEntries();
         return _changelog;
     }
 
@@ -39,6 +42,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             BuildTarget(file, entry);
         }
 
+        InsertEntries();
         return _changelog;
     }
 
@@ -97,7 +101,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
 
     Build:
         if (GetChangelogBuilder(path) is not ITkChangelogBuilder builder) {
-            AddChangelogMetadata(path, canonical, ChangelogEntryType.Copy, zsDictionaryId: -1);
+            AddChangelogMetadata(path, ref canonical, ChangelogEntryType.Copy, zsDictionaryId: -1, path.FileVersion);
             goto Copy;
         }
 
@@ -123,7 +127,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             = _tk.GetVanilla(canonical, path.Attributes);
 
         if (vanilla.IsEmpty) {
-            AddChangelogMetadata(path, canonical, ChangelogEntryType.Copy, zsDictionaryId);
+            AddChangelogMetadata(path, ref canonical, ChangelogEntryType.Copy, zsDictionaryId, path.FileVersion);
             outputFilePath = Path.Combine(path.Root.ToString(), canonical);
             using Stream output = _writer.OpenWrite(outputFilePath);
             output.Write(raw.Span);
@@ -131,7 +135,7 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         }
 
         builder.Build(canonical, path, decompressed.IsEmpty ? raw.Segment : decompressed.Segment, vanilla.Segment, (path, canon) => {
-            AddChangelogMetadata(path, canon, ChangelogEntryType.Changelog, zsDictionaryId);
+            AddChangelogMetadata(path, ref canon, ChangelogEntryType.Changelog, zsDictionaryId, path.FileVersion);
             string outputFile = Path.Combine(path.Root.ToString(), canon);
             return _writer.OpenWrite(outputFile);
         });
@@ -155,18 +159,24 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         }
     }
 
-    private void AddChangelogMetadata(in TkPath path, string canonical, ChangelogEntryType type, int zsDictionaryId)
+    private void AddChangelogMetadata(in TkPath path, ref string canonical, ChangelogEntryType type, int zsDictionaryId, int fileVersion)
     {
         if (path.Canonical.Length > 4 && path.Canonical[..4] is "Mals") {
             _changelog.MalsFiles.Add(canonical);
             return;
         }
 
-        _changelog.ChangelogFiles.Add(
-            new TkChangelogEntry(
+        ref TkChangelogEntry? entry = ref CollectionsMarshal.GetValueRefOrAddDefault(_entries, canonical, out bool exists);
+        if (!exists || entry is null) {
+            entry = new TkChangelogEntry(
                 canonical, type, path.Attributes, zsDictionaryId
-            )
-        );
+            );
+        }
+
+        if (fileVersion != -1) {
+            entry.Versions.Add(fileVersion);
+            canonical += fileVersion.ToString();
+        }
     }
 
     internal static ITkChangelogBuilder? GetChangelogBuilder(in TkPath path)
@@ -201,5 +211,10 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             { Extension: ".byml" } when path.Canonical[..4] is not "RSDB" && path.Canonical[..8] is not "GameData" => BymlChangelogBuilder.Instance,
             _ => null
         };
+    }
+    
+    private void InsertEntries()
+    {
+        _changelog.ChangelogFiles.AddRange(_entries.Values);
     }
 }

@@ -77,16 +77,26 @@ public static class TkPathExtensions
         for (int i = 0; i < size; i++) {
             ref char @char = ref canonical[i];
 
-            if (@char is '.' && size - i > 8 && canonical[i..(i + 8)] is ".Product") {
-                attributes |= TkFileAttributes.IsProductFile;
-                size -= 4;
-                i += 8;
-                fileVersion = int.Parse(canonical[(i + 1)..(i + 4)]);
-                state = State.SkipProductPart;
+            if (@char is '.') {
+                switch (size - i) {
+                    case > 2 when canonical[i..(i + 2)] is ".1" && (canonical.Length < 5 || canonical[^5..] is not ".txtg"):
+                        attributes |= TkFileAttributes.IsProductFile;
+                        size -= 4;
+                        fileVersion = int.Parse(canonical[(i + 1)..(i + 4)]);
+                        state = State.SkipVersion;
+                        break;
+                    case > 8 when canonical[i..(i + 8)] is ".Product":
+                        attributes |= TkFileAttributes.IsProductFile;
+                        size -= 4;
+                        i += 8;
+                        fileVersion = int.Parse(canonical[(i + 1)..(i + 4)]);
+                        state = State.SkipVersion;
+                        break;
+                }
             }
 
             @char = state switch {
-                0 => @char,
+                State.Default => @char,
                 _ => @char = canonical[i + 4]
             };
 
@@ -106,5 +116,5 @@ public static class TkPathExtensions
 file enum State
 {
     Default = 0,
-    SkipProductPart = 1
+    SkipVersion = 1
 }

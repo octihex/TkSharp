@@ -32,6 +32,7 @@ public static class TkChangelogWriter
             output.Write(changelog.Type);
             output.Write(changelog.Attributes);
             output.Write(changelog.ZsDictionaryId);
+            WriteVersions(output, changelog.Versions);
         }
     }
 
@@ -64,6 +65,15 @@ public static class TkChangelogWriter
 
         foreach (string file in files) {
             output.WriteString(file);
+        }
+    }
+    
+    private static void WriteVersions(Stream output, List<int> list)
+    {
+        output.Write((byte)list.Count);
+
+        foreach (int fileVersion in list) {
+            output.Write(fileVersion);
         }
     }
 }

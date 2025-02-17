@@ -28,7 +28,7 @@ public interface ITkRom : IDisposable
             : canonical;
 
         ReadOnlySpan<char> canon = result.AsSpan();
-        if (canon.Length > 26 && canon[..15] is EVENT_FLOW_FOLDER && canon[16..^11] is var eventFlowName
+        if (canon.Length > 26 && canon[..15] is EVENT_FLOW_FOLDER && canon[16..^7] is var eventFlowName
             && EventFlowVersions.TryGetValue(eventFlowName, out string? version)) {
             result = $"{EVENT_FLOW_FOLDER}/{eventFlowName}.{version}{Path.GetExtension(canon)}";
         }

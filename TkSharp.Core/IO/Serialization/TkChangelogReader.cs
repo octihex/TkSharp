@@ -27,7 +27,8 @@ public static class TkChangelogReader
                     input.ReadString()!,
                     input.Read<ChangelogEntryType>(),
                     input.Read<TkFileAttributes>(),
-                    input.Read<int>()
+                    input.Read<int>(),
+                    ReadVersions(input)
                 )
             );
         }
@@ -53,6 +54,17 @@ public static class TkChangelogReader
         ReadFileList(input, result.Reserved1);
         ReadFileList(input, result.Reserved2);
         
+        return result;
+    }
+
+    private static List<int> ReadVersions(Stream input)
+    {
+        int count = input.Read<byte>();
+        List<int> result = new(count);
+        for (int i = 0; i < count; i++) {
+            result.Add(input.Read<int>());
+        }
+
         return result;
     }
 
