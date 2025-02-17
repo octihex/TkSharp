@@ -11,7 +11,7 @@ public sealed partial class TkMod : TkStoredItem
     /// The version of this mod.
     /// </summary>
     [ObservableProperty]
-    private string _version = string.Empty;
+    private string _version = "1.0.0";
     
     /// <summary>
     /// The author of this mod.
