@@ -1,3 +1,4 @@
+using System.Buffers;
 using SharpCompress.Archives;
 using TkSharp.Core;
 using TkSharp.Core.IO.ModSources;
@@ -8,6 +9,9 @@ namespace TkSharp.IO.Readers;
 
 public sealed class ArchiveModReader(ITkSystemProvider systemProvider, ITkRomProvider romProvider) : ITkModReader
 {
+    private static readonly SearchValues<string> _validFoldersSearchValues = SearchValues.Create(
+        ["romfs", "exefs", "cheats", "extras"], StringComparison.OrdinalIgnoreCase);
+    
     private readonly ITkSystemProvider _systemProvider = systemProvider;
     private readonly ITkRomProvider _romProvider = romProvider;
 
@@ -50,10 +54,6 @@ public sealed class ArchiveModReader(ITkSystemProvider systemProvider, ITkRomPro
     internal static bool LocateRoot(IArchive archive, out string? root)
     {
         foreach (IArchiveEntry entry in archive.Entries) {
-            if (!entry.IsDirectory) {
-                continue;
-            }
-
             ReadOnlySpan<char> key = entry.Key.AsSpan();
             if (key.Length < 5) {
                 continue;
@@ -69,14 +69,25 @@ public sealed class ArchiveModReader(ITkSystemProvider systemProvider, ITkRomPro
                 return true;
             }
             
-            switch (Path.GetFileName(normalizedKeyLowercase)) {
-                case "romfs" or "exefs":
-                    root = normalizedKey[..^5].ToString();
-                    return true;
-                case "cheats" or "extras":
-                    root = normalizedKey[..^6].ToString();
-                    return true;
+            if (entry.IsDirectory) {
+                switch (Path.GetFileName(normalizedKeyLowercase)) {
+                    case "romfs" or "exefs":
+                        root = normalizedKey[..^5].ToString();
+                        return true;
+                    case "cheats" or "extras":
+                        root = normalizedKey[..^6].ToString();
+                        return true;
+                }
+                
+                continue;
             }
+
+            if (normalizedKeyLowercase.IndexOfAny(_validFoldersSearchValues) is var index && index is -1) {
+                continue;
+            }
+
+            root = normalizedKey[..index].ToString();
+            return true;
         }
 
         root = null;
