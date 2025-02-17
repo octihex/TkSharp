@@ -33,7 +33,7 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
 
         int newEntryOffset = 0;
 
-        foreach (int i in entry.Removals) {
+        foreach (int i in entry.Removals.Where(i => @base.Count > i)) {
             @base[i] = BymlChangeType.Remove;
         }
 
