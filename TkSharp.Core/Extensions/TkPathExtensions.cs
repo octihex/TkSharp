@@ -82,8 +82,10 @@ public static class TkPathExtensions
                     case > 2 when canonical[i..(i + 2)] is ".1" && (canonical.Length < 5 || canonical[^5..] is not ".txtg"):
                         attributes |= TkFileAttributes.IsProductFile;
                         size -= 4;
-                        fileVersion = int.Parse(canonical[(i + 1)..(i + 4)]);
-                        state = State.SkipVersion;
+                        if (int.TryParse(canonical[(i + 1)..(i + 4)], out int version)) {
+                            fileVersion = version;
+                            state = State.SkipVersion;
+                        }
                         break;
                     case > 8 when canonical[i..(i + 8)] is ".Product":
                         attributes |= TkFileAttributes.IsProductFile;
