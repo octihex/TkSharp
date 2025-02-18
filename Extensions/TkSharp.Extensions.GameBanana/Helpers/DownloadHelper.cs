@@ -13,7 +13,13 @@ public static class DownloadHelper
         Timeout = TimeSpan.FromSeconds(Config.TimeoutSeconds)
     };
 
-    public static Stack<DownloadReporter> Reporters { get; } = [];
+    static DownloadHelper() {
+        Client.DefaultRequestHeaders.UserAgent.ParseAdd("tkmm-client-application");
+        Client.DefaultRequestHeaders.Accept.Clear();
+        Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/octet-stream"));
+    }
+
+    public static Stack<DownloadReporter> Reporters { get; } = new();
     
     public static event Func<Task> OnDownloadStarted = () => Task.CompletedTask;
     public static event Func<Task> OnDownloadCompleted = () => Task.CompletedTask;
