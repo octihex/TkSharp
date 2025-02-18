@@ -64,11 +64,11 @@ public class BymlNameHashArrayChangelogBuilder : Singleton<BymlNameHashArrayChan
         return changelog.Count == 0;
     }
 
-    private static bool TryGetIndex<T>(IList<Byml> list, T element, out int index) where T : IEquatable<T>
+    private static bool TryGetIndex<T>(BymlArray list, T element, out int index) where T : IEquatable<T>
     {
         int len = list.Count;
         for (int i = 0; i < len; i++) {
-            if (list[i].Value is not BymlMap map || !map[KEY].Get<T>().Equals(element)) {
+            if (list[i].Value is not BymlMap map || !map[KEY].Value?.Equals(element) is true) {
                 continue;
             }
 
