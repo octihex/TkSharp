@@ -116,6 +116,10 @@ public static class TkGameRomUtils
 
     public static IEnumerable<(Application TotK, string FilePath)> ScanFolder(string target, KeySet keys)
     {
+        if (!Directory.Exists(target)) {
+            yield break;
+        }
+        
         foreach (string file in Directory.EnumerateFiles(target, "*.*", SearchOption.AllDirectories)) {
             ReadOnlySpan<char> ext = Path.GetExtension(file.AsSpan());
             if (ext is not (".xci" or ".nsp")) {
