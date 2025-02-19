@@ -102,7 +102,7 @@ public class BymlMergeTracking(string canonical) : Dictionary<BymlArray, BymlMer
                 int index = MergeKeyedAdditions(existingEntry, entries, ref newEntryOffset, @base, insertIndex, ref info);
                 existingEntry = BymlChangeType.Remove;
                 keyedAdditions[key] = index;
-                return;
+                continue;
             }
 
             int insertResult;
