@@ -129,8 +129,6 @@ public class TkExtensibleRomProvider : ITkRomProvider
             if (TkKeyUtils.TryGetKeys(sdCardFolder, out KeySet? keyFromSdCard)) {
                 return keyFromSdCard;
             }
-
-            ;
         }
 
         TkLog.Instance.LogDebug("[ROM *] Looking for roaming keys");
