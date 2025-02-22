@@ -96,7 +96,7 @@ public class TkExtensibleRomProvider : ITkRomProvider
         hasBaseGame = main is not null;
         hasUpdate = update is not null;
         
-        error = TkLocalizationInterface.Locale["TkExtensibleRomProvider_InvalidConfig", !hasBaseGame, !hasUpdate];
+        error = TkLocalizationInterface.Locale["TkExtensibleRomProvider_InvalidConfig", hasBaseGame, hasUpdate];
         return null;
     }
 
