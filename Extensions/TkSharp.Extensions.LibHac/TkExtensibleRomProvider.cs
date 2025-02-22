@@ -42,8 +42,17 @@ public class TkExtensibleRomProvider : ITkRomProvider
         _ = _config.PreferredVersion.Get(out string? preferredVersion);
 
         TkLog.Instance.LogDebug("[ROM *] Checking Extracted Game Dump");
-        if (_config.ExtractedGameDumpFolderPath.Get(out IEnumerable<string>? extractedGameDumpPaths)
-            && GetPreferred(extractedGameDumpPaths, preferredVersion) is string extractedGameDumpPath) {
+        if (_config.ExtractedGameDumpFolderPath.Get(out IEnumerable<string>? extractedGameDumpPaths)) {
+            if (GetPreferred(extractedGameDumpPaths, preferredVersion, out int version) is not string extractedGameDumpPath) {
+                error = TkLocalizationInterface.Locale["TkExtensibleRomProvider_InvalidGameDump"];
+                return null;
+            }
+
+            if (version < 110) {
+                error = TkLocalizationInterface.Locale["TkExtensibleRomProvider_InvalidGameDumpVersion"];
+                return null;
+            }
+            
             return new ExtractedTkRom(extractedGameDumpPath, _checksums);
         }
 
@@ -165,20 +174,27 @@ public class TkExtensibleRomProvider : ITkRomProvider
         return new TkSwitchRom(fs, collected.AsFsList(), _checksums);
     }
 
-    private static string? GetPreferred(IEnumerable<string> extractedGameDumpPaths, string? preferredVersion)
+    private static string? GetPreferred(IEnumerable<string> extractedGameDumpPaths, string? preferredVersion, out int foundVersion)
     {
         int? parsedVersion = int.TryParse(preferredVersion?.Replace(".", string.Empty), out int parsedVersionInline)
             ? parsedVersionInline
             : null;
 
+        foundVersion = -1;
+
         if (parsedVersion is not int version) {
-            return extractedGameDumpPaths
-                .FirstOrDefault(path => TkGameDumpUtils.CheckGameDump(path, out bool hasUpdate) && hasUpdate);
+            foreach (string path in extractedGameDumpPaths) {
+                if (TkGameDumpUtils.CheckGameDump(path, out _, out foundVersion)) {
+                    return path;
+                }
+            }
+
+            return null;
         }
 
         string? result = null;
         foreach (string gameDumpPath in extractedGameDumpPaths) {
-            if (!TkGameDumpUtils.CheckGameDump(gameDumpPath, out bool hasUpdate, out int foundVersion) || !hasUpdate) {
+            if (!TkGameDumpUtils.CheckGameDump(gameDumpPath, out _, out foundVersion)) {
                 continue;
             }
             
