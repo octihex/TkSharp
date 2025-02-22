@@ -38,7 +38,7 @@ public class TkExtensibleRomProvider : ITkRomProvider
     {
         hasBaseGame = hasUpdate = true;
         error = null;
-        
+
         _ = _config.PreferredVersion.Get(out string? preferredVersion);
 
         TkLog.Instance.LogDebug("[ROM *] Checking Extracted Game Dump");
@@ -52,7 +52,7 @@ public class TkExtensibleRomProvider : ITkRomProvider
                 error = TkLocalizationInterface.Locale["TkExtensibleRomProvider_InvalidGameDumpVersion"];
                 return null;
             }
-            
+
             return new ExtractedTkRom(extractedGameDumpPath, _checksums);
         }
 
@@ -95,16 +95,22 @@ public class TkExtensibleRomProvider : ITkRomProvider
                     preferredVersion);
             }
 
-            TkLog.Instance.LogDebug("[ROM *] Configuration Valid (Mixed)");
-            IFileSystem fs = main.MainNca.Nca
-                .OpenFileSystemWithPatch((update ?? alternateUpdate)!.MainNca.Nca,
-                    NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
-            return new TkSwitchRom(fs, collected.AsFsList(), _checksums);
+            try {
+                TkLog.Instance.LogDebug("[ROM *] Configuration Valid (Mixed)");
+                IFileSystem fs = main.MainNca.Nca
+                    .OpenFileSystemWithPatch((update ?? alternateUpdate)!.MainNca.Nca,
+                        NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
+                return new TkSwitchRom(fs, collected.AsFsList(), _checksums);
+            }
+            catch (Exception ex) {
+                TkLog.Instance.LogError(ex, "[ROM *] Configuration Error");
+                return null;
+            }
         }
 
         hasBaseGame = main is not null;
         hasUpdate = update is not null;
-        
+
         error = TkLocalizationInterface.Locale["TkExtensibleRomProvider_InvalidConfig", hasBaseGame, hasUpdate];
         return null;
     }
@@ -117,12 +123,14 @@ public class TkExtensibleRomProvider : ITkRomProvider
                 return keyFromFolder;
             }
         }
-        
+
         if (_config.SdCard.Get(out string? sdCardFolder)) {
             TkLog.Instance.LogDebug("[ROM *] Looking for Keys in SD card '{SdCard}'", sdCardFolder);
             if (TkKeyUtils.TryGetKeys(sdCardFolder, out KeySet? keyFromSdCard)) {
                 return keyFromSdCard;
-            };
+            }
+
+            ;
         }
 
         TkLog.Instance.LogDebug("[ROM *] Looking for roaming keys");
@@ -168,10 +176,16 @@ public class TkExtensibleRomProvider : ITkRomProvider
         return null;
 
     IsValid:
-        TkLog.Instance.LogDebug("[ROM *] Configuration Valid");
-        IFileSystem fs = main.MainNca.Nca
-            .OpenFileSystemWithPatch(update.MainNca.Nca, NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
-        return new TkSwitchRom(fs, collected.AsFsList(), _checksums);
+        try {
+            TkLog.Instance.LogDebug("[ROM *] Configuration Valid");
+            IFileSystem fs = main.MainNca.Nca
+                .OpenFileSystemWithPatch(update.MainNca.Nca, NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
+            return new TkSwitchRom(fs, collected.AsFsList(), _checksums);
+        }
+        catch (Exception ex) {
+            TkLog.Instance.LogError(ex, "[ROM *] Configuration Error");
+            return null;
+        }
     }
 
     private static string? GetPreferred(IEnumerable<string> extractedGameDumpPaths, string? preferredVersion, out int foundVersion)
@@ -197,7 +211,7 @@ public class TkExtensibleRomProvider : ITkRomProvider
             if (!TkGameDumpUtils.CheckGameDump(gameDumpPath, out _, out foundVersion)) {
                 continue;
             }
-            
+
             result = gameDumpPath;
 
             if (foundVersion == version) {
