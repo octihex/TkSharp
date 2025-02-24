@@ -1,3 +1,4 @@
+using LibHac;
 using LibHac.Common;
 using LibHac.Common.Keys;
 using LibHac.Fs;
@@ -41,7 +42,10 @@ public static class FileSystemExtensions
     {
         SharedRef<IStorage> storageShared = new(storage);
         SharedRef<IFileSystem> outputFs = new();
-        new PartitionFileSystemCreator().Create(ref outputFs, ref storageShared);
+        
+        new PartitionFileSystemCreator()
+            .Create(ref outputFs, ref storageShared)
+            .ThrowIfFailure();
 
         ImportTikFiles(keys, outputFs.Get);
         return SwitchFs.OpenNcaDirectory(keys, outputFs.Get);
