@@ -137,8 +137,8 @@ public static class TkGameRomUtils
                     continue;
                 }
             }
-            catch (Exception) {
-                TkLog.Instance.LogDebug($"The file {Path.GetFileName(file)} could not be read. Either it is corrupted, or the provided keys are insufficient.");
+            catch (Exception ex) {
+                TkLog.Instance.LogError(ex, $"The file {Path.GetFileName(file)} could not be read. Either it is corrupted, or the provided keys are insufficient.");
                 continue;
             }
             
