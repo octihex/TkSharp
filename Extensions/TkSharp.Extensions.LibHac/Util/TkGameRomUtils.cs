@@ -3,6 +3,8 @@ using LibHac.Fs;
 using LibHac.FsSystem;
 using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
+using Microsoft.Extensions.Logging;
+using TkSharp.Core;
 using TkSharp.Extensions.LibHac.Extensions;
 using TkSharp.Extensions.LibHac.Models;
 using Path = System.IO.Path;
@@ -126,10 +128,17 @@ public static class TkGameRomUtils
                 continue;
             }
             
-            using LocalStorage storage = new(file, FileAccess.Read);
-            using SwitchFs nx = storage.GetSwitchFs(file, keys);
+            Application? totk;
+            try {
+                using LocalStorage storage = new(file, FileAccess.Read);
+                using SwitchFs nx = storage.GetSwitchFs(file, keys);
 
-            if (!nx.Applications.TryGetValue(EX_KING_APP_ID, out Application? totk)) {
+                if (!nx.Applications.TryGetValue(EX_KING_APP_ID, out totk)) {
+                    continue;
+                }
+            }
+            catch (Exception) {
+                TkLog.Instance.LogDebug($"The file {Path.GetFileName(file)} could not be read. Either it is corrupted, or the provided keys are insufficient.");
                 continue;
             }
             
