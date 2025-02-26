@@ -12,7 +12,7 @@ namespace TkSharp.Merging.ChangelogBuilders;
 
 public sealed class GameDataChangelogBuilder : Singleton<GameDataChangelogBuilder>, ITkChangelogBuilder
 {
-    public void Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
+    public bool Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
     {
         BymlMap changelog = [];
         BymlMap src = Byml.FromBinary(srcBuffer).GetMap()["Data"].GetMap();
@@ -45,7 +45,7 @@ public sealed class GameDataChangelogBuilder : Singleton<GameDataChangelogBuilde
         }
 
         if (changelog.Count == 0) {
-            return;
+            return false;
         }
 
         using MemoryStream ms = new();
@@ -54,6 +54,7 @@ public sealed class GameDataChangelogBuilder : Singleton<GameDataChangelogBuilde
 
         using Stream output = openWrite(path, canonical);
         ms.CopyTo(output);
+        return true;
     }
 
     private static BymlHashMap32 LogEntries(ref BymlTrackingInfo bymlTrackingInfo, ulong tableNameHash,

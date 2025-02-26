@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
 using TkSharp.Core;
 using TkSharp.Core.Extensions;
 using TkSharp.Core.IO.Buffers;
@@ -134,11 +135,16 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
             return;
         }
 
-        builder.Build(canonical, path, decompressed.IsEmpty ? raw.Segment : decompressed.Segment, vanilla.Segment, (path, canon) => {
+        bool isVanilla = !builder.Build(canonical, path, decompressed.IsEmpty ? raw.Segment : decompressed.Segment, vanilla.Segment, (path, canon) => {
             AddChangelogMetadata(path, ref canon, ChangelogEntryType.Changelog, zsDictionaryId, path.FileVersion);
             string outputFile = Path.Combine(path.Root.ToString(), canon);
             return _writer.OpenWrite(outputFile);
         });
+
+        if (isVanilla) {
+            TkLog.Instance.LogTrace(
+                "The target '{FileName}' was skipped because no changes were found from the vanilla file", canonical);
+        }
     }
 
     public static IEnumerable<ArraySegment<byte>> CreateChangelogsExternal(string canonical, ArraySegment<byte> @base, IEnumerable<ArraySegment<byte>> changelogs, TkFileAttributes attributes)

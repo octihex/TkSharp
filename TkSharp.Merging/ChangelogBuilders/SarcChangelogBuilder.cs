@@ -7,7 +7,7 @@ public sealed class SarcChangelogBuilder : Singleton<SarcChangelogBuilder>, ITkC
 {
     private static readonly byte[] _deletedFileMark = [0x54, 0x4B, 0x53, 0x43, 0x52, 0x4D, 0x56, 0x44];
 
-    public void Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
+    public bool Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
     {
         Sarc vanilla = Sarc.FromBinary(vanillaBuffer);
 
@@ -54,10 +54,11 @@ public sealed class SarcChangelogBuilder : Singleton<SarcChangelogBuilder>, ITkC
         }
 
         if (changelog.Count == 0) {
-            return;
+            return false;
         }
 
         using Stream output = openWrite(path, canonical);
         changelog.Write(output, changelog.Endianness);
+        return true;
     }
 }

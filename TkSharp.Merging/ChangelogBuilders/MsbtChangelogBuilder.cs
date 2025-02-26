@@ -1,4 +1,5 @@
 using MessageStudio.Formats.BinaryText;
+using Microsoft.Extensions.Logging;
 using Revrs.Extensions;
 using TkSharp.Core;
 
@@ -6,10 +7,11 @@ namespace TkSharp.Merging.ChangelogBuilders;
 
 public sealed class MsbtChangelogBuilder : Singleton<MsbtChangelogBuilder>, ITkChangelogBuilder
 {
-    public void Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
+    public bool Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
     {
         if (srcBuffer.AsSpan().Read<ulong>() != Msbt.MAGIC) {
-            return;
+            TkLog.Instance.LogWarning("Expected MSBT file but found invalid magic: {CanonicalPath}", canonical);
+            return false;
         }
         
         Msbt vanilla = Msbt.FromBinary(vanillaBuffer);
@@ -31,10 +33,11 @@ public sealed class MsbtChangelogBuilder : Singleton<MsbtChangelogBuilder>, ITkC
         }
 
         if (changelog.Count == 0) {
-            return;
+            return false;
         }
 
         using Stream output = openWrite(path, canonical);
         changelog.WriteBinary(output);
+        return true;
     }
 }

@@ -13,7 +13,7 @@ namespace TkSharp.Merging.ChangelogBuilders;
 
 public sealed class RsdbTagChangelogBuilder : Singleton<RsdbTagChangelogBuilder>, ITkChangelogBuilder
 {
-    public void Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
+    public bool Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
     {
         using RsdbTagIndex vanilla = new(vanillaBuffer);
 
@@ -43,7 +43,7 @@ public sealed class RsdbTagChangelogBuilder : Singleton<RsdbTagChangelogBuilder>
         newTags.AddRange(tags.Where(tag => !vanilla.HasTag(tag)));
 
         if (changelog.Count == 0 && newTags.Count == 0) {
-            return;
+            return false;
         }
 
         Byml result = new BymlMap() {
@@ -57,6 +57,7 @@ public sealed class RsdbTagChangelogBuilder : Singleton<RsdbTagChangelogBuilder>
 
         using Stream output = openWrite(path, canonical);
         ms.CopyTo(output);
+        return true;
     }
 
     private static Byml CreateEntry(HashSet<string> entryTags, Span<string> removed)

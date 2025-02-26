@@ -9,7 +9,7 @@ namespace TkSharp.Merging.ChangelogBuilders;
 
 public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkChangelogBuilder
 {
-    public void Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
+    public bool Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
     {
         Byml vanillaByml = Byml.FromBinary(vanillaBuffer);
         Byml srcByml = Byml.FromBinary(srcBuffer, out Endianness endianness, out ushort version);
@@ -17,7 +17,7 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
         bool isVanilla = LogChangesInline(ref info, ref srcByml, vanillaByml);
 
         if (isVanilla) {
-            return;
+            return false;
         }
 
         using MemoryStream ms = new();
@@ -26,6 +26,8 @@ public sealed class BymlChangelogBuilder : Singleton<BymlChangelogBuilder>, ITkC
 
         using Stream output = openWrite(path, canonical);
         ms.CopyTo(output);
+
+        return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

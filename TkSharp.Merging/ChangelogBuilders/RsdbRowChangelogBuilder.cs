@@ -25,7 +25,7 @@ public sealed class RsdbRowChangelogBuilder<TKey>(string keyName) : ITkChangelog
 {
     private readonly string _keyName = keyName;
 
-    public void Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
+    public bool Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
     {
         ulong dbNameHash = GetDbNameHash(path);
 
@@ -66,7 +66,7 @@ public sealed class RsdbRowChangelogBuilder<TKey>(string keyName) : ITkChangelog
         }
 
         if (changelog.Count is 0) {
-            return;
+            return false;
         }
 
         using MemoryStream ms = new();
@@ -82,6 +82,7 @@ public sealed class RsdbRowChangelogBuilder<TKey>(string keyName) : ITkChangelog
         
         using Stream output = openWrite(path, canonical);
         ms.CopyTo(output);
+        return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
