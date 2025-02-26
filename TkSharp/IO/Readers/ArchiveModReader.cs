@@ -55,11 +55,12 @@ public sealed class ArchiveModReader(ITkSystemProvider systemProvider, ITkRomPro
     {
         foreach (IArchiveEntry entry in archive.Entries) {
             ReadOnlySpan<char> key = entry.Key.AsSpan();
-            if (key.Length < 5) {
+            ReadOnlySpan<char> normalizedKey = key[^1] is '/' or '\\' ? key[..^1] : key;
+            
+            if (normalizedKey.Length < 5) {
                 continue;
             }
             
-            ReadOnlySpan<char> normalizedKey = key[^1] is '/' or '\\' ? key[..^1] : key;
             ReadOnlySpan<char> normalizedKeyLowercase = normalizedKey
                 .ToString()
                 .ToLowerInvariant();
