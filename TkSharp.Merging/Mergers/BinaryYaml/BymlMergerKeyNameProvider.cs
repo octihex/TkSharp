@@ -119,7 +119,7 @@ public sealed class BymlMergerKeyNameProvider : Singleton<BymlMergerKeyNameProvi
             "ConditionArray" or "OverrideASEvReactVerbSettings" or "OverrideASEventReactSettings" or "SwitchParam"
                 or "TriggerParams" or "Triggers" => "Key",
             "OverrideReactionVerbSettings" => "KeyActionVerb",
-            "ShootableActorSettings" => "KeyHash",
+            "ShootableActorSettings" => ("KeyHash", "Actor"),
             "AttachmentGroupList" or "EnemyGroupList" => "Label",
             "ShopWeaponGroupList" or "WeaponGroupList" => ("Label", "EquipmentType"),
             "ActionSeqs" => "LabelHash",

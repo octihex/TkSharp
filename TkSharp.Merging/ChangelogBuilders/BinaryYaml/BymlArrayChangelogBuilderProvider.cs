@@ -117,7 +117,7 @@ public class BymlArrayChangelogBuilderProvider : Singleton<BymlArrayChangelogBui
             "ConditionArray" or "OverrideASEvReactVerbSettings" or "OverrideASEventReactSettings" or "SwitchParam"
                 or "TriggerParams" or "Triggers" => new BymlKeyedArrayChangelogBuilder("Key"),
             "OverrideReactionVerbSettings" => new BymlKeyedArrayChangelogBuilder("KeyActionVerb"),
-            "ShootableActorSettings" => new BymlKeyedArrayChangelogBuilder("KeyHash"),
+            "ShootableActorSettings" => new BymlKeyedArrayChangelogBuilder("KeyHash", "Actor"),
             "AttachmentGroupList" or "EnemyGroupList" => new BymlKeyedArrayChangelogBuilder("Label"),
             "ShopWeaponGroupList" or "WeaponGroupList" => new BymlKeyedArrayChangelogBuilder("Label", "EquipmentType"),
             "ActionSeqs" => new BymlKeyedArrayChangelogBuilder("LabelHash"),
