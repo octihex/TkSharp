@@ -33,7 +33,7 @@ public interface IGameBananaSource
     /// <param name="ct"></param>
     /// <returns></returns>
     ValueTask Search(string searchTerm, CancellationToken ct = default)
-        => LoadPage(CurrentPage = 0, searchTerm, customFeed: null, ct);
+        => LoadPage(CurrentPage = 0, searchTerm, ct);
 
     /// <summary>
     /// Reload the <see cref="CurrentPage"/>.
@@ -47,19 +47,17 @@ public interface IGameBananaSource
     /// Load the next page.
     /// </summary>
     /// <param name="searchTerm"></param>
-    /// <param name="customFeed">A custom feed to use in place of fetching the GameBanana API.</param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    ValueTask LoadNextPage(string? searchTerm = null, GameBananaFeed? customFeed = null, CancellationToken ct = default)
-        => LoadPage(++CurrentPage, null, customFeed, ct);
+    ValueTask LoadNextPage(string? searchTerm = null, CancellationToken ct = default)
+        => LoadPage(++CurrentPage, null, ct);
 
     /// <summary>
     /// Load the specified <paramref name="page"/>.
     /// </summary>
     /// <param name="page">The 0-based page index.</param>
     /// <param name="searchTerm"></param>
-    /// <param name="customFeed">A custom feed to use in place of fetching the GameBanana API.</param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    ValueTask LoadPage(int page, string? searchTerm = null, GameBananaFeed? customFeed = null, CancellationToken ct = default);
+    ValueTask LoadPage(int page, string? searchTerm = null, CancellationToken ct = default);
 }
