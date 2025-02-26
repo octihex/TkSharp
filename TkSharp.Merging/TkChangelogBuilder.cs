@@ -121,6 +121,8 @@ public class TkChangelogBuilder(ITkModSource source, ITkModWriter writer, ITkRom
         }
 
         if (_tk.IsVanilla(path.Canonical, decompressed.Span, path.FileVersion)) {
+            TkLog.Instance.LogTrace(
+                "The target '{FileName}' was skipped because the file is byte-perfect with the vanilla file", canonical);
             return;
         }
 
