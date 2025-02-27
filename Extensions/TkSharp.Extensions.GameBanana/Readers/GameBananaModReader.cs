@@ -63,17 +63,22 @@ public sealed class GameBananaModReader(ITkModReaderProvider readerProvider) : I
 
         mod.Name = gbMod.Name;
         mod.Author = gbMod.Submitter.Name;
-        mod.Description = new Converter(new Config {
-            GithubFlavored = true,
-            ListBulletChar = '*',
-            UnknownTags = Config.UnknownTagsOption.Bypass
-        }).Convert(gbMod.Text);
+        mod.Description = $"""
+            *[Game Banana Mod Page ->](https://gamebanana.com/mods/{modId})*
+            
+            {
+                new Converter(new Config {
+                    GithubFlavored = true,
+                    ListBulletChar = '*',
+                    UnknownTags = Config.UnknownTagsOption.Bypass}).Convert(gbMod.Text)
+            }
+            """;
         mod.Thumbnail = new TkThumbnail {
             ThumbnailPath = gbMod.Media.Images.First() switch {
                 var image => $"{image.BaseUrl}/{image.File}"
             }
         };
-        mod.Version = gbMod.Version;
+        mod.Version = string.IsNullOrWhiteSpace(gbMod.Version) ? "1.0.0" : gbMod.Version;
 
         foreach (GameBananaAuthor author in gbMod.Credits.SelectMany(group => group.Authors)) {
             mod.Contributors.Add(new TkModContributor(author.Name, author.Role));
@@ -85,18 +90,18 @@ public sealed class GameBananaModReader(ITkModReaderProvider readerProvider) : I
     public async ValueTask<TkMod?> ParseFromFileUrl(TkModContext context, string fileUrl, long fileId, GameBananaFile? target = null, CancellationToken ct = default)
     {
         target ??= await GameBanana.Get<GameBananaFile>($"File/{fileId}", GameBananaModJsonContext.Default.GameBananaFile, ct);
-        
+
         if (target is null) {
             return null;
         }
-        
+
         var fileIdAsInt = (Int128)fileId;
 
         ITkModReader? reader = _readerProvider.GetReader(target.Name);
         context.EnsureId(
             Unsafe.As<Int128, Ulid>(ref fileIdAsInt)
         );
-        
+
         byte[] data = await DownloadHelper.DownloadAndVerify(
             fileUrl, Convert.FromHexString(target.Checksum), ct: ct);
 
