@@ -26,4 +26,9 @@ public partial class GameBananaFile : ObservableObject
 
     [JsonIgnore]
     public bool IsTkcl => Name.EndsWith(".tkcl");
+
+    public override string ToString()
+    {
+        return Name;
+    }
 }

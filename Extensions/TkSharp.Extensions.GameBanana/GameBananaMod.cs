@@ -39,6 +39,11 @@ public sealed class GameBananaMod
 
     [JsonPropertyName("_aCredits")]
     public List<GameBananaCreditGroup> Credits { get; set; } = [];
+
+    public override string ToString()
+    {
+        return Name;
+    }
 }
 
 [JsonSerializable(typeof(GameBananaMod))]
