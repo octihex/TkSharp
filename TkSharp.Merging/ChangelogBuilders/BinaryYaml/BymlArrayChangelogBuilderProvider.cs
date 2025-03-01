@@ -171,6 +171,7 @@ public class BymlArrayChangelogBuilderProvider : Singleton<BymlArrayChangelogBui
             "ConditionList" => new BymlKeyedArrayChangelogBuilder("WeaponEssence"),
             "WeaponTypeAndSubModelMapping" => new BymlKeyedArrayChangelogBuilder("WeaponType"),
             "Translate" or "Rotate" or "Scale" => BymlDirectIndexArrayChangelogBuilder.Instance,
+            "StaffRoleSetArray" => BymlDirectIndexArrayChangelogBuilder.Instance,
             _ => info.Type switch {
                 "game__component__ConditionParam" => BymlDirectIndexArrayChangelogBuilder.Instance,
                 _ => BymlArrayChangelogBuilder.Instance
