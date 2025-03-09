@@ -56,10 +56,12 @@ public class BymlArrayChangelogBuilder : IBymlArrayChangelogBuilder
             );
         }
 
-        foreach (int index in additions) {
-            changelog.Add(
-                (index, BymlChangeType.Add, node: src[index])
-            );
+        if (additions.TryPeek(out int index)) {
+            for (int i = 0; i < additions.Count; i++) {
+                changelog.Add(
+                    (index, BymlChangeType.Add, node: src[index])
+                );
+            }
         }
 
         root = changelog;
