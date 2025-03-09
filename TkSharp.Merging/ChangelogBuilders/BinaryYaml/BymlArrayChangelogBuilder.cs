@@ -57,9 +57,9 @@ public class BymlArrayChangelogBuilder : IBymlArrayChangelogBuilder
         }
 
         if (additions.TryPeek(out int index)) {
-            for (int i = 0; i < additions.Count; i++) {
+            foreach (int i in additions) {
                 changelog.Add(
-                    (index, BymlChangeType.Add, node: src[index])
+                    (index, BymlChangeType.Add, node: src[i])
                 );
             }
         }
