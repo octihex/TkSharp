@@ -170,7 +170,7 @@ public class BymlArrayChangelogBuilderProvider : Singleton<BymlArrayChangelogBui
             "AlreadyReadInfo" => new BymlKeyedArrayChangelogBuilder("UpdateGameDataFlag"),
             "ConditionList" => new BymlKeyedArrayChangelogBuilder("WeaponEssence"),
             "WeaponTypeAndSubModelMapping" => new BymlKeyedArrayChangelogBuilder("WeaponType"),
-            "Translate" or "Rotate" or "Scale" => BymlDirectIndexArrayChangelogBuilder.Instance,
+            "Translate" or "Rotate" or "Scale" or "MarginNegative" or "MarginPositive" or "Rot" => BymlDirectIndexArrayChangelogBuilder.Instance,
             "StaffRollSetArray" => BymlDirectIndexArrayChangelogBuilder.Instance,
             _ => info.Type switch {
                 "game__component__ConditionParam" => BymlDirectIndexArrayChangelogBuilder.Instance,
