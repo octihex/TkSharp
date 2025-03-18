@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using TkSharp.Core;
 using TkSharp.Core.Models;
 
 namespace TkSharp.Packaging;
@@ -36,9 +38,16 @@ public static class TkProjectManager
         }
 
         RecentProjects.Clear();
-        using FileStream fs = File.OpenRead(_storeFilePath);
-        List<string> recentProjectFolders = JsonSerializer.Deserialize<List<string>>(fs)
-                                            ?? [];
+        List<string> recentProjectFolders = [];
+
+        try {
+            using FileStream fs = File.OpenRead(_storeFilePath);
+            recentProjectFolders = JsonSerializer.Deserialize<List<string>>(fs)
+                                   ?? [];
+        }
+        catch (Exception ex) {
+            TkLog.Instance.LogWarning(ex, "Failed to load recent projects");
+        }
 
         foreach (TkProject project in recentProjectFolders.Where(Directory.Exists).Select(projectFolder => new TkProject(projectFolder))) {
             LoadProjectMetadataFromFolder(project);
