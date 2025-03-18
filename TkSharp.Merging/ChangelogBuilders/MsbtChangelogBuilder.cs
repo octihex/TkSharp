@@ -7,6 +7,10 @@ namespace TkSharp.Merging.ChangelogBuilders;
 
 public sealed class MsbtChangelogBuilder : Singleton<MsbtChangelogBuilder>, ITkChangelogBuilder
 {
+    private static readonly MsbtOptions _options = new() {
+        DuplicateKeyMode = MsbtDuplicateKeyMode.UseLastOccurrence
+    };
+    
     public bool Build(string canonical, in TkPath path, ArraySegment<byte> srcBuffer, ArraySegment<byte> vanillaBuffer, OpenWriteChangelog openWrite)
     {
         if (srcBuffer.AsSpan().Read<ulong>() != Msbt.MAGIC) {
@@ -17,7 +21,7 @@ public sealed class MsbtChangelogBuilder : Singleton<MsbtChangelogBuilder>, ITkC
         Msbt vanilla = Msbt.FromBinary(vanillaBuffer);
 
         Msbt changelog = [];
-        Msbt src = Msbt.FromBinary(srcBuffer);
+        Msbt src = Msbt.FromBinary(srcBuffer, _options);
 
         foreach ((string key, MsbtEntry entry) in src) {
             if (!vanilla.TryGetValue(key, out MsbtEntry? vanillaEntry)) {
