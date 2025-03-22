@@ -1,3 +1,6 @@
+using System;
+using System.IO;
+using System.Text.Json;
 using CommunityToolkit.HighPerformance;
 using TkSharp.Core.IO.Serialization;
 using TkSharp.Core.IO.Serialization.Models;
@@ -75,6 +78,17 @@ internal static class TkModManagerSerializer
         }
 
         manager.Unlock();
+
+        using (StreamWriter streamWriter = new StreamWriter("zstate.db.json"))
+		{
+			JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
+			{
+				WriteIndented = true
+			};
+
+			streamWriter.WriteLine(JsonSerializer.Serialize<TkModManager>(manager, jsonSerializerOptions));
+		}
+
         return manager;
     }
 }
